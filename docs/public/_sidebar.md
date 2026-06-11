@@ -1,4 +1,5 @@
 - [Home](README.md)
+- [Getting Started](GETTING_STARTED.md)
 - [Project Plan](PROJECT_PLAN.md)
 - [References](REFERENCES.md)
 - [Checkpoint Workflow](CHECKPOINTS.md)
