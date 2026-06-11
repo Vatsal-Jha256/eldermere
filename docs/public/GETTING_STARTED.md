@@ -49,9 +49,22 @@ npm run check
 
 ## Starter Commands
 
+- `quest`: start or check the starter quest.
 - `look`: inspect the current room.
 - `go north`, `go east`, `go south`, `go west`: move through room exits.
 - `fight`: resolve the current room's encounter with a d20-style roll.
 - `recruit`: attempt to recruit the current room's companion.
+- `take`: pick up the current room's visible item.
+- `inventory`: list carried items.
 - `party`: list recruited companions.
 - `say hello`: send a local speech event.
+
+## Starter Quest Path
+
+The current vertical slice has a small Arthurian quest arc:
+
+1. Start in Lantern Yard and run `quest`.
+2. Explore east into Market Under and try `recruit`.
+3. Go `down` to Smuggler Vault.
+4. Use `take` to collect the Excalibur Fragment.
+5. Return to Lantern Yard and run `quest` again to complete the arc.

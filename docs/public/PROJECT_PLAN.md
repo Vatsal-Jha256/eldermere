@@ -146,7 +146,7 @@ Stage 5: expanded legend universe:
 3. SvelteKit client skeleton with playable first screen layout.
 4. WebSocket command loop with `look`, `go`, and `say`.
 5. Room/content model loaded from data files. Initial starter room loading is in place; the next version should make this mod-pack friendly.
-6. Arthurian starter region with 5-8 rooms and one short quest.
+6. Arthurian starter region with 5-8 rooms and one short quest. Initial 6-room "stolen Excalibur fragment" arc is in place.
 7. Dice engine, encounter engine, and one recruitable companion/relic/ally. Initial `fight`, `recruit`, and `party` commands are in place for the starter rooms.
 8. Persistence for accounts, characters, inventory, location, and quest state.
 9. Public modding guide and content-pack validation.

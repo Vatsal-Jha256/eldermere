@@ -6,7 +6,13 @@
       "description": "The rain over Camelot tastes faintly of iron. Squires trade rumors beside a shrine of old river-stone.",
       "exits": {
         "north": "old-bridge",
-        "east": "market-under"
+        "east": "market-under",
+        "west": "tavern-backroom"
+      },
+      "quest": {
+        "start": "Quest started: recover the stolen Excalibur fragment before it is sold under the old bridge.",
+        "incomplete": "Merlin's courier taps the shrine. The fragment is still missing. Follow the under-market rumor east, then deeper.",
+        "complete": "Merlin's courier wraps the Excalibur fragment in river-cloth. The yard goes quiet; even the rain seems to wait."
       }
     },
     {
@@ -14,7 +20,8 @@
       "name": "Old Bridge",
       "description": "A bridge older than the crown leans over black water. Someone has scratched a Greek oath into one stone.",
       "exits": {
-        "south": "lantern-yard"
+        "south": "lantern-yard",
+        "east": "river-stairs"
       },
       "encounter": {
         "name": "Bridge Debt Collector",
@@ -28,13 +35,53 @@
       "name": "Market Under",
       "description": "Below the respectable stalls, charm-sellers auction debts, curses, and maps that disagree with themselves.",
       "exits": {
-        "west": "lantern-yard"
+        "west": "lantern-yard",
+        "down": "smuggler-vault"
       },
       "recruitable": {
         "name": "Oath Spirit",
         "dc": 11,
         "success": "The Oath Spirit joins your party, bound by a promise neither of you fully understands.",
         "failure": "The Oath Spirit circles once and refuses. It wants proof, not enthusiasm."
+      }
+    },
+    {
+      "id": "tavern-backroom",
+      "name": "Tavern Backroom",
+      "description": "Behind the tavern ledger, a card game has become a faction summit. Nobody admits they serve Camelot.",
+      "exits": {
+        "east": "lantern-yard",
+        "north": "river-stairs"
+      }
+    },
+    {
+      "id": "river-stairs",
+      "name": "River Stairs",
+      "description": "Wet stairs descend toward Avalon-black water. Chalk marks show a route used by smugglers and saints.",
+      "exits": {
+        "west": "old-bridge",
+        "south": "tavern-backroom",
+        "east": "smuggler-vault"
+      },
+      "encounter": {
+        "name": "Mordred's Runner",
+        "dc": 14,
+        "win": "You cut off the runner's escape and learn the vault passphrase.",
+        "lose": "The runner vanishes downriver, leaving only a false coin and a worse rumor."
+      }
+    },
+    {
+      "id": "smuggler-vault",
+      "name": "Smuggler Vault",
+      "description": "A cellar of stolen blessings. Greek bronze, Celtic knots, and Arthurian steel hum like they have been arguing for centuries.",
+      "exits": {
+        "west": "river-stairs",
+        "up": "market-under"
+      },
+      "item": {
+        "id": "excalibur-fragment",
+        "name": "Excalibur Fragment",
+        "description": "a moon-bright shard of Excalibur hidden inside a cracked dice cup"
       }
     }
   ]

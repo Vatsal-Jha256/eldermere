@@ -106,3 +106,31 @@ func TestRecruitAddsCompanionToParty(t *testing.T) {
 		t.Fatalf("expected Oath Spirit in party, got %q", events[0].Text)
 	}
 }
+
+func TestQuestCanStartCollectItemAndComplete(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("quest")
+	if len(events) != 1 || events[0].Type != "quest" {
+		t.Fatalf("expected quest start event, got %#v", events)
+	}
+
+	session.Handle("go east")
+	session.Handle("go down")
+
+	events = session.Handle("take")
+	if len(events) != 1 || events[0].Type != "inventory" {
+		t.Fatalf("expected inventory event after take, got %#v", events)
+	}
+
+	session.Handle("go up")
+	session.Handle("go west")
+
+	events = session.Handle("quest")
+	if len(events) != 1 {
+		t.Fatalf("expected quest completion event, got %#v", events)
+	}
+	if events[0].Type != "quest" || !session.quest.Completed {
+		t.Fatalf("expected completed quest, got event %#v state %#v", events[0], session.quest)
+	}
+}

@@ -21,6 +21,8 @@ type Room struct {
 	Exits       map[string]string `json:"exits"`
 	Encounter   *Encounter        `json:"encounter,omitempty"`
 	Recruitable *Recruitable      `json:"recruitable,omitempty"`
+	Item        *Item             `json:"item,omitempty"`
+	Quest       *QuestMarker      `json:"quest,omitempty"`
 }
 
 type Encounter struct {
@@ -37,6 +39,18 @@ type Recruitable struct {
 	Failure string `json:"failure"`
 }
 
+type Item struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
+
+type QuestMarker struct {
+	Start      string `json:"start,omitempty"`
+	Incomplete string `json:"incomplete,omitempty"`
+	Complete   string `json:"complete,omitempty"`
+}
+
 type World struct {
 	rooms map[string]Room
 }
@@ -45,7 +59,14 @@ type Session struct {
 	world  World
 	roomID string
 	party  map[string]bool
+	items  map[string]Item
+	quest  QuestState
 	roll   func(sides int) int
+}
+
+type QuestState struct {
+	Started   bool
+	Completed bool
 }
 
 type Event struct {
@@ -129,6 +150,8 @@ func NewSession(world World) Session {
 		world:  world,
 		roomID: "lantern-yard",
 		party:  map[string]bool{},
+		items:  map[string]Item{},
+		quest:  QuestState{},
 		roll:   defaultRoller(),
 	}
 }
@@ -175,11 +198,17 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.recruit()}
 	case "party":
 		return []Event{s.partyStatus()}
+	case "inventory", "inv", "i":
+		return []Event{s.inventoryStatus()}
+	case "quest":
+		return []Event{s.questStatus()}
+	case "take", "get":
+		return []Event{s.takeItem()}
 	case "exits":
 		room := s.currentRoom()
 		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(sortedExitNames(room.Exits), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `go north`, `go east`, `fight`, `recruit`, `party`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `exits`, or `say hello`.", verb)}}
 	}
 }
 
@@ -199,9 +228,13 @@ func (s *Session) goDirection(direction string) []Event {
 
 func (s *Session) look() Event {
 	room := s.currentRoom()
+	text := fmt.Sprintf("%s: %s Exits: %s.", room.Name, room.Description, strings.Join(sortedExitNames(room.Exits), ", "))
+	if room.Item != nil && !s.hasItem(room.Item.ID) {
+		text = fmt.Sprintf("%s You notice %s.", text, room.Item.Description)
+	}
 	return Event{
 		Type: "room",
-		Text: fmt.Sprintf("%s: %s Exits: %s.", room.Name, room.Description, strings.Join(sortedExitNames(room.Exits), ", ")),
+		Text: text,
 		Room: &View{
 			ID:          room.ID,
 			Name:        room.Name,
@@ -259,6 +292,18 @@ func (s *Session) recruit() Event {
 	}
 }
 
+func (s *Session) takeItem() Event {
+	room := s.currentRoom()
+	if room.Item == nil {
+		return Event{Type: "system", Text: "There is nothing obvious to take here."}
+	}
+	if s.hasItem(room.Item.ID) {
+		return Event{Type: "inventory", Text: fmt.Sprintf("You already have %s.", room.Item.Name)}
+	}
+	s.items[room.Item.ID] = *room.Item
+	return Event{Type: "inventory", Text: fmt.Sprintf("Taken: %s.", room.Item.Name)}
+}
+
 func (s *Session) partyStatus() Event {
 	if len(s.party) == 0 {
 		return Event{Type: "party", Text: "Party: no companions yet."}
@@ -270,6 +315,49 @@ func (s *Session) partyStatus() Event {
 	}
 	sortStrings(names)
 	return Event{Type: "party", Text: fmt.Sprintf("Party: %s.", strings.Join(names, ", "))}
+}
+
+func (s *Session) inventoryStatus() Event {
+	if len(s.items) == 0 {
+		return Event{Type: "inventory", Text: "Inventory: empty."}
+	}
+
+	names := make([]string, 0, len(s.items))
+	for _, item := range s.items {
+		names = append(names, item.Name)
+	}
+	sortStrings(names)
+	return Event{Type: "inventory", Text: fmt.Sprintf("Inventory: %s.", strings.Join(names, ", "))}
+}
+
+func (s *Session) questStatus() Event {
+	room := s.currentRoom()
+	if room.Quest != nil {
+		if room.Quest.Start != "" && !s.quest.Started {
+			s.quest.Started = true
+			return Event{Type: "quest", Text: room.Quest.Start}
+		}
+		if room.Quest.Complete != "" && s.hasItem("excalibur-fragment") && !s.quest.Completed {
+			s.quest.Completed = true
+			return Event{Type: "quest", Text: room.Quest.Complete}
+		}
+		if room.Quest.Incomplete != "" && s.quest.Started && !s.quest.Completed {
+			return Event{Type: "quest", Text: room.Quest.Incomplete}
+		}
+	}
+
+	if s.quest.Completed {
+		return Event{Type: "quest", Text: "Quest complete: the stolen Excalibur fragment is back under safer eyes."}
+	}
+	if s.quest.Started {
+		return Event{Type: "quest", Text: "Quest active: find the stolen Excalibur fragment in the under-market route."}
+	}
+	return Event{Type: "quest", Text: "No quest is active. Try asking around in Lantern Yard."}
+}
+
+func (s *Session) hasItem(id string) bool {
+	_, ok := s.items[id]
+	return ok
 }
 
 func (s *Session) currentRoom() Room {

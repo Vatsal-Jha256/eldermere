@@ -14,7 +14,7 @@
     room?: RoomView;
   };
 
-  const commands = ['look', 'go north', 'fight', 'go south', 'go east', 'recruit', 'party'];
+  const commands = ['quest', 'look', 'go east', 'recruit', 'go down', 'take', 'inventory', 'go west'];
 
   let command = $state('');
   let connected = $state(false);
