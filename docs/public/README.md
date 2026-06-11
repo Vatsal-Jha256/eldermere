@@ -1,6 +1,6 @@
-# Mythweald Public Docs
+# Eldermere Public Docs
 
-Mythweald is a browser-based MUD and creature-RPG built around connected legends.
+Eldermere is a browser-based MUD and creature-RPG built around connected legends.
 
 The first release starts with Arthurian legend. Later legend packs should interact with the same world state instead of acting like isolated expansion zones.
 

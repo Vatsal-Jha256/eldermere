@@ -2,7 +2,9 @@
 
 ## Summary
 
-Mythweald is an open-source browser MUD and creature-RPG. It starts in Arthurian legend, then grows into a connected myth universe where legend packs interact through shared factions, travel, prophecy, reputation, curses, relics, and world events.
+Eldermere is the current working title for an open-source browser MUD and creature-RPG. It starts in Arthurian legend, then grows into a connected myth universe where legend packs interact through shared factions, travel, prophecy, reputation, curses, relics, and world events.
+
+The game combines old-school MUD exploration, creature-collector progression, tabletop-style probability, and mod-friendly content. The target is differentiated: MUDs, monster collectors, and Arthurian RPGs all exist, but the specific mix of browser MUD, recruitable companions/relics/knights, probabilistic legend variation, and a moddable connected myth universe is not obviously saturated.
 
 The game should feel text-first and fast to build: room prose, command input, static backgrounds, compact character panels, and probabilistic encounters. Visual maps can arrive later, and only when the player has an in-world map, relic, guide, or equivalent reason to see one.
 
@@ -18,6 +20,7 @@ The game should feel text-first and fast to build: room prose, command input, st
 
 - Players explore rooms through commands such as `look`, `go`, `talk`, `fight`, `recruit`, `equip`, `use`, and `quest`.
 - Encounters use tabletop-like probabilities: stats, dice rolls, advantage/disadvantage, critical outcomes, resistances, and risky bargains.
+- The first playable version should prove the fun core loop before full multiplayer: create character, enter rooms, move with commands, inspect background/text, recruit one companion/relic/ally, fight one probabilistic battle, and complete one short Arthurian quest arc.
 - Collection combines three categories:
   - Companions: beasts, spirits, squires, cursed allies, local legends, and mythic creatures.
   - Relics: blessings, curses, techniques, fragments, oaths, charms, and named items.
@@ -26,7 +29,7 @@ The game should feel text-first and fast to build: room prose, command input, st
 
 ## Connected Legend Universe
 
-Later legends should not be separate theme parks. They should connect to the same world model.
+Later legends should not be separate theme parks. Greek, Celtic, Norse, South Asian, and other legend regions can arrive as content packs, but they must connect to the same world model.
 
 - Each legend pack adds regions, factions, characters, companions, relics, events, and quest chains.
 - Packs can reference and affect each other through shared tags, faction relations, prophecy keys, relic ownership, travel routes, and world events.
@@ -43,6 +46,8 @@ Later legends should not be separate theme parks. They should connect to the sam
 - Later cache/queue option: Redis only when needed.
 - Deployment: Docker and Docker Compose first.
 - Docs: Docsify.
+- Public docs: install, modding, content schema, contribution guide, and contributor workflow.
+- Private docs: learning notes for Go concurrency, WebSockets, persistence, game loops, ECS/state modeling, testing, and deployment.
 
 The backend should expose a command-driven game loop inspired by MUD architecture: parse command, validate actor state, apply world rules, persist changes, broadcast room/player updates, and return a readable event log.
 
@@ -67,7 +72,16 @@ Evennia is a reference for:
 
 This project should not fork, clone, or copy either reference. The implementation should use original code and its own data model unless a dependency is deliberately adopted under its license.
 
-## Milestones
+## Implementation Stages
+
+1. Stage 0: scaffold repo with Go API/server, SvelteKit client, Docker Compose, PostgreSQL, public Docsify docs, and private local Docsify notes.
+2. Stage 1: single-player playable core loop with character creation, rooms, movement, room backgrounds/text, one recruitable companion/relic/ally, one probabilistic battle, and one short Arthurian quest arc.
+3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log.
+4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack.
+5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises.
+6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes.
+
+## Near-Term Milestones
 
 1. Planning and repository setup.
 2. Go server skeleton with health route, config, logging, and test setup.
@@ -87,3 +101,18 @@ This project should not fork, clone, or copy either reference. The implementatio
 - Content schemas should prefer clear IDs and tags over brittle code hooks.
 - The project should include a small example mod pack as soon as the core loop works.
 - Contributions should require tests for engine changes and validation for content changes.
+
+## Test Plan
+
+- Unit tests for dice/probability, recruit/capture logic, combat resolution, inventory, room movement, and content validation.
+- Integration tests for WebSocket commands: connect, look, move, say, fight, and recruit.
+- Content tests to ensure every room exit points to a valid room and every quest can complete.
+- Basic browser tests for command input, room rendering, background display, and responsive layout.
+- Docs checks to ensure the public modding guide includes a working example content pack and private docs explain each implemented system.
+
+## Assumptions
+
+- The first milestone optimizes for fun core loop over full multiplayer.
+- Go and SvelteKit are chosen for learning value, portfolio value, and fit with browser MUD architecture, even though Evennia would ship faster.
+- The project uses real Arthurian names but original writing, original mechanics, and original visual identity.
+- The first public release should be small, moddable, and playable rather than lore-complete.

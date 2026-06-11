@@ -1,8 +1,8 @@
-# Mythweald
+# Eldermere
 
-Browser-based MUD and creature-RPG inspired by Arthurian legend, old-school text worlds, tabletop-style probability, and modern web play.
+Working title for a browser-based MUD and creature-RPG inspired by Arthurian legend, old-school text worlds, tabletop-style probability, and modern web play.
 
-The project direction is documented in [docs/public/PROJECT_PLAN.md](docs/public/PROJECT_PLAN.md).
+The project direction is documented in [docs/public/PROJECT_PLAN.md](docs/public/PROJECT_PLAN.md). Naming options are tracked in [docs/public/NAMING.md](docs/public/NAMING.md).
 
 ## Current Status
 

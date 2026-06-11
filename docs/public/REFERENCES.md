@@ -11,7 +11,7 @@ Relevant ideas:
 - Go and Svelte are a credible stack for realtime MUD development.
 - WebSockets, persistent state, graphical overlays, mobile-responsive UI, and content tooling are useful long-term targets.
 
-How Mythweald should use it:
+How Eldermere should use it:
 
 - Treat TalesMUD as a product and architecture reference.
 - Do not copy implementation details, UI, world content, writing, or branding.
@@ -29,7 +29,7 @@ Relevant ideas:
 - Rooms, characters, objects, commands, channels, persistence, and builder workflows are core concepts.
 - A strong engine should avoid prescribing combat rules, classes, races, or genre too early.
 
-How Mythweald should use it:
+How Eldermere should use it:
 
 - Treat Evennia as a design reference for flexible MUD architecture.
 - Study its concepts, not its exact Python/Django/Twisted implementation.
