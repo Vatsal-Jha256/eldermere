@@ -69,6 +69,13 @@ type QuestState struct {
 	Completed bool
 }
 
+type PersistentState struct {
+	RoomID string     `json:"room_id"`
+	Party  []string   `json:"party"`
+	Items  []Item     `json:"items"`
+	Quest  QuestState `json:"quest"`
+}
+
 type Event struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
@@ -160,6 +167,46 @@ func NewSessionWithRoller(world World, roller func(sides int) int) Session {
 	session := NewSession(world)
 	session.roll = roller
 	return session
+}
+
+func NewSessionFromState(world World, state PersistentState) Session {
+	session := NewSession(world)
+	if _, ok := world.rooms[state.RoomID]; ok {
+		session.roomID = state.RoomID
+	}
+	for _, name := range state.Party {
+		if strings.TrimSpace(name) != "" {
+			session.party[name] = true
+		}
+	}
+	for _, item := range state.Items {
+		if strings.TrimSpace(item.ID) != "" {
+			session.items[item.ID] = item
+		}
+	}
+	session.quest = state.Quest
+	return session
+}
+
+func (s *Session) PersistentState() PersistentState {
+	party := make([]string, 0, len(s.party))
+	for name := range s.party {
+		party = append(party, name)
+	}
+	sortStrings(party)
+
+	items := make([]Item, 0, len(s.items))
+	for _, item := range s.items {
+		items = append(items, item)
+	}
+	sortItems(items)
+
+	return PersistentState{
+		RoomID: s.roomID,
+		Party:  party,
+		Items:  items,
+		Quest:  s.quest,
+	}
 }
 
 func (s *Session) Welcome() []Event {
@@ -384,6 +431,16 @@ func sortStrings(values []string) {
 	for i := 0; i < len(values); i++ {
 		for j := i + 1; j < len(values); j++ {
 			if values[j] < values[i] {
+				values[i], values[j] = values[j], values[i]
+			}
+		}
+	}
+}
+
+func sortItems(values []Item) {
+	for i := 0; i < len(values); i++ {
+		for j := i + 1; j < len(values); j++ {
+			if values[j].ID < values[i].ID {
 				values[i], values[j] = values[j], values[i]
 			}
 		}

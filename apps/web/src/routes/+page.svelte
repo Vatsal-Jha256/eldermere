@@ -26,7 +26,8 @@
   const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8080';
 
   onMount(() => {
-    socket = new WebSocket(toWebSocketURL(apiBase, '/ws'));
+    const playerID = getPlayerID();
+    socket = new WebSocket(toWebSocketURL(apiBase, '/ws', playerID));
 
     socket.addEventListener('open', () => {
       connected = true;
@@ -71,9 +72,20 @@
     }
   }
 
-  function toWebSocketURL(base: string, path: string) {
+  function getPlayerID() {
+    const key = 'eldermere.player_id';
+    const existing = localStorage.getItem(key);
+    if (existing) return existing;
+
+    const next = crypto.randomUUID();
+    localStorage.setItem(key, next);
+    return next;
+  }
+
+  function toWebSocketURL(base: string, path: string, playerID: string) {
     const url = new URL(path, base);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    url.searchParams.set('player_id', playerID);
     return url.toString();
   }
 </script>

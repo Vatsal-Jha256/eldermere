@@ -8,6 +8,7 @@ import (
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/config"
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/game"
+	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/storage"
 )
 
 type healthResponse struct {
@@ -17,7 +18,7 @@ type healthResponse struct {
 	Time   string `json:"time"`
 }
 
-func NewRouter(cfg config.Config, logger *slog.Logger) http.Handler {
+func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http.Handler {
 	mux := http.NewServeMux()
 	world := game.NewStarterWorld()
 
@@ -39,7 +40,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger) http.Handler {
 		})
 	})
 
-	mux.HandleFunc("GET /ws", handleWebSocket(logger, world))
+	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store))
 
 	return withRequestLogging(logger, withCORS(mux))
 }

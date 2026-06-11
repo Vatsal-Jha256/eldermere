@@ -5,9 +5,11 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/game"
+	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/storage"
 	"github.com/coder/websocket"
 )
 
@@ -15,8 +17,14 @@ type commandMessage struct {
 	Command string `json:"command"`
 }
 
-func handleWebSocket(logger *slog.Logger, world game.World) http.HandlerFunc {
+func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
+		playerID := strings.TrimSpace(r.URL.Query().Get("player_id"))
+		if playerID == "" {
+			http.Error(w, "player_id is required", http.StatusBadRequest)
+			return
+		}
+
 		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
 			InsecureSkipVerify: true,
 		})
@@ -27,6 +35,16 @@ func handleWebSocket(logger *slog.Logger, world game.World) http.HandlerFunc {
 		defer conn.Close(websocket.StatusNormalClosure, "session ended")
 
 		session := game.NewSession(world)
+		state, ok, err := store.LoadPlayerState(r.Context(), playerID)
+		if err != nil {
+			logger.Warn("load player state failed", "player_id", playerID, "error", err)
+			conn.Close(websocket.StatusInternalError, "failed to load state")
+			return
+		}
+		if ok {
+			session = game.NewSessionFromState(world, state)
+		}
+
 		if err := writeEvents(r.Context(), conn, session.Welcome()); err != nil {
 			logger.Warn("websocket welcome failed", "error", err)
 			return
@@ -41,7 +59,14 @@ func handleWebSocket(logger *slog.Logger, world game.World) http.HandlerFunc {
 
 			command := parseCommand(payload)
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
-			err = writeEvents(ctx, conn, session.Handle(command))
+			events := session.Handle(command)
+			if saveErr := store.SavePlayerState(ctx, playerID, session.PersistentState()); saveErr != nil {
+				cancel()
+				logger.Warn("save player state failed", "player_id", playerID, "error", saveErr)
+				conn.Close(websocket.StatusInternalError, "failed to save state")
+				return
+			}
+			err = writeEvents(ctx, conn, events)
 			cancel()
 			if err != nil {
 				logger.Warn("websocket write failed", "error", err)

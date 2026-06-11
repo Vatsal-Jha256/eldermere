@@ -1,4 +1,4 @@
-FROM golang:1.23-alpine AS build
+FROM golang:1.26-alpine AS build
 
 WORKDIR /src
 COPY go.mod ./
@@ -12,4 +12,3 @@ WORKDIR /app
 COPY --from=build /out/eldermere /app/eldermere
 EXPOSE 8080
 ENTRYPOINT ["/app/eldermere"]
-

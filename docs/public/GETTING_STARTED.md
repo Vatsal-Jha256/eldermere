@@ -22,12 +22,14 @@ Open:
 
 Postgres is exposed on `localhost:5433`. Inside Docker, services still use `db:5432`.
 
+The web client creates an anonymous player id in browser `localStorage` and sends it to `/ws`. The server persists room location, inventory, party, and quest state in PostgreSQL.
+
 ## Run Checks
 
 Backend checks through Docker:
 
 ```sh
-docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.23-alpine go test ./...
+docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.26-alpine go test ./...
 ```
 
 Frontend checks:
@@ -43,6 +45,7 @@ npm run check
 - `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
 - `apps/web`: SvelteKit browser client with a live WebSocket command console.
 - `apps/server/internal/game/content/starter/rooms.json`: starter room data loaded by the server.
+- `apps/server/internal/storage`: PostgreSQL and in-memory persistence implementations.
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.
@@ -68,3 +71,5 @@ The current vertical slice has a small Arthurian quest arc:
 3. Go `down` to Smuggler Vault.
 4. Use `take` to collect the Excalibur Fragment.
 5. Return to Lantern Yard and run `quest` again to complete the arc.
+
+Reconnect after picking up the fragment to verify persistence: the same browser should resume in the last room with the item still in inventory.

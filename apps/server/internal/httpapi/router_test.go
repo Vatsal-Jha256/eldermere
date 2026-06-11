@@ -8,10 +8,11 @@ import (
 	"testing"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/config"
+	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/storage"
 )
 
 func TestHealthz(t *testing.T) {
-	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default())
+	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default(), storage.NewMemoryStore())
 
 	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
 	res := httptest.NewRecorder()

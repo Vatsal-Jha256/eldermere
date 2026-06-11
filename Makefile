@@ -25,4 +25,3 @@ docker-down:
 
 docs-public:
 	npx docsify-cli serve docs/public
-

@@ -11,6 +11,7 @@ import (
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/config"
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/httpapi"
+	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/storage"
 )
 
 func main() {
@@ -19,9 +20,16 @@ func main() {
 		Level: cfg.LogLevel,
 	}))
 
+	store, err := storage.NewPostgresStore(context.Background(), cfg.DatabaseURL)
+	if err != nil {
+		logger.Error("database setup failed", "error", err)
+		os.Exit(1)
+	}
+	defer store.Close()
+
 	server := &http.Server{
 		Addr:              cfg.ServerAddr,
-		Handler:           httpapi.NewRouter(cfg, logger),
+		Handler:           httpapi.NewRouter(cfg, logger, store),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

@@ -12,13 +12,14 @@ Stage 0 scaffold is in place. The current repo has:
 - Go backend
 - SvelteKit frontend
 - WebSocket command loop with movement, speech, fight, recruit, and party commands
+- Anonymous persistent player state for room, inventory, party, and quest progress
 - Arthurian starter region
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is expanding the Arthurian starter region toward 5-8 rooms and one short quest arc.
+The next implementation target is account/session auth on top of the current anonymous persistence.
 
 ## Run Locally
 
@@ -35,6 +36,8 @@ Then open:
 - WebSocket command endpoint: `ws://localhost:8080/ws`
 
 Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres installs on `5432`.
+
+The browser stores an anonymous `eldermere.player_id` in `localStorage` and passes it to the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects.
 
 ## Checks
 

@@ -134,3 +134,25 @@ func TestQuestCanStartCollectItemAndComplete(t *testing.T) {
 		t.Fatalf("expected completed quest, got event %#v state %#v", events[0], session.quest)
 	}
 }
+
+func TestSessionCanResumePersistentState(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+	session.Handle("quest")
+	session.Handle("go east")
+	session.Handle("go down")
+	session.Handle("take")
+
+	resumed := NewSessionFromState(NewStarterWorld(), session.PersistentState())
+	events := resumed.Handle("inventory")
+	if len(events) != 1 {
+		t.Fatalf("expected inventory event, got %#v", events)
+	}
+	if events[0].Text != "Inventory: Excalibur Fragment." {
+		t.Fatalf("expected restored inventory, got %q", events[0].Text)
+	}
+
+	events = resumed.Handle("look")
+	if events[0].Room == nil || events[0].Room.ID != "smuggler-vault" {
+		t.Fatalf("expected resumed room smuggler-vault, got %#v", events)
+	}
+}
