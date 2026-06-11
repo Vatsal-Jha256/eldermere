@@ -1,0 +1,29 @@
+{
+  "rooms": [
+    {
+      "id": "lantern-yard",
+      "name": "Lantern Yard",
+      "description": "The rain over Camelot tastes faintly of iron. Squires trade rumors beside a shrine of old river-stone.",
+      "exits": {
+        "north": "old-bridge",
+        "east": "market-under"
+      }
+    },
+    {
+      "id": "old-bridge",
+      "name": "Old Bridge",
+      "description": "A bridge older than the crown leans over black water. Someone has scratched a Greek oath into one stone.",
+      "exits": {
+        "south": "lantern-yard"
+      }
+    },
+    {
+      "id": "market-under",
+      "name": "Market Under",
+      "description": "Below the respectable stalls, charm-sellers auction debts, curses, and maps that disagree with themselves.",
+      "exits": {
+        "west": "lantern-yard"
+      }
+    }
+  ]
+}

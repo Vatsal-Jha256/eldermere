@@ -42,6 +42,7 @@ npm run check
 
 - `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
 - `apps/web`: SvelteKit browser client with a live WebSocket command console.
+- `apps/server/internal/game/content/starter/rooms.json`: starter room data loaded by the server.
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.

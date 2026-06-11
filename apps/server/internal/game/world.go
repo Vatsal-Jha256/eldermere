@@ -1,15 +1,22 @@
 package game
 
 import (
+	"embed"
+	"encoding/json"
+	"errors"
 	"fmt"
+	"io/fs"
 	"strings"
 )
 
+//go:embed content/starter/rooms.json
+var starterContent embed.FS
+
 type Room struct {
-	ID          string
-	Name        string
-	Description string
-	Exits       map[string]string
+	ID          string            `json:"id"`
+	Name        string            `json:"name"`
+	Description string            `json:"description"`
+	Exits       map[string]string `json:"exits"`
 }
 
 type World struct {
@@ -35,35 +42,66 @@ type View struct {
 }
 
 func NewStarterWorld() World {
-	return World{
-		rooms: map[string]Room{
-			"lantern-yard": {
-				ID:          "lantern-yard",
-				Name:        "Lantern Yard",
-				Description: "The rain over Camelot tastes faintly of iron. Squires trade rumors beside a shrine of old river-stone.",
-				Exits: map[string]string{
-					"north": "old-bridge",
-					"east":  "market-under",
-				},
-			},
-			"old-bridge": {
-				ID:          "old-bridge",
-				Name:        "Old Bridge",
-				Description: "A bridge older than the crown leans over black water. Someone has scratched a Greek oath into one stone.",
-				Exits: map[string]string{
-					"south": "lantern-yard",
-				},
-			},
-			"market-under": {
-				ID:          "market-under",
-				Name:        "Market Under",
-				Description: "Below the respectable stalls, charm-sellers auction debts, curses, and maps that disagree with themselves.",
-				Exits: map[string]string{
-					"west": "lantern-yard",
-				},
-			},
-		},
+	world, err := LoadWorld(starterContent, "content/starter/rooms.json")
+	if err != nil {
+		panic(fmt.Sprintf("load starter world: %v", err))
 	}
+	return world
+}
+
+func LoadWorld(files fs.FS, path string) (World, error) {
+	payload, err := fs.ReadFile(files, path)
+	if err != nil {
+		return World{}, err
+	}
+
+	var document struct {
+		Rooms []Room `json:"rooms"`
+	}
+	if err := json.Unmarshal(payload, &document); err != nil {
+		return World{}, err
+	}
+
+	return NewWorld(document.Rooms)
+}
+
+func NewWorld(rooms []Room) (World, error) {
+	if len(rooms) == 0 {
+		return World{}, errors.New("world must include at least one room")
+	}
+
+	byID := make(map[string]Room, len(rooms))
+	for _, room := range rooms {
+		if strings.TrimSpace(room.ID) == "" {
+			return World{}, errors.New("room id is required")
+		}
+		if strings.TrimSpace(room.Name) == "" {
+			return World{}, fmt.Errorf("room %q name is required", room.ID)
+		}
+		if strings.TrimSpace(room.Description) == "" {
+			return World{}, fmt.Errorf("room %q description is required", room.ID)
+		}
+		if _, exists := byID[room.ID]; exists {
+			return World{}, fmt.Errorf("duplicate room id %q", room.ID)
+		}
+		if room.Exits == nil {
+			room.Exits = map[string]string{}
+		}
+		byID[room.ID] = room
+	}
+
+	for _, room := range byID {
+		for direction, targetID := range room.Exits {
+			if strings.TrimSpace(direction) == "" {
+				return World{}, fmt.Errorf("room %q has empty exit direction", room.ID)
+			}
+			if _, ok := byID[targetID]; !ok {
+				return World{}, fmt.Errorf("room %q exit %q points to unknown room %q", room.ID, direction, targetID)
+			}
+		}
+	}
+
+	return World{rooms: byID}, nil
 }
 
 func NewSession(world World) Session {

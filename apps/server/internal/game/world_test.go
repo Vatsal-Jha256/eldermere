@@ -1,6 +1,9 @@
 package game
 
-import "testing"
+import (
+	"testing"
+	"testing/fstest"
+)
 
 func TestSessionLookAndMove(t *testing.T) {
 	session := NewSession(NewStarterWorld())
@@ -31,5 +34,40 @@ func TestSessionUnknownCommand(t *testing.T) {
 	}
 	if events[0].Type != "error" {
 		t.Fatalf("expected error event, got %q", events[0].Type)
+	}
+}
+
+func TestLoadWorldValidatesExitTargets(t *testing.T) {
+	files := fstest.MapFS{
+		"rooms.json": {
+			Data: []byte(`{
+				"rooms": [
+					{
+						"id": "start",
+						"name": "Start",
+						"description": "A valid room.",
+						"exits": { "north": "missing" }
+					}
+				]
+			}`),
+		},
+	}
+
+	_, err := LoadWorld(files, "rooms.json")
+	if err == nil {
+		t.Fatal("expected invalid exit target to fail")
+	}
+}
+
+func TestLoadWorldFromContentFile(t *testing.T) {
+	world := NewStarterWorld()
+	session := NewSession(world)
+
+	events := session.Handle("go east")
+	if len(events) != 2 {
+		t.Fatalf("expected move and room events, got %#v", events)
+	}
+	if events[1].Room == nil || events[1].Room.ID != "market-under" {
+		t.Fatalf("expected market-under room, got %#v", events)
 	}
 }

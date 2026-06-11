@@ -145,7 +145,7 @@ Stage 5: expanded legend universe:
 2. Go server skeleton with health route, config, logging, and test setup.
 3. SvelteKit client skeleton with playable first screen layout.
 4. WebSocket command loop with `look`, `go`, and `say`.
-5. Room/content model loaded from data files.
+5. Room/content model loaded from data files. Initial starter room loading is in place; the next version should make this mod-pack friendly.
 6. Arthurian starter region with 5-8 rooms and one short quest.
 7. Dice engine, encounter engine, and one recruitable companion/relic/ally.
 8. Persistence for accounts, characters, inventory, location, and quest state.
