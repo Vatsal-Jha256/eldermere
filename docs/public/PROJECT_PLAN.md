@@ -98,8 +98,8 @@ This project should not fork, clone, or copy either reference. The implementatio
 4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack.
 5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises. Initial map-gated route, faction reputation effects, party encounter bonuses, and quest-start variants are in place.
 6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes. Initial content-pack manifests, cross-pack interaction hooks, and a Greek Crossing example pack are in place.
-7. Stage 6: Arthurian lore foundation. Collect, download, cite, and summarize public-domain Arthurian source material before expanding the Arthurian story. The game can add original content, but Arthurian main story and side arcs should first cover the major original lore beats, characters, relics, places, conflicts, and variations.
-8. Stage 7: story expansion. Use the Arthurian lore foundation to flesh out original main-story arcs, side quests, factions, companions, relics, and procedural variants while keeping modern adaptation material out of the source base.
+7. Stage 6: Arthurian lore foundation. Collect, download, cite, and summarize public-domain Arthurian source material before expanding the Arthurian story. The game can add original content, but Arthurian main story and side arcs should first cover the major original lore beats, characters, relics, places, conflicts, and variations. Initial source corpus, citations, lore index, and story seed files are in place.
+8. Stage 7: story expansion. Use the Arthurian lore foundation to flesh out original main-story arcs, side quests, factions, companions, relics, and procedural variants while keeping modern adaptation material out of the source base. Initial story seeds are in place; full main/side arc content remains.
 9. Stage 8: dynamic atmospheric background generator. Add a system that generates or selects room backgrounds from structured room metadata so the browser MUD feels atmospheric while staying text-first and art-light.
 
 ## Original Stage Details To Preserve
@@ -175,8 +175,8 @@ Stage 8: dynamic atmospheric background generator:
 8. Persistence for accounts, characters, inventory, location, and quest state. Session-token player records now persist character location, inventory, party, and quest state.
 9. Public modding guide and content-pack validation. Initial room-pack validator, modding guide, and example "Camelot Underbelly" content pack are in place.
 10. Private learning docs explaining each major system and checkpoint.
-11. After Stages 0-5 are complete, add Arthurian lore collection/download/indexing as a formal source base.
-12. After the lore source base exists, expand main story and side arcs from that source base.
+11. After Stages 0-5 are complete, add Arthurian lore collection/download/indexing as a formal source base. Initial corpus and indexes are in `lore/arthurian`.
+12. After the lore source base exists, expand main story and side arcs from that source base. Initial story seed notes are in place; implementation remains.
 13. Add dynamic atmospheric background generation/selection for rooms and modded content.
 
 ## Open Source And Modding
