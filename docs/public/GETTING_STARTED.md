@@ -63,6 +63,8 @@ npm run check
 - `party`: list recruited companions.
 - `say hello`: send a local speech event.
 
+Players in the same room receive presence, `say`, fight, and recruit events. New arrivals receive the recent room event log.
+
 ## Starter Quest Path
 
 The current vertical slice has a small Arthurian quest arc:

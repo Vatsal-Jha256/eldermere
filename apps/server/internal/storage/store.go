@@ -14,6 +14,7 @@ import (
 type Store interface {
 	CreatePlayerSession(ctx context.Context, displayName string) (PlayerSession, error)
 	VerifyPlayerSession(ctx context.Context, playerID string, token string) (bool, error)
+	PlayerDisplayName(ctx context.Context, playerID string) (string, bool, error)
 	LoadPlayerState(ctx context.Context, playerID string) (game.PersistentState, bool, error)
 	SavePlayerState(ctx context.Context, playerID string, state game.PersistentState) error
 	Close()
@@ -68,6 +69,17 @@ func (s *MemoryStore) VerifyPlayerSession(_ context.Context, playerID string, to
 		return false, nil
 	}
 	return session.TokenHash == hashToken(token), nil
+}
+
+func (s *MemoryStore) PlayerDisplayName(_ context.Context, playerID string) (string, bool, error) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+
+	session, ok := s.sessions[playerID]
+	if !ok {
+		return "", false, nil
+	}
+	return session.DisplayName, true, nil
 }
 
 func (s *MemoryStore) LoadPlayerState(_ context.Context, playerID string) (game.PersistentState, bool, error) {

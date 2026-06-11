@@ -91,6 +91,23 @@ func (s *PostgresStore) VerifyPlayerSession(ctx context.Context, playerID string
 	return tokenHash == hashToken(token), nil
 }
 
+func (s *PostgresStore) PlayerDisplayName(ctx context.Context, playerID string) (string, bool, error) {
+	var displayName string
+	err := s.pool.QueryRow(ctx, `
+		select display_name
+		from player_accounts
+		where player_id = $1
+	`, playerID).Scan(&displayName)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+
+	return displayName, true, nil
+}
+
 func (s *PostgresStore) LoadPlayerState(ctx context.Context, playerID string) (game.PersistentState, bool, error) {
 	var state game.PersistentState
 	var partyJSON []byte

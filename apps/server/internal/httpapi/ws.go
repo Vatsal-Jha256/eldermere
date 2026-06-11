@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"strings"
@@ -17,7 +18,7 @@ type commandMessage struct {
 	Command string `json:"command"`
 }
 
-func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store) http.HandlerFunc {
+func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store, hub *roomHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		playerID := strings.TrimSpace(r.URL.Query().Get("player_id"))
 		token := strings.TrimSpace(r.URL.Query().Get("token"))
@@ -37,6 +38,16 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store)
 			return
 		}
 		if !verified {
+			http.Error(w, "invalid session", http.StatusUnauthorized)
+			return
+		}
+		displayName, ok, err := store.PlayerDisplayName(r.Context(), playerID)
+		if err != nil {
+			logger.Warn("load player display name failed", "player_id", playerID, "error", err)
+			http.Error(w, "failed to load session", http.StatusInternalServerError)
+			return
+		}
+		if !ok {
 			http.Error(w, "invalid session", http.StatusUnauthorized)
 			return
 		}
@@ -60,9 +71,20 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store)
 		if ok {
 			session = game.NewSessionFromState(world, state)
 		}
+		client := &clientConn{
+			playerID:    playerID,
+			displayName: displayName,
+			conn:        conn,
+		}
+		hub.join(r.Context(), client, session.RoomID())
+		defer hub.leave(context.Background(), client)
 
 		if err := writeEvents(r.Context(), conn, session.Welcome()); err != nil {
 			logger.Warn("websocket welcome failed", "error", err)
+			return
+		}
+		if err := writeEvents(r.Context(), conn, hub.recent(session.RoomID())); err != nil {
+			logger.Warn("websocket recent log failed", "error", err)
 			return
 		}
 
@@ -74,6 +96,7 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store)
 			}
 
 			command := parseCommand(payload)
+			beforeRoomID := session.RoomID()
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 			events := session.Handle(command)
 			if saveErr := store.SavePlayerState(ctx, playerID, session.PersistentState()); saveErr != nil {
@@ -82,6 +105,11 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store)
 				conn.Close(websocket.StatusInternalError, "failed to save state")
 				return
 			}
+			if beforeRoomID != session.RoomID() {
+				hub.leave(ctx, client)
+				hub.join(ctx, client, session.RoomID())
+			}
+			broadcastRoomEvents(ctx, hub, client, session.RoomID(), displayName, events)
 			err = writeEvents(ctx, conn, events)
 			cancel()
 			if err != nil {
@@ -90,6 +118,28 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store)
 			}
 		}
 	}
+}
+
+func broadcastRoomEvents(ctx context.Context, hub *roomHub, client *clientConn, roomID string, displayName string, events []game.Event) {
+	for _, event := range events {
+		switch event.Type {
+		case "say":
+			hub.broadcast(ctx, roomID, game.Event{
+				Type: "say",
+				Text: fmt.Sprintf("%s says: %s", displayName, quotedSpeech(event.Text)),
+			}, client)
+		case "fight", "party":
+			hub.broadcast(ctx, roomID, game.Event{
+				Type: "room_event",
+				Text: fmt.Sprintf("%s: %s", displayName, event.Text),
+			}, client)
+		}
+	}
+}
+
+func quotedSpeech(text string) string {
+	text = strings.TrimPrefix(text, "You say, ")
+	return strings.Trim(text, `"`)
 }
 
 func parseCommand(payload []byte) string {

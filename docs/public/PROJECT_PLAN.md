@@ -94,7 +94,7 @@ This project should not fork, clone, or copy either reference. The implementatio
 
 1. Stage 0: scaffold repo with Go API/server, SvelteKit client, Docker Compose, PostgreSQL, public Docsify docs, and private local Docsify notes.
 2. Stage 1: single-player playable core loop with character creation, rooms, movement, room backgrounds/text, one recruitable companion/relic/ally, one probabilistic battle, and one short Arthurian quest arc.
-3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log. Session-token auth and WebSocket command stream are in place; room presence, local chat, and shared event log remain.
+3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log. Session-token auth, WebSocket command stream, room presence, local chat, and in-memory recent room event logs are in place.
 4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack.
 5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises.
 6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes.

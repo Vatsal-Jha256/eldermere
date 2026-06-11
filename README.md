@@ -13,13 +13,14 @@ Stage 0 scaffold is in place. The current repo has:
 - SvelteKit frontend
 - WebSocket command loop with movement, speech, fight, recruit, and party commands
 - Session-authenticated persistent player state for room, inventory, party, and quest progress
+- Room presence, local chat, and recent room event log
 - Arthurian starter region
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is room presence, local chat, and shared event log.
+The next implementation target is public modding guide and content-pack validation.
 
 ## Run Locally
 

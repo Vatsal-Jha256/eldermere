@@ -21,6 +21,7 @@ type healthResponse struct {
 func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http.Handler {
 	mux := http.NewServeMux()
 	world := game.NewStarterWorld()
+	hub := newRoomHub()
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
 		writeJSON(w, http.StatusOK, healthResponse{
@@ -41,7 +42,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http
 	})
 
 	mux.HandleFunc("POST /api/v1/sessions", handleCreateSession(logger, store))
-	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store))
+	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store, hub))
 
 	return withRequestLogging(logger, withCORS(mux))
 }

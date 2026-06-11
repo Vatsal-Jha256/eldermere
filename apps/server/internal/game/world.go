@@ -209,6 +209,10 @@ func (s *Session) PersistentState() PersistentState {
 	}
 }
 
+func (s *Session) RoomID() string {
+	return s.roomID
+}
+
 func (s *Session) Welcome() []Event {
 	return []Event{
 		{Type: "system", Text: "Connected to Eldermere."},
