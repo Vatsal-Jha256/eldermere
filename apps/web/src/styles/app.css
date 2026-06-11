@@ -43,8 +43,10 @@ input {
   position: absolute;
   inset: 0;
   background:
+    radial-gradient(circle at var(--glow-x, 22%) var(--glow-y, 18%), color-mix(in srgb, var(--bg-c, #e2b65f) 58%, transparent), transparent 20rem),
+    repeating-linear-gradient(var(--mist-angle, 35deg), rgba(255, 255, 255, 0.055) 0 1px, transparent 1px 18px),
     linear-gradient(to top, rgba(10, 13, 11, 0.94), rgba(10, 13, 11, 0.24) 52%, rgba(10, 13, 11, 0.78)),
-    url("https://images.unsplash.com/photo-1518709268805-4e9042af2176?auto=format&fit=crop&w=1800&q=80");
+    linear-gradient(135deg, var(--bg-a, #101511), var(--bg-b, #314439) 58%, var(--bg-c, #e2b65f));
   background-position: center;
   background-size: cover;
   filter: saturate(0.9) contrast(1.08);
@@ -80,6 +82,15 @@ h1 {
   color: #efe1bd;
   font-size: clamp(1.1rem, 2.4vw, 1.55rem);
   line-height: 1.45;
+}
+
+.atmosphere {
+  max-width: 42rem;
+  margin: 1rem 0 0;
+  color: #d8c69d;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.5;
 }
 
 .console {

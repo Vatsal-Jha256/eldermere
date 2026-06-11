@@ -4,6 +4,12 @@
       "id": "coin-arch",
       "name": "Coin Arch",
       "description": "A low arch under Camelot where debt marks are scratched beside saints' names.",
+      "atmosphere": {
+        "palette": "coin-shadow",
+        "weather": "damp stone",
+        "myth_layer": "arthurian undercity",
+        "motifs": ["coin marks", "saint names", "low arch"]
+      },
       "exits": {
         "east": "candle-court"
       },
@@ -18,6 +24,12 @@
       "id": "candle-court",
       "name": "Candle Court",
       "description": "Every candle here was bought with a secret. The flames lean toward anyone carrying royal steel.",
+      "atmosphere": {
+        "palette": "candle-smoke",
+        "weather": "warm wax air",
+        "myth_layer": "secret court",
+        "motifs": ["candles", "royal steel", "whispered bargains"]
+      },
       "exits": {
         "west": "coin-arch"
       },
@@ -30,4 +42,3 @@
     }
   ]
 }
-

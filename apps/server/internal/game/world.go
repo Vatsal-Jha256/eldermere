@@ -24,6 +24,7 @@ type Room struct {
 	Recruitable *Recruitable         `json:"recruitable,omitempty"`
 	Item        *Item                `json:"item,omitempty"`
 	Quest       *QuestMarker         `json:"quest,omitempty"`
+	Atmosphere  Atmosphere           `json:"atmosphere,omitempty"`
 }
 
 type Encounter struct {
@@ -58,6 +59,13 @@ type GatedExit struct {
 	Target       string `json:"target"`
 	RequiresItem string `json:"requires_item"`
 	LockedText   string `json:"locked_text"`
+}
+
+type Atmosphere struct {
+	Palette   string   `json:"palette,omitempty"`
+	Weather   string   `json:"weather,omitempty"`
+	MythLayer string   `json:"myth_layer,omitempty"`
+	Motifs    []string `json:"motifs,omitempty"`
 }
 
 type World struct {
@@ -99,6 +107,7 @@ type View struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Exits       map[string]string `json:"exits"`
+	Atmosphere  Atmosphere        `json:"atmosphere"`
 }
 
 func NewStarterWorld() World {
@@ -342,6 +351,7 @@ func (s *Session) look() Event {
 			Name:        room.Name,
 			Description: room.Description,
 			Exits:       s.visibleExits(room),
+			Atmosphere:  room.Atmosphere,
 		},
 	}
 }

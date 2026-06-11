@@ -4,6 +4,12 @@
       "id": "oracle-jetty",
       "name": "Oracle Jetty",
       "description": "A narrow jetty under a foreign moon. The water below reflects Camelot's rain instead of Greek stars.",
+      "atmosphere": {
+        "palette": "oracle-blue",
+        "weather": "foreign moonlight",
+        "myth_layer": "greek crossing",
+        "motifs": ["jetty", "camelot rain", "oracle water"]
+      },
       "exits": {
         "east": "ferry-shrine"
       },
@@ -22,6 +28,12 @@
       "id": "ferry-shrine",
       "name": "Ferry Shrine",
       "description": "Bronze offerings crowd a shrine whose oldest inscription has started spelling Avalon.",
+      "atmosphere": {
+        "palette": "bronze-ash",
+        "weather": "underworld hush",
+        "myth_layer": "greek underworld",
+        "motifs": ["bronze offerings", "ferry shrine", "avalon inscription"]
+      },
       "exits": {
         "west": "oracle-jetty"
       },
@@ -34,4 +46,3 @@
     }
   ]
 }
-

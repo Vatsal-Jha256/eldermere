@@ -58,6 +58,12 @@ And a `rooms.json`:
       "id": "coin-arch",
       "name": "Coin Arch",
       "description": "A low arch under Camelot...",
+      "atmosphere": {
+        "palette": "rain-gold",
+        "weather": "iron rain",
+        "myth_layer": "arthurian court",
+        "motifs": ["lanterns", "river-stone", "wet banners"]
+      },
       "exits": {
         "east": "candle-court"
       },
@@ -89,6 +95,19 @@ And a `rooms.json`:
 - Public-domain Arthurian names and motifs are allowed.
 - Do not copy dialogue, scenes, character designs, or newly invented details from modern adaptations.
 - Prefer hooks that can connect to other legend packs later: faction tags, strange relics, rumors, debts, curses, roads, dreams, and messengers.
+
+## Atmospheric Backgrounds
+
+Rooms can include `atmosphere` metadata. The web client uses this to generate a lightweight atmospheric background, so mods can feel visually distinct without shipping art assets.
+
+Fields:
+
+- `palette`: a named color palette. Existing examples include `rain-gold`, `blackwater`, `candle-smoke`, `tavern-red`, `avalon-green`, `relic-vault`, `coin-shadow`, `oracle-blue`, and `bronze-ash`.
+- `weather`: short sensory weather or air description.
+- `myth_layer`: the room's mythic context, such as `arthurian court`, `under-market`, or `greek underworld`.
+- `motifs`: inspectable visual motifs that should influence future generated art prompts.
+
+The current implementation generates CSS backgrounds. A later renderer can use the same fields as prompts for generated bitmap backgrounds.
 
 ## Current Example
 

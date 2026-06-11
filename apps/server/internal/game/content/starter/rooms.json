@@ -4,6 +4,12 @@
       "id": "lantern-yard",
       "name": "Lantern Yard",
       "description": "The rain over Camelot tastes faintly of iron. Squires trade rumors beside a shrine of old river-stone.",
+      "atmosphere": {
+        "palette": "rain-gold",
+        "weather": "iron rain",
+        "myth_layer": "arthurian court",
+        "motifs": ["lanterns", "river-stone", "wet banners"]
+      },
       "exits": {
         "north": "old-bridge",
         "east": "market-under",
@@ -31,6 +37,12 @@
       "id": "old-bridge",
       "name": "Old Bridge",
       "description": "A bridge older than the crown leans over black water. Someone has scratched a Greek oath into one stone.",
+      "atmosphere": {
+        "palette": "blackwater",
+        "weather": "cold drizzle",
+        "myth_layer": "cross-myth omen",
+        "motifs": ["old bridge", "black water", "greek oath"]
+      },
       "exits": {
         "south": "lantern-yard",
         "east": "river-stairs"
@@ -50,6 +62,12 @@
       "id": "market-under",
       "name": "Market Under",
       "description": "Below the respectable stalls, charm-sellers auction debts, curses, and maps that disagree with themselves.",
+      "atmosphere": {
+        "palette": "candle-smoke",
+        "weather": "underground warmth",
+        "myth_layer": "under-market",
+        "motifs": ["charms", "debt ledgers", "false maps"]
+      },
       "exits": {
         "west": "lantern-yard",
         "down": "smuggler-vault"
@@ -65,6 +83,12 @@
       "id": "tavern-backroom",
       "name": "Tavern Backroom",
       "description": "Behind the tavern ledger, a card game has become a faction summit. Nobody admits they serve Camelot.",
+      "atmosphere": {
+        "palette": "tavern-red",
+        "weather": "stale hearth heat",
+        "myth_layer": "faction politics",
+        "motifs": ["cards", "ledgers", "sealed cups"]
+      },
       "exits": {
         "east": "lantern-yard",
         "north": "river-stairs"
@@ -79,6 +103,12 @@
       "id": "river-stairs",
       "name": "River Stairs",
       "description": "Wet stairs descend toward Avalon-black water. Chalk marks show a route used by smugglers and saints.",
+      "atmosphere": {
+        "palette": "avalon-green",
+        "weather": "river mist",
+        "myth_layer": "otherworld threshold",
+        "motifs": ["chalk marks", "river stairs", "saint routes"]
+      },
       "exits": {
         "west": "old-bridge",
         "south": "tavern-backroom",
@@ -99,6 +129,12 @@
       "id": "smuggler-vault",
       "name": "Smuggler Vault",
       "description": "A cellar of stolen blessings. Greek bronze, Celtic knots, and Arthurian steel hum like they have been arguing for centuries.",
+      "atmosphere": {
+        "palette": "relic-vault",
+        "weather": "still underground air",
+        "myth_layer": "connected legends",
+        "motifs": ["greek bronze", "celtic knots", "arthurian steel"]
+      },
       "exits": {
         "west": "river-stairs",
         "up": "market-under"

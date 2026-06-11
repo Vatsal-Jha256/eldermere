@@ -51,6 +51,8 @@ npm run check
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.
 
+Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs.
+
 ## Starter Commands
 
 - `quest`: start or check the starter quest.
