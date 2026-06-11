@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+vendor/
+
+# Build outputs
+dist/
+build/
+.svelte-kit/
+bin/
+tmp/
+
+# Environment and local config
+.env
+.env.*
+!.env.example
+
+# Databases and generated runtime state
+*.db
+*.sqlite
+*.sqlite3
+data/
+
+# Logs
+*.log
+logs/
+
+# Private local learning notes
+private-docs/
+
