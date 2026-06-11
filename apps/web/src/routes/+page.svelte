@@ -1,39 +1,80 @@
 <script lang="ts">
-  const commands = ['look', 'go north', 'talk merlin', 'recruit', 'quest'];
+  import { onMount } from 'svelte';
+
+  type RoomView = {
+    id: string;
+    name: string;
+    description: string;
+    exits: Record<string, string>;
+  };
+
+  type ServerEvent = {
+    type: string;
+    text: string;
+    room?: RoomView;
+  };
+
+  const commands = ['look', 'go north', 'go east', 'exits', 'say hail'];
 
   let command = $state('');
+  let connected = $state(false);
+  let room = $state<RoomView | null>(null);
   let log = $state([
-    'The rain over Camelot tastes faintly of iron.',
-    'A cracked milestone points toward Avalon, Londinium, and somewhere the map refuses to name.',
-    'Type a command to begin.'
+    'Opening a path to the Eldermere server...'
   ]);
+  let socket: WebSocket | null = null;
+  const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8080';
+
+  onMount(() => {
+    socket = new WebSocket(toWebSocketURL(apiBase, '/ws'));
+
+    socket.addEventListener('open', () => {
+      connected = true;
+    });
+
+    socket.addEventListener('message', (event) => {
+      const parsed = parseServerEvent(event.data);
+      if (parsed.room) {
+        room = parsed.room;
+      }
+      log = [...log, parsed.text];
+    });
+
+    socket.addEventListener('close', () => {
+      connected = false;
+      log = [...log, 'Disconnected from the server.'];
+    });
+
+    socket.addEventListener('error', () => {
+      log = [...log, 'Connection error. Is the Go server running on port 8080?'];
+    });
+
+    return () => {
+      socket?.close();
+    };
+  });
 
   function submitCommand() {
     const trimmed = command.trim();
     if (!trimmed) return;
 
-    log = [...log, `> ${trimmed}`, commandResponse(trimmed)];
+    log = [...log, `> ${trimmed}`];
+    socket?.send(JSON.stringify({ command: trimmed }));
     command = '';
   }
 
-  function commandResponse(input: string) {
-    const lower = input.toLowerCase();
-    if (lower === 'look') {
-      return 'You stand in the Lantern Yard, where squires trade rumors beside a shrine of old river-stone.';
+  function parseServerEvent(data: string): ServerEvent {
+    try {
+      return JSON.parse(data) as ServerEvent;
+    } catch {
+      return { type: 'system', text: data };
     }
-    if (lower.startsWith('go')) {
-      return 'The route is marked, but the server command loop will decide where it leads next.';
-    }
-    if (lower.startsWith('talk')) {
-      return 'A hooded advisor smiles like he already knows which dice you will roll.';
-    }
-    if (lower === 'recruit') {
-      return 'A half-wild oath spirit watches you. It may join you if the odds bend kindly.';
-    }
-    if (lower === 'quest') {
-      return 'Quest seed: recover a stolen Excalibur fragment before it is sold beneath the old bridge.';
-    }
-    return 'The world listens. This command will become real once the backend parser lands.';
+  }
+
+  function toWebSocketURL(base: string, path: string) {
+    const url = new URL(path, base);
+    url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
+    return url.toString();
   }
 </script>
 
@@ -49,16 +90,20 @@
   <section class="room" aria-label="Current room">
     <div class="room__background"></div>
     <div class="room__content">
-      <p class="eyebrow">Lantern Yard / Camelot Underbelly</p>
+      <p class="eyebrow">{room?.name ?? 'Connecting'} / Camelot Underbelly</p>
       <h1>Eldermere</h1>
       <p class="lede">
-        A browser MUD for connected legends. Start in Arthur's Britain, recruit strange allies,
-        and follow rumors that should not know each other yet.
+        {room?.description ??
+          "A browser MUD for connected legends. Start in Arthur's Britain, recruit strange allies, and follow rumors that should not know each other yet."}
       </p>
     </div>
   </section>
 
   <section class="console" aria-label="Command console">
+    <div class:online={connected} class="status">
+      {connected ? 'Connected' : 'Disconnected'}
+    </div>
+
     <div class="console__log" aria-live="polite">
       {#each log as line}
         <p>{line}</p>
@@ -73,8 +118,9 @@
         autocomplete="off"
         spellcheck="false"
         placeholder="try: look"
+        disabled={!connected}
       />
-      <button type="submit">Send</button>
+      <button type="submit" disabled={!connected}>Send</button>
     </form>
 
     <div class="chips" aria-label="Example commands">
@@ -84,4 +130,3 @@
     </div>
   </section>
 </main>
-

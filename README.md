@@ -18,7 +18,7 @@ Stage 0 scaffold is in place. The current repo has:
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is the command loop: `look`, `go`, and `say`.
+The next implementation target is loading rooms from content files instead of hardcoded starter rooms.
 
 ## Run Locally
 
@@ -32,6 +32,7 @@ Then open:
 
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
+- WebSocket command endpoint: `ws://localhost:8080/ws`
 
 Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres installs on `5432`.
 

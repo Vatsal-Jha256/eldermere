@@ -18,6 +18,7 @@ Open:
 
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
+- WebSocket command endpoint: `ws://localhost:8080/ws`
 
 Postgres is exposed on `localhost:5433`. Inside Docker, services still use `db:5432`.
 
@@ -39,9 +40,8 @@ npm run check
 
 ## Current Scaffold
 
-- `apps/server`: Go API server with `/healthz` and `/api/v1/status`.
-- `apps/web`: SvelteKit browser client with a playable mock command console.
+- `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
+- `apps/web`: SvelteKit browser client with a live WebSocket command console.
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.
-
