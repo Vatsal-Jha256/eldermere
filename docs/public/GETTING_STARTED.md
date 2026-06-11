@@ -19,10 +19,11 @@ Open:
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
 - WebSocket command endpoint: `ws://localhost:8080/ws`
+- Session endpoint: `POST http://localhost:8080/api/v1/sessions`
 
 Postgres is exposed on `localhost:5433`. Inside Docker, services still use `db:5432`.
 
-The web client creates an anonymous player id in browser `localStorage` and sends it to `/ws`. The server persists room location, inventory, party, and quest state in PostgreSQL.
+The web client creates a session through `POST /api/v1/sessions`, stores it in browser `localStorage`, and sends the player id plus token to `/ws`. The server persists room location, inventory, party, and quest state in PostgreSQL.
 
 ## Run Checks
 
@@ -72,4 +73,4 @@ The current vertical slice has a small Arthurian quest arc:
 4. Use `take` to collect the Excalibur Fragment.
 5. Return to Lantern Yard and run `quest` again to complete the arc.
 
-Reconnect after picking up the fragment to verify persistence: the same browser should resume in the last room with the item still in inventory.
+Reconnect after picking up the fragment to verify persistence: the same browser should resume in the last room with the item still in inventory. Clearing `localStorage` starts a new session.

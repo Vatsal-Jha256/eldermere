@@ -94,7 +94,7 @@ This project should not fork, clone, or copy either reference. The implementatio
 
 1. Stage 0: scaffold repo with Go API/server, SvelteKit client, Docker Compose, PostgreSQL, public Docsify docs, and private local Docsify notes.
 2. Stage 1: single-player playable core loop with character creation, rooms, movement, room backgrounds/text, one recruitable companion/relic/ally, one probabilistic battle, and one short Arthurian quest arc.
-3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log.
+3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log. Session-token auth and WebSocket command stream are in place; room presence, local chat, and shared event log remain.
 4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack.
 5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises.
 6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes.
@@ -148,7 +148,7 @@ Stage 5: expanded legend universe:
 5. Room/content model loaded from data files. Initial starter room loading is in place; the next version should make this mod-pack friendly.
 6. Arthurian starter region with 5-8 rooms and one short quest. Initial 6-room "stolen Excalibur fragment" arc is in place.
 7. Dice engine, encounter engine, and one recruitable companion/relic/ally. Initial `fight`, `recruit`, and `party` commands are in place for the starter rooms.
-8. Persistence for accounts, characters, inventory, location, and quest state. Anonymous player persistence is in place for character location, inventory, party, and quest state; account/session auth remains next.
+8. Persistence for accounts, characters, inventory, location, and quest state. Session-token player records now persist character location, inventory, party, and quest state.
 9. Public modding guide and content-pack validation.
 10. Private learning docs explaining each major system and checkpoint.
 

@@ -30,8 +30,16 @@ func NewPostgresStore(ctx context.Context, databaseURL string) (*PostgresStore, 
 
 func (s *PostgresStore) Migrate(ctx context.Context) error {
 	_, err := s.pool.Exec(ctx, `
-		create table if not exists player_states (
+		create table if not exists player_accounts (
 			player_id text primary key,
+			display_name text not null,
+			token_hash text not null,
+			created_at timestamptz not null default now(),
+			updated_at timestamptz not null default now()
+		);
+
+		create table if not exists player_states (
+			player_id text primary key references player_accounts(player_id) on delete cascade,
 			room_id text not null,
 			party jsonb not null default '[]'::jsonb,
 			items jsonb not null default '[]'::jsonb,
@@ -41,6 +49,46 @@ func (s *PostgresStore) Migrate(ctx context.Context) error {
 		)
 	`)
 	return err
+}
+
+func (s *PostgresStore) CreatePlayerSession(ctx context.Context, displayName string) (PlayerSession, error) {
+	session, err := newPlayerSession(displayName)
+	if err != nil {
+		return PlayerSession{}, err
+	}
+
+	_, err = s.pool.Exec(ctx, `
+		insert into player_accounts (
+			player_id,
+			display_name,
+			token_hash,
+			created_at,
+			updated_at
+		)
+		values ($1, $2, $3, $4, $4)
+	`, session.PlayerID, session.DisplayName, hashToken(session.Token), nowUTC())
+	if err != nil {
+		return PlayerSession{}, err
+	}
+
+	return session, nil
+}
+
+func (s *PostgresStore) VerifyPlayerSession(ctx context.Context, playerID string, token string) (bool, error) {
+	var tokenHash string
+	err := s.pool.QueryRow(ctx, `
+		select token_hash
+		from player_accounts
+		where player_id = $1
+	`, playerID).Scan(&tokenHash)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return false, nil
+	}
+	if err != nil {
+		return false, err
+	}
+
+	return tokenHash == hashToken(token), nil
 }
 
 func (s *PostgresStore) LoadPlayerState(ctx context.Context, playerID string) (game.PersistentState, bool, error) {

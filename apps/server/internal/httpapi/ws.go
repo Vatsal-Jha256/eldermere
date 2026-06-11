@@ -20,8 +20,24 @@ type commandMessage struct {
 func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		playerID := strings.TrimSpace(r.URL.Query().Get("player_id"))
+		token := strings.TrimSpace(r.URL.Query().Get("token"))
 		if playerID == "" {
 			http.Error(w, "player_id is required", http.StatusBadRequest)
+			return
+		}
+		if token == "" {
+			http.Error(w, "token is required", http.StatusBadRequest)
+			return
+		}
+
+		verified, err := store.VerifyPlayerSession(r.Context(), playerID, token)
+		if err != nil {
+			logger.Warn("verify player session failed", "player_id", playerID, "error", err)
+			http.Error(w, "failed to verify session", http.StatusInternalServerError)
+			return
+		}
+		if !verified {
+			http.Error(w, "invalid session", http.StatusUnauthorized)
 			return
 		}
 

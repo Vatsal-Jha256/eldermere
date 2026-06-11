@@ -14,6 +14,12 @@
     room?: RoomView;
   };
 
+  type PlayerSession = {
+    player_id: string;
+    display_name: string;
+    token: string;
+  };
+
   const commands = ['quest', 'look', 'go east', 'recruit', 'go down', 'take', 'inventory', 'go west'];
 
   let command = $state('');
@@ -26,8 +32,22 @@
   const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8080';
 
   onMount(() => {
-    const playerID = getPlayerID();
-    socket = new WebSocket(toWebSocketURL(apiBase, '/ws', playerID));
+    let active = true;
+    connect().catch((error) => {
+      if (active) {
+        log = [...log, `Connection setup failed: ${error instanceof Error ? error.message : 'unknown error'}`];
+      }
+    });
+
+    return () => {
+      active = false;
+      socket?.close();
+    };
+  });
+
+  async function connect() {
+    const session = await getPlayerSession();
+    socket = new WebSocket(toWebSocketURL(apiBase, '/ws', session));
 
     socket.addEventListener('open', () => {
       connected = true;
@@ -49,11 +69,7 @@
     socket.addEventListener('error', () => {
       log = [...log, 'Connection error. Is the Go server running on port 8080?'];
     });
-
-    return () => {
-      socket?.close();
-    };
-  });
+  }
 
   function submitCommand() {
     const trimmed = command.trim();
@@ -72,20 +88,33 @@
     }
   }
 
-  function getPlayerID() {
-    const key = 'eldermere.player_id';
+  async function getPlayerSession() {
+    const key = 'eldermere.session';
     const existing = localStorage.getItem(key);
-    if (existing) return existing;
+    if (existing) {
+      return JSON.parse(existing) as PlayerSession;
+    }
 
-    const next = crypto.randomUUID();
-    localStorage.setItem(key, next);
-    return next;
+    const response = await fetch(new URL('/api/v1/sessions', apiBase), {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ display_name: 'Wanderer' })
+    });
+
+    if (!response.ok) {
+      throw new Error(`session request failed with ${response.status}`);
+    }
+
+    const session = (await response.json()) as PlayerSession;
+    localStorage.setItem(key, JSON.stringify(session));
+    return session;
   }
 
-  function toWebSocketURL(base: string, path: string, playerID: string) {
+  function toWebSocketURL(base: string, path: string, session: PlayerSession) {
     const url = new URL(path, base);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-    url.searchParams.set('player_id', playerID);
+    url.searchParams.set('player_id', session.player_id);
+    url.searchParams.set('token', session.token);
     return url.toString();
   }
 </script>

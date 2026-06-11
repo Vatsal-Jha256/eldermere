@@ -12,14 +12,14 @@ Stage 0 scaffold is in place. The current repo has:
 - Go backend
 - SvelteKit frontend
 - WebSocket command loop with movement, speech, fight, recruit, and party commands
-- Anonymous persistent player state for room, inventory, party, and quest progress
+- Session-authenticated persistent player state for room, inventory, party, and quest progress
 - Arthurian starter region
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is account/session auth on top of the current anonymous persistence.
+The next implementation target is room presence, local chat, and shared event log.
 
 ## Run Locally
 
@@ -34,15 +34,16 @@ Then open:
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
 - WebSocket command endpoint: `ws://localhost:8080/ws`
+- Session endpoint: `POST http://localhost:8080/api/v1/sessions`
 
 Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres installs on `5432`.
 
-The browser stores an anonymous `eldermere.player_id` in `localStorage` and passes it to the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects.
+The browser stores an `eldermere.session` object in `localStorage`, created through `POST /api/v1/sessions`. The session token is required by the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects without exposing unauthenticated state changes.
 
 ## Checks
 
 ```sh
-docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.23-alpine go test ./...
+docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.26-alpine go test ./...
 cd apps/web && npm run check
 ```
 
