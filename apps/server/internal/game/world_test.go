@@ -156,3 +156,75 @@ func TestSessionCanResumePersistentState(t *testing.T) {
 		t.Fatalf("expected resumed room smuggler-vault, got %#v", events)
 	}
 }
+
+func TestGatedExitRequiresMapItem(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("go under")
+	if len(events) != 1 || events[0].Type != "error" {
+		t.Fatalf("expected locked route error, got %#v", events)
+	}
+
+	session.Handle("go west")
+	session.Handle("take")
+	session.Handle("go east")
+
+	events = session.Handle("go under")
+	if len(events) != 2 {
+		t.Fatalf("expected move and room after map unlock, got %#v", events)
+	}
+	if events[1].Room == nil || events[1].Room.ID != "smuggler-vault" {
+		t.Fatalf("expected smuggler-vault after gated move, got %#v", events)
+	}
+}
+
+func TestUnlockedGatedExitAppearsInRoomView(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+	session.Handle("go west")
+	session.Handle("take")
+	session.Handle("go east")
+
+	events := session.Handle("look")
+	if len(events) != 1 || events[0].Room == nil {
+		t.Fatalf("expected room event, got %#v", events)
+	}
+	if events[0].Room.Exits["under"] != "smuggler-vault" {
+		t.Fatalf("expected unlocked under exit in room view, got %#v", events[0].Room.Exits)
+	}
+}
+
+func TestFightCanChangeFactionReputation(t *testing.T) {
+	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
+		return 20
+	})
+	session.Handle("go north")
+
+	events := session.Handle("fight")
+	if len(events) != 1 || events[0].Type != "fight" {
+		t.Fatalf("expected fight event, got %#v", events)
+	}
+
+	events = session.Handle("factions")
+	if len(events) != 1 {
+		t.Fatalf("expected factions event, got %#v", events)
+	}
+	if events[0].Text != "Factions: Camelot Underbelly +1, Mordred's Brokers -1." {
+		t.Fatalf("unexpected faction text: %q", events[0].Text)
+	}
+}
+
+func TestQuestStoresVariant(t *testing.T) {
+	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
+		return 1
+	})
+
+	session.Handle("quest")
+	if session.quest.Variant == "" {
+		t.Fatal("expected quest variant to be selected")
+	}
+
+	events := session.Handle("quest")
+	if len(events) != 1 || events[0].Text == "Quest active: find the stolen Excalibur fragment in the under-market route." {
+		t.Fatalf("expected variant quest text, got %#v", events)
+	}
+}

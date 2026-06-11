@@ -25,4 +25,3 @@ func main() {
 
 	fmt.Printf("valid content pack: %s\n", path)
 }
-

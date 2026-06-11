@@ -61,6 +61,8 @@ npm run check
 - `take`: pick up the current room's visible item.
 - `inventory`: list carried items.
 - `party`: list recruited companions.
+- `map`: inspect hidden or gated routes from the current room.
+- `factions`: inspect faction reputation changes.
 - `say hello`: send a local speech event.
 
 Players in the same room receive presence, `say`, fight, and recruit events. New arrivals receive the recent room event log.
@@ -70,9 +72,10 @@ Players in the same room receive presence, `say`, fight, and recruit events. New
 The current vertical slice has a small Arthurian quest arc:
 
 1. Start in Lantern Yard and run `quest`.
-2. Explore east into Market Under and try `recruit`.
-3. Go `down` to Smuggler Vault.
-4. Use `take` to collect the Excalibur Fragment.
-5. Return to Lantern Yard and run `quest` again to complete the arc.
+2. Go `west` into Tavern Backroom and use `take` to collect the Under-Market Map.
+3. Return east to Lantern Yard, then use `map` to see the unlocked under-route.
+4. Use `go under` to reach Smuggler Vault.
+5. Use `take` to collect the Excalibur Fragment.
+6. Return to Lantern Yard and run `quest` again to complete the arc.
 
 Reconnect after picking up the fragment to verify persistence: the same browser should resume in the last room with the item still in inventory. Clearing `localStorage` starts a new session.

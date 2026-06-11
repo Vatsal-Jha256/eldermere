@@ -9,8 +9,20 @@
         "east": "market-under",
         "west": "tavern-backroom"
       },
+      "gated_exits": {
+        "under": {
+          "target": "smuggler-vault",
+          "requires_item": "under-market-map",
+          "locked_text": "The under-route is hidden. A proper under-market map would reveal it."
+        }
+      },
       "quest": {
         "start": "Quest started: recover the stolen Excalibur fragment before it is sold under the old bridge.",
+        "start_variants": [
+          "The courier says the fragment may be under the market, but the route shifts with whoever last lied about it.",
+          "A tavern runner claims Mordred's people want the fragment moved before moonrise.",
+          "A shrine candle gutters toward the old bridge whenever Excalibur is named."
+        ],
         "incomplete": "Merlin's courier taps the shrine. The fragment is still missing. Follow the under-market rumor east, then deeper.",
         "complete": "Merlin's courier wraps the Excalibur fragment in river-cloth. The yard goes quiet; even the rain seems to wait."
       }
@@ -27,7 +39,11 @@
         "name": "Bridge Debt Collector",
         "dc": 12,
         "win": "You break the collector's nerve and win a rumor about an Excalibur fragment.",
-        "lose": "The collector marks your name in a wet ledger. The debt will come back later."
+        "lose": "The collector marks your name in a wet ledger. The debt will come back later.",
+        "faction_effects": {
+          "Camelot Underbelly": 1,
+          "Mordred's Brokers": -1
+        }
       }
     },
     {
@@ -52,6 +68,11 @@
       "exits": {
         "east": "lantern-yard",
         "north": "river-stairs"
+      },
+      "item": {
+        "id": "under-market-map",
+        "name": "Under-Market Map",
+        "description": "a damp map showing a hidden under-route beneath Lantern Yard"
       }
     },
     {
@@ -67,7 +88,11 @@
         "name": "Mordred's Runner",
         "dc": 14,
         "win": "You cut off the runner's escape and learn the vault passphrase.",
-        "lose": "The runner vanishes downriver, leaving only a false coin and a worse rumor."
+        "lose": "The runner vanishes downriver, leaving only a false coin and a worse rumor.",
+        "faction_effects": {
+          "Merlin's Couriers": 1,
+          "Mordred's Brokers": -1
+        }
       }
     },
     {

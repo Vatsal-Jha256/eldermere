@@ -15,21 +15,23 @@ import (
 var starterContent embed.FS
 
 type Room struct {
-	ID          string            `json:"id"`
-	Name        string            `json:"name"`
-	Description string            `json:"description"`
-	Exits       map[string]string `json:"exits"`
-	Encounter   *Encounter        `json:"encounter,omitempty"`
-	Recruitable *Recruitable      `json:"recruitable,omitempty"`
-	Item        *Item             `json:"item,omitempty"`
-	Quest       *QuestMarker      `json:"quest,omitempty"`
+	ID          string               `json:"id"`
+	Name        string               `json:"name"`
+	Description string               `json:"description"`
+	Exits       map[string]string    `json:"exits"`
+	GatedExits  map[string]GatedExit `json:"gated_exits,omitempty"`
+	Encounter   *Encounter           `json:"encounter,omitempty"`
+	Recruitable *Recruitable         `json:"recruitable,omitempty"`
+	Item        *Item                `json:"item,omitempty"`
+	Quest       *QuestMarker         `json:"quest,omitempty"`
 }
 
 type Encounter struct {
-	Name string `json:"name"`
-	DC   int    `json:"dc"`
-	Win  string `json:"win"`
-	Lose string `json:"lose"`
+	Name           string         `json:"name"`
+	DC             int            `json:"dc"`
+	Win            string         `json:"win"`
+	Lose           string         `json:"lose"`
+	FactionEffects map[string]int `json:"faction_effects,omitempty"`
 }
 
 type Recruitable struct {
@@ -46,9 +48,16 @@ type Item struct {
 }
 
 type QuestMarker struct {
-	Start      string `json:"start,omitempty"`
-	Incomplete string `json:"incomplete,omitempty"`
-	Complete   string `json:"complete,omitempty"`
+	Start         string   `json:"start,omitempty"`
+	StartVariants []string `json:"start_variants,omitempty"`
+	Incomplete    string   `json:"incomplete,omitempty"`
+	Complete      string   `json:"complete,omitempty"`
+}
+
+type GatedExit struct {
+	Target       string `json:"target"`
+	RequiresItem string `json:"requires_item"`
+	LockedText   string `json:"locked_text"`
 }
 
 type World struct {
@@ -56,24 +65,27 @@ type World struct {
 }
 
 type Session struct {
-	world  World
-	roomID string
-	party  map[string]bool
-	items  map[string]Item
-	quest  QuestState
-	roll   func(sides int) int
+	world    World
+	roomID   string
+	party    map[string]bool
+	items    map[string]Item
+	quest    QuestState
+	factions map[string]int
+	roll     func(sides int) int
 }
 
 type QuestState struct {
 	Started   bool
 	Completed bool
+	Variant   string
 }
 
 type PersistentState struct {
-	RoomID string     `json:"room_id"`
-	Party  []string   `json:"party"`
-	Items  []Item     `json:"items"`
-	Quest  QuestState `json:"quest"`
+	RoomID   string         `json:"room_id"`
+	Party    []string       `json:"party"`
+	Items    []Item         `json:"items"`
+	Quest    QuestState     `json:"quest"`
+	Factions map[string]int `json:"factions"`
 }
 
 type Event struct {
@@ -135,6 +147,9 @@ func NewWorld(rooms []Room) (World, error) {
 		if room.Exits == nil {
 			room.Exits = map[string]string{}
 		}
+		if room.GatedExits == nil {
+			room.GatedExits = map[string]GatedExit{}
+		}
 		byID[room.ID] = room
 	}
 
@@ -147,6 +162,20 @@ func NewWorld(rooms []Room) (World, error) {
 				return World{}, fmt.Errorf("room %q exit %q points to unknown room %q", room.ID, direction, targetID)
 			}
 		}
+		for direction, exit := range room.GatedExits {
+			if strings.TrimSpace(direction) == "" {
+				return World{}, fmt.Errorf("room %q has empty gated exit direction", room.ID)
+			}
+			if strings.TrimSpace(exit.Target) == "" {
+				return World{}, fmt.Errorf("room %q gated exit %q target is required", room.ID, direction)
+			}
+			if _, ok := byID[exit.Target]; !ok {
+				return World{}, fmt.Errorf("room %q gated exit %q points to unknown room %q", room.ID, direction, exit.Target)
+			}
+			if strings.TrimSpace(exit.RequiresItem) == "" {
+				return World{}, fmt.Errorf("room %q gated exit %q requires_item is required", room.ID, direction)
+			}
+		}
 	}
 
 	return World{rooms: byID}, nil
@@ -154,12 +183,13 @@ func NewWorld(rooms []Room) (World, error) {
 
 func NewSession(world World) Session {
 	return Session{
-		world:  world,
-		roomID: "lantern-yard",
-		party:  map[string]bool{},
-		items:  map[string]Item{},
-		quest:  QuestState{},
-		roll:   defaultRoller(),
+		world:    world,
+		roomID:   "lantern-yard",
+		party:    map[string]bool{},
+		items:    map[string]Item{},
+		quest:    QuestState{},
+		factions: map[string]int{},
+		roll:     defaultRoller(),
 	}
 }
 
@@ -185,6 +215,11 @@ func NewSessionFromState(world World, state PersistentState) Session {
 		}
 	}
 	session.quest = state.Quest
+	for name, value := range state.Factions {
+		if strings.TrimSpace(name) != "" {
+			session.factions[name] = value
+		}
+	}
 	return session
 }
 
@@ -202,10 +237,11 @@ func (s *Session) PersistentState() PersistentState {
 	sortItems(items)
 
 	return PersistentState{
-		RoomID: s.roomID,
-		Party:  party,
-		Items:  items,
-		Quest:  s.quest,
+		RoomID:   s.roomID,
+		Party:    party,
+		Items:    items,
+		Quest:    s.quest,
+		Factions: copyFactions(s.factions),
 	}
 }
 
@@ -249,6 +285,10 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.recruit()}
 	case "party":
 		return []Event{s.partyStatus()}
+	case "factions", "reputation", "rep":
+		return []Event{s.factionStatus()}
+	case "map":
+		return []Event{s.mapStatus()}
 	case "inventory", "inv", "i":
 		return []Event{s.inventoryStatus()}
 	case "quest":
@@ -257,9 +297,9 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.takeItem()}
 	case "exits":
 		room := s.currentRoom()
-		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(sortedExitNames(room.Exits), ", "))}}
+		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(s.visibleExitNames(room), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
 	}
 }
 
@@ -267,7 +307,18 @@ func (s *Session) goDirection(direction string) []Event {
 	room := s.currentRoom()
 	nextID, ok := room.Exits[direction]
 	if !ok {
-		return []Event{{Type: "error", Text: fmt.Sprintf("No exit %s from %s.", direction, room.Name)}}
+		gated, gatedOK := room.GatedExits[direction]
+		if !gatedOK {
+			return []Event{{Type: "error", Text: fmt.Sprintf("No exit %s from %s.", direction, room.Name)}}
+		}
+		if !s.hasItem(gated.RequiresItem) {
+			text := gated.LockedText
+			if text == "" {
+				text = fmt.Sprintf("You need %s to go %s.", gated.RequiresItem, direction)
+			}
+			return []Event{{Type: "error", Text: text}}
+		}
+		nextID = gated.Target
 	}
 
 	s.roomID = nextID
@@ -279,7 +330,7 @@ func (s *Session) goDirection(direction string) []Event {
 
 func (s *Session) look() Event {
 	room := s.currentRoom()
-	text := fmt.Sprintf("%s: %s Exits: %s.", room.Name, room.Description, strings.Join(sortedExitNames(room.Exits), ", "))
+	text := fmt.Sprintf("%s: %s Exits: %s.", room.Name, room.Description, strings.Join(s.visibleExitNames(room), ", "))
 	if room.Item != nil && !s.hasItem(room.Item.ID) {
 		text = fmt.Sprintf("%s You notice %s.", text, room.Item.Description)
 	}
@@ -290,7 +341,7 @@ func (s *Session) look() Event {
 			ID:          room.ID,
 			Name:        room.Name,
 			Description: room.Description,
-			Exits:       room.Exits,
+			Exits:       s.visibleExits(room),
 		},
 	}
 }
@@ -302,17 +353,21 @@ func (s *Session) fight() Event {
 	}
 
 	roll := s.roll(20)
-	total := roll + 2
+	partyBonus := s.partyBonus()
+	total := roll + 2 + partyBonus
 	if total >= room.Encounter.DC {
+		for faction, delta := range room.Encounter.FactionEffects {
+			s.factions[faction] += delta
+		}
 		return Event{
 			Type: "fight",
-			Text: fmt.Sprintf("Rolled %d + 2 = %d against DC %d. %s", roll, total, room.Encounter.DC, room.Encounter.Win),
+			Text: fmt.Sprintf("Rolled %d + 2 + party %d = %d against DC %d. %s", roll, partyBonus, total, room.Encounter.DC, room.Encounter.Win),
 		}
 	}
 
 	return Event{
 		Type: "fight",
-		Text: fmt.Sprintf("Rolled %d + 2 = %d against DC %d. %s", roll, total, room.Encounter.DC, room.Encounter.Lose),
+		Text: fmt.Sprintf("Rolled %d + 2 + party %d = %d against DC %d. %s", roll, partyBonus, total, room.Encounter.DC, room.Encounter.Lose),
 	}
 }
 
@@ -381,11 +436,47 @@ func (s *Session) inventoryStatus() Event {
 	return Event{Type: "inventory", Text: fmt.Sprintf("Inventory: %s.", strings.Join(names, ", "))}
 }
 
+func (s *Session) factionStatus() Event {
+	if len(s.factions) == 0 {
+		return Event{Type: "factions", Text: "Factions: no reputation changes yet."}
+	}
+
+	names := make([]string, 0, len(s.factions))
+	for name := range s.factions {
+		names = append(names, name)
+	}
+	sortStrings(names)
+
+	parts := make([]string, 0, len(names))
+	for _, name := range names {
+		parts = append(parts, fmt.Sprintf("%s %+d", name, s.factions[name]))
+	}
+	return Event{Type: "factions", Text: fmt.Sprintf("Factions: %s.", strings.Join(parts, ", "))}
+}
+
+func (s *Session) mapStatus() Event {
+	room := s.currentRoom()
+	gated := make([]string, 0, len(room.GatedExits))
+	for direction, exit := range room.GatedExits {
+		if s.hasItem(exit.RequiresItem) {
+			gated = append(gated, fmt.Sprintf("%s -> %s", direction, exit.Target))
+		} else {
+			gated = append(gated, fmt.Sprintf("%s locked by %s", direction, exit.RequiresItem))
+		}
+	}
+	sortStrings(gated)
+	if len(gated) == 0 {
+		return Event{Type: "map", Text: "Map: no hidden or gated routes from here."}
+	}
+	return Event{Type: "map", Text: fmt.Sprintf("Map: %s.", strings.Join(gated, ", "))}
+}
+
 func (s *Session) questStatus() Event {
 	room := s.currentRoom()
 	if room.Quest != nil {
 		if room.Quest.Start != "" && !s.quest.Started {
 			s.quest.Started = true
+			s.quest.Variant = s.chooseQuestVariant(room.Quest)
 			return Event{Type: "quest", Text: room.Quest.Start}
 		}
 		if room.Quest.Complete != "" && s.hasItem("excalibur-fragment") && !s.quest.Completed {
@@ -401,6 +492,9 @@ func (s *Session) questStatus() Event {
 		return Event{Type: "quest", Text: "Quest complete: the stolen Excalibur fragment is back under safer eyes."}
 	}
 	if s.quest.Started {
+		if s.quest.Variant != "" {
+			return Event{Type: "quest", Text: fmt.Sprintf("Quest active: %s", s.quest.Variant)}
+		}
 		return Event{Type: "quest", Text: "Quest active: find the stolen Excalibur fragment in the under-market route."}
 	}
 	return Event{Type: "quest", Text: "No quest is active. Try asking around in Lantern Yard."}
@@ -409,6 +503,50 @@ func (s *Session) questStatus() Event {
 func (s *Session) hasItem(id string) bool {
 	_, ok := s.items[id]
 	return ok
+}
+
+func (s *Session) chooseQuestVariant(marker *QuestMarker) string {
+	if len(marker.StartVariants) == 0 {
+		return ""
+	}
+	index := s.roll(len(marker.StartVariants)) - 1
+	if index < 0 || index >= len(marker.StartVariants) {
+		index = 0
+	}
+	return marker.StartVariants[index]
+}
+
+func (s *Session) partyBonus() int {
+	if len(s.party) > 3 {
+		return 3
+	}
+	return len(s.party)
+}
+
+func (s *Session) visibleExitNames(room Room) []string {
+	exits := s.visibleExits(room)
+	names := make([]string, 0, len(exits))
+	for direction := range exits {
+		names = append(names, direction)
+	}
+	sortStrings(names)
+	if len(names) == 0 {
+		return []string{"none"}
+	}
+	return names
+}
+
+func (s *Session) visibleExits(room Room) map[string]string {
+	exits := make(map[string]string, len(room.Exits)+len(room.GatedExits))
+	for direction, target := range room.Exits {
+		exits[direction] = target
+	}
+	for direction, exit := range room.GatedExits {
+		if s.hasItem(exit.RequiresItem) {
+			exits[direction] = exit.Target
+		}
+	}
+	return exits
 }
 
 func (s *Session) currentRoom() Room {
@@ -449,6 +587,14 @@ func sortItems(values []Item) {
 			}
 		}
 	}
+}
+
+func copyFactions(values map[string]int) map[string]int {
+	copied := make(map[string]int, len(values))
+	for key, value := range values {
+		copied[key] = value
+	}
+	return copied
 }
 
 func defaultRoller() func(sides int) int {

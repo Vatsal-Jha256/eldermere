@@ -20,7 +20,7 @@
     token: string;
   };
 
-  const commands = ['quest', 'look', 'go east', 'recruit', 'go down', 'take', 'inventory', 'go west'];
+  const commands = ['quest', 'map', 'go west', 'take', 'go east', 'go under', 'fight', 'factions'];
 
   let command = $state('');
   let connected = $state(false);

@@ -43,10 +43,14 @@ func (s *PostgresStore) Migrate(ctx context.Context) error {
 			room_id text not null,
 			party jsonb not null default '[]'::jsonb,
 			items jsonb not null default '[]'::jsonb,
+			factions jsonb not null default '{}'::jsonb,
 			quest_started boolean not null default false,
 			quest_completed boolean not null default false,
+			quest_variant text not null default '',
 			updated_at timestamptz not null default now()
-		)
+		);
+		alter table player_states add column if not exists factions jsonb not null default '{}'::jsonb;
+		alter table player_states add column if not exists quest_variant text not null default ''
 	`)
 	return err
 }
@@ -112,12 +116,13 @@ func (s *PostgresStore) LoadPlayerState(ctx context.Context, playerID string) (g
 	var state game.PersistentState
 	var partyJSON []byte
 	var itemsJSON []byte
+	var factionsJSON []byte
 
 	err := s.pool.QueryRow(ctx, `
-		select room_id, party, items, quest_started, quest_completed
+		select room_id, party, items, factions, quest_started, quest_completed, quest_variant
 		from player_states
 		where player_id = $1
-	`, playerID).Scan(&state.RoomID, &partyJSON, &itemsJSON, &state.Quest.Started, &state.Quest.Completed)
+	`, playerID).Scan(&state.RoomID, &partyJSON, &itemsJSON, &factionsJSON, &state.Quest.Started, &state.Quest.Completed, &state.Quest.Variant)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return game.PersistentState{}, false, nil
 	}
@@ -129,6 +134,9 @@ func (s *PostgresStore) LoadPlayerState(ctx context.Context, playerID string) (g
 		return game.PersistentState{}, false, err
 	}
 	if err := json.Unmarshal(itemsJSON, &state.Items); err != nil {
+		return game.PersistentState{}, false, err
+	}
+	if err := json.Unmarshal(factionsJSON, &state.Factions); err != nil {
 		return game.PersistentState{}, false, err
 	}
 
@@ -144,6 +152,10 @@ func (s *PostgresStore) SavePlayerState(ctx context.Context, playerID string, st
 	if err != nil {
 		return err
 	}
+	factionsJSON, err := json.Marshal(state.Factions)
+	if err != nil {
+		return err
+	}
 
 	_, err = s.pool.Exec(ctx, `
 		insert into player_states (
@@ -151,19 +163,23 @@ func (s *PostgresStore) SavePlayerState(ctx context.Context, playerID string, st
 			room_id,
 			party,
 			items,
+			factions,
 			quest_started,
 			quest_completed,
+			quest_variant,
 			updated_at
 		)
-		values ($1, $2, $3::jsonb, $4::jsonb, $5, $6, now())
+		values ($1, $2, $3::jsonb, $4::jsonb, $5::jsonb, $6, $7, $8, now())
 		on conflict (player_id) do update set
 			room_id = excluded.room_id,
 			party = excluded.party,
 			items = excluded.items,
+			factions = excluded.factions,
 			quest_started = excluded.quest_started,
 			quest_completed = excluded.quest_completed,
+			quest_variant = excluded.quest_variant,
 			updated_at = now()
-	`, playerID, state.RoomID, string(partyJSON), string(itemsJSON), state.Quest.Started, state.Quest.Completed)
+	`, playerID, state.RoomID, string(partyJSON), string(itemsJSON), string(factionsJSON), state.Quest.Started, state.Quest.Completed, state.Quest.Variant)
 	return err
 }
 
