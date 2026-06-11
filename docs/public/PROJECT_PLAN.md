@@ -149,7 +149,7 @@ Stage 5: expanded legend universe:
 6. Arthurian starter region with 5-8 rooms and one short quest. Initial 6-room "stolen Excalibur fragment" arc is in place.
 7. Dice engine, encounter engine, and one recruitable companion/relic/ally. Initial `fight`, `recruit`, and `party` commands are in place for the starter rooms.
 8. Persistence for accounts, characters, inventory, location, and quest state. Session-token player records now persist character location, inventory, party, and quest state.
-9. Public modding guide and content-pack validation.
+9. Public modding guide and content-pack validation. Initial room-pack validator, modding guide, and example "Camelot Underbelly" content pack are in place.
 10. Private learning docs explaining each major system and checkpoint.
 
 ## Open Source And Modding

@@ -1,0 +1,33 @@
+{
+  "rooms": [
+    {
+      "id": "coin-arch",
+      "name": "Coin Arch",
+      "description": "A low arch under Camelot where debt marks are scratched beside saints' names.",
+      "exits": {
+        "east": "candle-court"
+      },
+      "encounter": {
+        "name": "Ledger Knight",
+        "dc": 13,
+        "win": "The Ledger Knight yields a stamped token and refuses to explain why it smells of Avalon.",
+        "lose": "The Ledger Knight records your face in a book that seems heavier than law."
+      }
+    },
+    {
+      "id": "candle-court",
+      "name": "Candle Court",
+      "description": "Every candle here was bought with a secret. The flames lean toward anyone carrying royal steel.",
+      "exits": {
+        "west": "coin-arch"
+      },
+      "recruitable": {
+        "name": "Candle Page",
+        "dc": 10,
+        "success": "The Candle Page joins you and promises to remember what everyone else forgets.",
+        "failure": "The Candle Page grins, pockets your offer, and asks for a better story."
+      }
+    }
+  ]
+}
+

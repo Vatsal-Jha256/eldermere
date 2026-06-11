@@ -1,4 +1,4 @@
-.PHONY: dev server web test test-server test-web docker-up docker-down docs-public
+.PHONY: dev server web test test-server test-web validate-content docker-up docker-down docs-public
 
 dev:
 	docker compose up --build
@@ -16,6 +16,9 @@ test-server:
 
 test-web:
 	cd apps/web && npm run check
+
+validate-content:
+	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly/rooms.json
 
 docker-up:
 	docker compose up --build
