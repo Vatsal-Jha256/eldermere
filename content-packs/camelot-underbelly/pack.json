@@ -1,0 +1,21 @@
+{
+  "id": "camelot-underbelly",
+  "name": "Camelot Underbelly",
+  "myth_region": "Arthurian",
+  "tags": [
+    "arthurian",
+    "camelot",
+    "underworld-market",
+    "excalibur-rumor"
+  ],
+  "rooms_file": "rooms.json",
+  "interactions": [
+    {
+      "id": "excalibur-rumor-crosses-sea",
+      "when_tags": ["greek", "oracle-network"],
+      "adds_tags": ["foreign-seers-seek-excalibur"],
+      "description": "Rumors of Excalibur reach foreign seers, causing non-Arthurian factions to send agents into Camelot."
+    }
+  ]
+}
+

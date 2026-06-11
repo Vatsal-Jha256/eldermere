@@ -1,0 +1,26 @@
+{
+  "id": "greek-crossing",
+  "name": "Greek Crossing",
+  "myth_region": "Greek",
+  "tags": [
+    "greek",
+    "oracle-network",
+    "underworld-route"
+  ],
+  "rooms_file": "rooms.json",
+  "interactions": [
+    {
+      "id": "grail-curse-disturbs-ferry",
+      "when_tags": ["arthurian", "grail-curse"],
+      "adds_tags": ["underworld-unrest"],
+      "description": "A Grail curse disturbs the ferry routes beneath the world, making Greek underworld paths leak into Arthurian roads."
+    },
+    {
+      "id": "excalibur-rumor-reaches-oracle",
+      "when_tags": ["arthurian", "excalibur-rumor"],
+      "adds_tags": ["oracle-seeks-foreign-steel"],
+      "description": "An oracle hears of Excalibur and sends a dream-message toward Camelot's under-market."
+    }
+  ]
+}
+

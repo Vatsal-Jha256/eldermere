@@ -10,16 +10,45 @@ import (
 
 func main() {
 	if len(os.Args) != 3 || os.Args[1] != "validate" {
-		fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json>")
+		fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json|pack-directory>")
 		os.Exit(2)
 	}
 
 	path := os.Args[2]
+	info, err := os.Stat(path)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid path: %v\n", err)
+		os.Exit(1)
+	}
+	if info.IsDir() {
+		validatePack(path)
+		return
+	}
+
+	validateRooms(path)
+}
+
+func validateRooms(path string) {
 	dir := filepath.Dir(path)
 	file := filepath.Base(path)
 
 	if _, err := game.LoadWorld(os.DirFS(dir), file); err != nil {
-		fmt.Fprintf(os.Stderr, "invalid content pack: %v\n", err)
+		fmt.Fprintf(os.Stderr, "invalid room file: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("valid room file: %s\n", path)
+}
+
+func validatePack(path string) {
+	pack, err := game.LoadContentPack(os.DirFS(path), "pack.json")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid content pack manifest: %v\n", err)
+		os.Exit(1)
+	}
+
+	if _, err := game.LoadWorld(os.DirFS(path), pack.RoomsFile); err != nil {
+		fmt.Fprintf(os.Stderr, "invalid content pack rooms: %v\n", err)
 		os.Exit(1)
 	}
 

@@ -18,7 +18,8 @@ test-web:
 	cd apps/web && npm run check
 
 validate-content:
-	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly/rooms.json
+	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly
+	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/greek-crossing
 
 docker-up:
 	docker compose up --build

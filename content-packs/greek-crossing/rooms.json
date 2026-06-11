@@ -1,0 +1,37 @@
+{
+  "rooms": [
+    {
+      "id": "oracle-jetty",
+      "name": "Oracle Jetty",
+      "description": "A narrow jetty under a foreign moon. The water below reflects Camelot's rain instead of Greek stars.",
+      "exits": {
+        "east": "ferry-shrine"
+      },
+      "encounter": {
+        "name": "Dream-Tax Ferryman",
+        "dc": 13,
+        "win": "The ferryman accepts a rumor instead of a coin and points toward the Arthurian road.",
+        "lose": "The ferryman takes your name as collateral and leaves you with someone else's omen.",
+        "faction_effects": {
+          "Oracle Network": 1,
+          "Underworld Ferries": -1
+        }
+      }
+    },
+    {
+      "id": "ferry-shrine",
+      "name": "Ferry Shrine",
+      "description": "Bronze offerings crowd a shrine whose oldest inscription has started spelling Avalon.",
+      "exits": {
+        "west": "oracle-jetty"
+      },
+      "recruitable": {
+        "name": "Omen Hound",
+        "dc": 12,
+        "success": "The Omen Hound joins you, tracking prophecies by scent.",
+        "failure": "The Omen Hound sneezes at your future and pads away."
+      }
+    }
+  ]
+}
+

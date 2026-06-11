@@ -1,6 +1,6 @@
 # Modding
 
-Eldermere content packs are data-first. The current validator supports room packs in JSON.
+Eldermere content packs are data-first. The current validator supports pack manifests plus room packs in JSON.
 
 ## Validate A Pack
 
@@ -14,11 +14,13 @@ Or validate a specific file:
 
 ```sh
 cd apps/server
-go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly/rooms.json
+go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly
 ```
 
 The validator checks:
 
+- Pack manifest has `id`, `name`, `myth_region`, and `rooms_file`.
+- Pack interactions have ids, trigger tags, and descriptions.
 - At least one room exists.
 - Every room has an `id`, `name`, and `description`.
 - Room ids are unique.
@@ -26,6 +28,28 @@ The validator checks:
 - Empty exit directions are rejected.
 
 ## Room Pack Shape
+
+Each pack has a `pack.json`:
+
+```json
+{
+  "id": "greek-crossing",
+  "name": "Greek Crossing",
+  "myth_region": "Greek",
+  "tags": ["greek", "oracle-network", "underworld-route"],
+  "rooms_file": "rooms.json",
+  "interactions": [
+    {
+      "id": "excalibur-rumor-reaches-oracle",
+      "when_tags": ["arthurian", "excalibur-rumor"],
+      "adds_tags": ["oracle-seeks-foreign-steel"],
+      "description": "An oracle hears of Excalibur and sends a dream-message toward Camelot."
+    }
+  ]
+}
+```
+
+And a `rooms.json`:
 
 ```json
 {
@@ -68,5 +92,9 @@ The validator checks:
 
 ## Current Example
 
-See `content-packs/camelot-underbelly/rooms.json`.
+See:
 
+- `content-packs/camelot-underbelly`
+- `content-packs/greek-crossing`
+
+The Greek Crossing pack demonstrates the connected-legend rule: it declares interactions that respond to Arthurian tags such as `excalibur-rumor` and `grail-curse` instead of behaving like an isolated Greek zone.
