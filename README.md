@@ -11,14 +11,14 @@ Stage 0 scaffold is in place. The current repo has:
 - Text-first browser MUD interface
 - Go backend
 - SvelteKit frontend
-- WebSocket command loop
+- WebSocket command loop with movement, speech, fight, recruit, and party commands
 - Arthurian starter region
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is loading rooms from content files instead of hardcoded starter rooms.
+The next implementation target is expanding the Arthurian starter region toward 5-8 rooms and one short quest arc.
 
 ## Run Locally
 

@@ -71,3 +71,38 @@ func TestLoadWorldFromContentFile(t *testing.T) {
 		t.Fatalf("expected market-under room, got %#v", events)
 	}
 }
+
+func TestFightUsesRoomEncounter(t *testing.T) {
+	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
+		return 10
+	})
+	session.Handle("go north")
+
+	events := session.Handle("fight")
+	if len(events) != 1 {
+		t.Fatalf("expected one fight event, got %#v", events)
+	}
+	if events[0].Type != "fight" {
+		t.Fatalf("expected fight event, got %q", events[0].Type)
+	}
+}
+
+func TestRecruitAddsCompanionToParty(t *testing.T) {
+	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
+		return 20
+	})
+	session.Handle("go east")
+
+	events := session.Handle("recruit")
+	if len(events) != 1 || events[0].Type != "party" {
+		t.Fatalf("expected party event, got %#v", events)
+	}
+
+	events = session.Handle("party")
+	if len(events) != 1 {
+		t.Fatalf("expected one party status event, got %#v", events)
+	}
+	if events[0].Text != "Party: Oath Spirit." {
+		t.Fatalf("expected Oath Spirit in party, got %q", events[0].Text)
+	}
+}

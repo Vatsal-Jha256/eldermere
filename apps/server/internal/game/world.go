@@ -6,7 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"io/fs"
+	"math/rand"
 	"strings"
+	"time"
 )
 
 //go:embed content/starter/rooms.json
@@ -17,6 +19,22 @@ type Room struct {
 	Name        string            `json:"name"`
 	Description string            `json:"description"`
 	Exits       map[string]string `json:"exits"`
+	Encounter   *Encounter        `json:"encounter,omitempty"`
+	Recruitable *Recruitable      `json:"recruitable,omitempty"`
+}
+
+type Encounter struct {
+	Name string `json:"name"`
+	DC   int    `json:"dc"`
+	Win  string `json:"win"`
+	Lose string `json:"lose"`
+}
+
+type Recruitable struct {
+	Name    string `json:"name"`
+	DC      int    `json:"dc"`
+	Success string `json:"success"`
+	Failure string `json:"failure"`
 }
 
 type World struct {
@@ -26,6 +44,8 @@ type World struct {
 type Session struct {
 	world  World
 	roomID string
+	party  map[string]bool
+	roll   func(sides int) int
 }
 
 type Event struct {
@@ -108,7 +128,15 @@ func NewSession(world World) Session {
 	return Session{
 		world:  world,
 		roomID: "lantern-yard",
+		party:  map[string]bool{},
+		roll:   defaultRoller(),
 	}
+}
+
+func NewSessionWithRoller(world World, roller func(sides int) int) Session {
+	session := NewSession(world)
+	session.roll = roller
+	return session
 }
 
 func (s *Session) Welcome() []Event {
@@ -141,11 +169,17 @@ func (s *Session) Handle(input string) []Event {
 			return []Event{{Type: "error", Text: "Say what?"}}
 		}
 		return []Event{{Type: "say", Text: fmt.Sprintf("You say, %q", strings.Join(args, " "))}}
+	case "fight":
+		return []Event{s.fight()}
+	case "recruit":
+		return []Event{s.recruit()}
+	case "party":
+		return []Event{s.partyStatus()}
 	case "exits":
 		room := s.currentRoom()
 		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(sortedExitNames(room.Exits), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `go north`, `go east`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `go north`, `go east`, `fight`, `recruit`, `party`, `exits`, or `say hello`.", verb)}}
 	}
 }
 
@@ -177,6 +211,67 @@ func (s *Session) look() Event {
 	}
 }
 
+func (s *Session) fight() Event {
+	room := s.currentRoom()
+	if room.Encounter == nil {
+		return Event{Type: "system", Text: "There is nothing here that wants a fight yet."}
+	}
+
+	roll := s.roll(20)
+	total := roll + 2
+	if total >= room.Encounter.DC {
+		return Event{
+			Type: "fight",
+			Text: fmt.Sprintf("Rolled %d + 2 = %d against DC %d. %s", roll, total, room.Encounter.DC, room.Encounter.Win),
+		}
+	}
+
+	return Event{
+		Type: "fight",
+		Text: fmt.Sprintf("Rolled %d + 2 = %d against DC %d. %s", roll, total, room.Encounter.DC, room.Encounter.Lose),
+	}
+}
+
+func (s *Session) recruit() Event {
+	room := s.currentRoom()
+	if room.Recruitable == nil {
+		return Event{Type: "system", Text: "No one here is ready to join you."}
+	}
+
+	name := room.Recruitable.Name
+	if s.party[name] {
+		return Event{Type: "party", Text: fmt.Sprintf("%s is already with you.", name)}
+	}
+
+	roll := s.roll(20)
+	total := roll + 1
+	if total >= room.Recruitable.DC {
+		s.party[name] = true
+		return Event{
+			Type: "party",
+			Text: fmt.Sprintf("Rolled %d + 1 = %d against DC %d. %s", roll, total, room.Recruitable.DC, room.Recruitable.Success),
+		}
+	}
+
+	return Event{
+		Type: "party",
+		Text: fmt.Sprintf("Rolled %d + 1 = %d against DC %d. %s", roll, total, room.Recruitable.DC, room.Recruitable.Failure),
+	}
+}
+
+func (s *Session) partyStatus() Event {
+	if len(s.party) == 0 {
+		return Event{Type: "party", Text: "Party: no companions yet."}
+	}
+
+	names := make([]string, 0, len(s.party))
+	for name := range s.party {
+		names = append(names, name)
+	}
+	sortStrings(names)
+	return Event{Type: "party", Text: fmt.Sprintf("Party: %s.", strings.Join(names, ", "))}
+}
+
 func (s *Session) currentRoom() Room {
 	room, ok := s.world.rooms[s.roomID]
 	if !ok {
@@ -190,15 +285,29 @@ func sortedExitNames(exits map[string]string) []string {
 	for name := range exits {
 		names = append(names, name)
 	}
-	for i := 0; i < len(names); i++ {
-		for j := i + 1; j < len(names); j++ {
-			if names[j] < names[i] {
-				names[i], names[j] = names[j], names[i]
-			}
-		}
-	}
+	sortStrings(names)
 	if len(names) == 0 {
 		return []string{"none"}
 	}
 	return names
+}
+
+func sortStrings(values []string) {
+	for i := 0; i < len(values); i++ {
+		for j := i + 1; j < len(values); j++ {
+			if values[j] < values[i] {
+				values[i], values[j] = values[j], values[i]
+			}
+		}
+	}
+}
+
+func defaultRoller() func(sides int) int {
+	source := rand.New(rand.NewSource(time.Now().UnixNano()))
+	return func(sides int) int {
+		if sides <= 1 {
+			return 1
+		}
+		return source.Intn(sides) + 1
+	}
 }

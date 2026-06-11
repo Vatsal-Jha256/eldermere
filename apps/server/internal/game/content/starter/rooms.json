@@ -15,6 +15,12 @@
       "description": "A bridge older than the crown leans over black water. Someone has scratched a Greek oath into one stone.",
       "exits": {
         "south": "lantern-yard"
+      },
+      "encounter": {
+        "name": "Bridge Debt Collector",
+        "dc": 12,
+        "win": "You break the collector's nerve and win a rumor about an Excalibur fragment.",
+        "lose": "The collector marks your name in a wet ledger. The debt will come back later."
       }
     },
     {
@@ -23,6 +29,12 @@
       "description": "Below the respectable stalls, charm-sellers auction debts, curses, and maps that disagree with themselves.",
       "exits": {
         "west": "lantern-yard"
+      },
+      "recruitable": {
+        "name": "Oath Spirit",
+        "dc": 11,
+        "success": "The Oath Spirit joins your party, bound by a promise neither of you fully understands.",
+        "failure": "The Oath Spirit circles once and refuses. It wants proof, not enthusiasm."
       }
     }
   ]

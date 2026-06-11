@@ -46,3 +46,12 @@ npm run check
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.
+
+## Starter Commands
+
+- `look`: inspect the current room.
+- `go north`, `go east`, `go south`, `go west`: move through room exits.
+- `fight`: resolve the current room's encounter with a d20-style roll.
+- `recruit`: attempt to recruit the current room's companion.
+- `party`: list recruited companions.
+- `say hello`: send a local speech event.
