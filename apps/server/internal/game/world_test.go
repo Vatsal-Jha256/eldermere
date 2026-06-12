@@ -462,7 +462,11 @@ func TestStoryStepRequiresRoomAndCanChangeFaction(t *testing.T) {
 	session := NewSession(world)
 
 	session.Handle("story start sword-test")
-	events := session.Handle("story next")
+	events := session.Handle("story status")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Room: stone-yard") || !strings.Contains(events[0].Text, "Find someone who saw the sword test.") {
+		t.Fatalf("expected story status to include room and objective guidance, got %#v", events)
+	}
+	events = session.Handle("story next")
 	if len(events) != 1 || !strings.Contains(events[0].Text, "needs room `stone-yard`") {
 		t.Fatalf("expected room-gated story step, got %#v", events)
 	}

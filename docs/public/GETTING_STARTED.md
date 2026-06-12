@@ -60,8 +60,8 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 - `story`: list loaded story arcs from content packs.
 - `story sword-test`: inspect a source-grounded Arthurian story arc.
 - `story start sword-test`: begin a loaded story arc.
-- `story status`: inspect active story progress.
-- `story next`: advance the active story arc and collect outcome tags.
+- `story status`: inspect active story progress, including the room and suggested commands for the current step.
+- `story next`: advance the active story arc when you are in the required room, collecting outcome tags and faction effects.
 - `story tags`: inspect earned branch and eligibility tags.
 - `factions`: inspect reputation changes from encounters and story steps.
 - `travel arthurian-core`: move to a loaded content pack's entry room.

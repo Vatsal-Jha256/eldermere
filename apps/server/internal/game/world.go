@@ -714,7 +714,7 @@ func (s *Session) startStoryArc(id string) Event {
 	s.story.StepIndex = 0
 	s.story.VariantTag = variant
 	step := arc.Steps[0]
-	text := fmt.Sprintf("Story started: %s. Step 1/%d - %s: %s", arc.Title, len(arc.Steps), step.Title, step.Objective)
+	text := fmt.Sprintf("Story started: %s. Step 1/%d - %s", arc.Title, len(arc.Steps), formatStoryStep(step))
 	if variant != "" {
 		text = fmt.Sprintf("%s Variant: %s.", text, variant)
 	}
@@ -758,7 +758,7 @@ func (s *Session) advanceStoryArc() Event {
 		next := arc.Steps[s.story.StepIndex]
 		return Event{
 			Type: "story",
-			Text: fmt.Sprintf("Story advanced: %s. Step %d/%d - %s: %s", arc.Title, s.story.StepIndex+1, len(arc.Steps), next.Title, next.Objective),
+			Text: fmt.Sprintf("Story advanced: %s. Step %d/%d - %s", arc.Title, s.story.StepIndex+1, len(arc.Steps), formatStoryStep(next)),
 		}
 	}
 
@@ -799,7 +799,7 @@ func (s *Session) activeStoryStatus() Event {
 		index = len(arc.Steps) - 1
 	}
 	step := arc.Steps[index]
-	text := fmt.Sprintf("Story active: %s. Step %d/%d - %s: %s", arc.Title, index+1, len(arc.Steps), step.Title, step.Objective)
+	text := fmt.Sprintf("Story active: %s. Step %d/%d - %s", arc.Title, index+1, len(arc.Steps), formatStoryStep(step))
 	if s.story.VariantTag != "" {
 		text = fmt.Sprintf("%s Variant: %s.", text, s.story.VariantTag)
 	}
@@ -812,6 +812,17 @@ func (s *Session) storyTagsStatus() Event {
 		return Event{Type: "story", Text: "Story tags: none."}
 	}
 	return Event{Type: "story", Text: fmt.Sprintf("Story tags: %s.", strings.Join(tags, ", "))}
+}
+
+func formatStoryStep(step StoryStep) string {
+	parts := []string{fmt.Sprintf("%s: %s", step.Title, step.Objective)}
+	if strings.TrimSpace(step.RoomHint) != "" {
+		parts = append(parts, fmt.Sprintf("Room: %s", step.RoomHint))
+	}
+	if len(step.Commands) > 0 {
+		parts = append(parts, fmt.Sprintf("Try: %s", strings.Join(step.Commands, ", ")))
+	}
+	return strings.Join(parts, ". ")
 }
 
 func (s *Session) hasItem(id string) bool {
