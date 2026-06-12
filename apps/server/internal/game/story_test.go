@@ -3,6 +3,8 @@ package game
 import (
 	"os"
 	"path/filepath"
+	"runtime"
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -138,5 +140,66 @@ func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 	}
 	if runtimeContent.Entries["arthurian-core"] != "stone-yard" {
 		t.Fatalf("expected arthurian-core entry room, got %#v", runtimeContent.Entries)
+	}
+}
+
+func TestArthurianCoreMainPlotCanAdvanceInOrder(t *testing.T) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve test file path")
+	}
+	repoRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "../../../.."))
+	content, err := LoadPackRuntimeContentFromContentPacks(filepath.Join(repoRoot, "content-packs"))
+	if err != nil {
+		t.Fatalf("load content packs: %v", err)
+	}
+	world, err := NewStarterWorld().WithPackRuntimeContent(content)
+	if err != nil {
+		t.Fatalf("attach runtime content: %v", err)
+	}
+	session := NewSessionWithRoller(world, func(sides int) int {
+		return 1
+	})
+
+	mainArcIDs := []string{
+		"sword-test",
+		"merlins-ledger",
+		"scabbard-problem",
+		"round-table-fractures",
+		"grail-sorting",
+		"mordreds-claim",
+		"avalon-ambiguity",
+	}
+
+	for _, arcID := range mainArcIDs {
+		arc, ok := world.stories[arcID]
+		if !ok {
+			t.Fatalf("missing main arc %q", arcID)
+		}
+		events := session.Handle("story start " + arcID)
+		if len(events) != 1 || !strings.Contains(events[0].Text, "Story started") {
+			t.Fatalf("start %s: %#v", arcID, events)
+		}
+		for _, step := range arc.Steps {
+			if step.RoomHint != "" {
+				if _, ok := world.rooms[step.RoomHint]; !ok {
+					t.Fatalf("arc %s step %s points to missing room %q", arcID, step.ID, step.RoomHint)
+				}
+				session.roomID = step.RoomHint
+			}
+			events = session.Handle("story next")
+			if len(events) != 1 || strings.Contains(events[0].Text, "needs room") || strings.Contains(events[0].Text, "locked") {
+				t.Fatalf("advance %s/%s from room %q: %#v", arcID, step.ID, session.roomID, events)
+			}
+		}
+		if !storyContains(session.story.CompletedArcIDs, arcID) {
+			t.Fatalf("expected arc %s to be complete, got %#v", arcID, session.story)
+		}
+	}
+
+	for _, tag := range []string{"arthurian-v1-spine-complete", "avalon-ambiguity", "camlann-route-set", "grail-witness"} {
+		if !storyContains(session.story.Tags, tag) {
+			t.Fatalf("expected completed main plot tag %q in %#v", tag, session.story.Tags)
+		}
 	}
 }
