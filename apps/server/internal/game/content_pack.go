@@ -221,6 +221,36 @@ func LoadPackRuntimeContentFromContentPacks(root string) (PackRuntimeContent, er
 	return content, nil
 }
 
+func ValidatePackRuntimeReferences(content PackRuntimeContent, base World, sourceIDs map[string]bool) error {
+	world, err := base.WithPackRuntimeContent(content)
+	if err != nil {
+		return err
+	}
+
+	for _, arc := range content.Stories.Arcs {
+		for _, sourceID := range arc.SourceIDs {
+			sourceID = strings.TrimSpace(sourceID)
+			if sourceID == "" {
+				continue
+			}
+			if sourceIDs != nil && !sourceIDs[sourceID] {
+				return fmt.Errorf("story arc %q cites unknown source id %q", arc.ID, sourceID)
+			}
+		}
+		for _, step := range arc.Steps {
+			roomID := strings.TrimSpace(step.RoomHint)
+			if roomID == "" {
+				continue
+			}
+			if _, ok := world.rooms[roomID]; !ok {
+				return fmt.Errorf("story arc %q step %q points to unknown room_hint %q", arc.ID, step.ID, roomID)
+			}
+		}
+	}
+
+	return nil
+}
+
 func roomIDExists(rooms []Room, id string) bool {
 	for _, room := range rooms {
 		if room.ID == id {

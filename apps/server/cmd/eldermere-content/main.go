@@ -1,20 +1,45 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/game"
 )
 
 func main() {
-	if len(os.Args) != 3 || os.Args[1] != "validate" {
-		fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json|pack-directory>")
+	if len(os.Args) < 3 {
+		fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json|pack-directory> | validate-all <content-packs-directory> [source-manifest]")
 		os.Exit(2)
 	}
 
-	path := os.Args[2]
+	switch os.Args[1] {
+	case "validate":
+		if len(os.Args) != 3 {
+			fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json|pack-directory>")
+			os.Exit(2)
+		}
+		validatePath(os.Args[2])
+	case "validate-all":
+		if len(os.Args) > 4 {
+			fmt.Fprintln(os.Stderr, "usage: eldermere-content validate-all <content-packs-directory> [source-manifest]")
+			os.Exit(2)
+		}
+		sourceManifest := ""
+		if len(os.Args) == 4 {
+			sourceManifest = os.Args[3]
+		}
+		validateAll(os.Args[2], sourceManifest)
+	default:
+		fmt.Fprintln(os.Stderr, "usage: eldermere-content validate <rooms.json|pack-directory> | validate-all <content-packs-directory> [source-manifest]")
+		os.Exit(2)
+	}
+}
+
+func validatePath(path string) {
 	info, err := os.Stat(path)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "invalid path: %v\n", err)
@@ -26,6 +51,30 @@ func main() {
 	}
 
 	validateRooms(path)
+}
+
+func validateAll(contentPacksRoot string, sourceManifest string) {
+	content, err := game.LoadPackRuntimeContentFromContentPacks(contentPacksRoot)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "invalid content packs: %v\n", err)
+		os.Exit(1)
+	}
+
+	sourceIDs := map[string]bool(nil)
+	if sourceManifest != "" {
+		sourceIDs, err = loadSourceIDs(sourceManifest)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid source manifest: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	if err := game.ValidatePackRuntimeReferences(content, game.NewStarterWorld(), sourceIDs); err != nil {
+		fmt.Fprintf(os.Stderr, "invalid runtime content references: %v\n", err)
+		os.Exit(1)
+	}
+
+	fmt.Printf("valid runtime content: %s\n", contentPacksRoot)
 }
 
 func validateRooms(path string) {
@@ -79,4 +128,38 @@ func packRoomExists(rooms []game.Room, id string) bool {
 		}
 	}
 	return false
+}
+
+func loadSourceIDs(path string) (map[string]bool, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	ids := map[string]bool{}
+	scanner := bufio.NewScanner(file)
+	for scanner.Scan() {
+		line := strings.TrimSpace(scanner.Text())
+		if !strings.HasPrefix(line, "| `") {
+			continue
+		}
+		start := strings.Index(line, "`")
+		if start < 0 {
+			continue
+		}
+		rest := line[start+1:]
+		end := strings.Index(rest, "`")
+		if end <= 0 {
+			continue
+		}
+		ids[rest[:end]] = true
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, err
+	}
+	if len(ids) == 0 {
+		return nil, fmt.Errorf("no source ids found in %s", path)
+	}
+	return ids, nil
 }

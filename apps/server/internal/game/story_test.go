@@ -168,6 +168,58 @@ func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 	}
 }
 
+func TestValidatePackRuntimeReferencesChecksStoryRoomHints(t *testing.T) {
+	content := PackRuntimeContent{
+		Stories: StoryContent{
+			Arcs: []StoryArc{
+				{
+					ID:           "bad-room",
+					Title:        "Bad Room",
+					Kind:         "side",
+					LoreBeats:    []string{"Story steps need valid rooms."},
+					SourceIDs:    []string{"malory-1251"},
+					Summary:      "Invalid room hint.",
+					OriginalHook: "A builder typo points nowhere.",
+					Steps: []StoryStep{
+						{ID: "step", Title: "Step", RoomHint: "missing-room", Objective: "Go nowhere."},
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidatePackRuntimeReferences(content, NewStarterWorld(), map[string]bool{"malory-1251": true})
+	if err == nil || !strings.Contains(err.Error(), "unknown room_hint") {
+		t.Fatalf("expected bad room hint error, got %v", err)
+	}
+}
+
+func TestValidatePackRuntimeReferencesChecksStorySources(t *testing.T) {
+	content := PackRuntimeContent{
+		Stories: StoryContent{
+			Arcs: []StoryArc{
+				{
+					ID:           "bad-source",
+					Title:        "Bad Source",
+					Kind:         "side",
+					LoreBeats:    []string{"Story arcs need cited sources."},
+					SourceIDs:    []string{"missing-source"},
+					Summary:      "Invalid source id.",
+					OriginalHook: "A builder typo cites nothing.",
+					Steps: []StoryStep{
+						{ID: "step", Title: "Step", RoomHint: "lantern-yard", Objective: "Use a known room."},
+					},
+				},
+			},
+		},
+	}
+
+	err := ValidatePackRuntimeReferences(content, NewStarterWorld(), map[string]bool{"malory-1251": true})
+	if err == nil || !strings.Contains(err.Error(), "unknown source id") {
+		t.Fatalf("expected bad source id error, got %v", err)
+	}
+}
+
 func TestArthurianCoreMainPlotCanAdvanceInOrder(t *testing.T) {
 	_, file, _, ok := runtime.Caller(0)
 	if !ok {

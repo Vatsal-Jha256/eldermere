@@ -29,6 +29,7 @@ The validator checks:
 - Room ids are unique.
 - Every exit points to an existing room.
 - Empty exit directions are rejected.
+- `make validate-content` also loads all content packs together, checks story `room_hint` values against the merged runtime world, and checks Arthurian `source_ids` against `lore/arthurian/sources/SOURCES.md`.
 
 ## Room Pack Shape
 
