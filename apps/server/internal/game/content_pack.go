@@ -17,6 +17,7 @@ type ContentPack struct {
 	MythRegion   string            `json:"myth_region"`
 	Tags         []string          `json:"tags"`
 	RoomsFile    string            `json:"rooms_file"`
+	EntryRoom    string            `json:"entry_room,omitempty"`
 	StoryFile    string            `json:"story_file,omitempty"`
 	Interactions []PackInteraction `json:"interactions"`
 }
@@ -100,6 +101,12 @@ type StoryContent struct {
 	Tags []string
 }
 
+type PackRuntimeContent struct {
+	Rooms   []Room
+	Stories StoryContent
+	Entries map[string]string
+}
+
 type StoryArc struct {
 	ID            string      `json:"id"`
 	Title         string      `json:"title"`
@@ -140,17 +147,25 @@ func LoadStoryDocument(files fs.FS, path string) (StoryDocument, error) {
 }
 
 func LoadStoryArcsFromContentPacks(root string) ([]StoryArc, error) {
-	content, err := LoadStoryContentFromContentPacks(root)
+	content, err := LoadPackRuntimeContentFromContentPacks(root)
 	if err != nil {
 		return nil, err
 	}
-	return content.Arcs, nil
+	return content.Stories.Arcs, nil
 }
 
 func LoadStoryContentFromContentPacks(root string) (StoryContent, error) {
-	entries, err := os.ReadDir(root)
+	content, err := LoadPackRuntimeContentFromContentPacks(root)
 	if err != nil {
 		return StoryContent{}, err
+	}
+	return content.Stories, nil
+}
+
+func LoadPackRuntimeContentFromContentPacks(root string) (PackRuntimeContent, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return PackRuntimeContent{}, err
 	}
 
 	names := make([]string, 0, len(entries))
@@ -161,7 +176,9 @@ func LoadStoryContentFromContentPacks(root string) (StoryContent, error) {
 	}
 	sort.Strings(names)
 
-	var content StoryContent
+	content := PackRuntimeContent{
+		Entries: map[string]string{},
+	}
 	for _, name := range names {
 		packPath := filepath.Join(root, name)
 		pack, err := LoadContentPack(os.DirFS(packPath), "pack.json")
@@ -169,21 +186,46 @@ func LoadStoryContentFromContentPacks(root string) (StoryContent, error) {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
 			}
-			return StoryContent{}, fmt.Errorf("load pack %s: %w", name, err)
+			return PackRuntimeContent{}, fmt.Errorf("load pack %s: %w", name, err)
 		}
-		content.Tags = append(content.Tags, pack.Tags...)
+		rooms, err := LoadRooms(os.DirFS(packPath), pack.RoomsFile)
+		if err != nil {
+			return PackRuntimeContent{}, fmt.Errorf("load rooms for pack %s: %w", name, err)
+		}
+		if len(rooms) == 0 {
+			return PackRuntimeContent{}, fmt.Errorf("pack %s has no rooms", name)
+		}
+		entryRoom := pack.EntryRoom
+		if entryRoom == "" {
+			entryRoom = rooms[0].ID
+		}
+		if !roomIDExists(rooms, entryRoom) {
+			return PackRuntimeContent{}, fmt.Errorf("pack %s entry_room %q does not exist", name, entryRoom)
+		}
+		content.Rooms = append(content.Rooms, rooms...)
+		content.Entries[pack.ID] = entryRoom
+		content.Stories.Tags = append(content.Stories.Tags, pack.Tags...)
 		if pack.StoryFile == "" {
 			continue
 		}
 		document, err := LoadStoryDocument(os.DirFS(packPath), pack.StoryFile)
 		if err != nil {
-			return StoryContent{}, fmt.Errorf("load story file for pack %s: %w", name, err)
+			return PackRuntimeContent{}, fmt.Errorf("load story file for pack %s: %w", name, err)
 		}
-		content.Arcs = append(content.Arcs, document.Arcs...)
+		content.Stories.Arcs = append(content.Stories.Arcs, document.Arcs...)
 	}
 
-	content.Tags = appendStoryTags(nil, content.Tags...)
+	content.Stories.Tags = appendStoryTags(nil, content.Stories.Tags...)
 	return content, nil
+}
+
+func roomIDExists(rooms []Room, id string) bool {
+	for _, room := range rooms {
+		if room.ID == id {
+			return true
+		}
+	}
+	return false
 }
 
 func ValidateStoryDocument(document StoryDocument) error {

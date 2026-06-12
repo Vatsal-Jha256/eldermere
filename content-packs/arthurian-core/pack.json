@@ -12,6 +12,7 @@
     "round-table-fracture"
   ],
   "rooms_file": "rooms.json",
+  "entry_room": "stone-yard",
   "story_file": "story_arcs.json",
   "interactions": [
     {

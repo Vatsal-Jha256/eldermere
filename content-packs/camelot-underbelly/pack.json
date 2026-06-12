@@ -9,6 +9,7 @@
     "excalibur-rumor"
   ],
   "rooms_file": "rooms.json",
+  "entry_room": "coin-arch",
   "interactions": [
     {
       "id": "excalibur-rumor-crosses-sea",
@@ -18,4 +19,3 @@
     }
   ]
 }
-

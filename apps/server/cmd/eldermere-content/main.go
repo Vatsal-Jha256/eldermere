@@ -51,6 +51,17 @@ func validatePack(path string) {
 		fmt.Fprintf(os.Stderr, "invalid content pack rooms: %v\n", err)
 		os.Exit(1)
 	}
+	if pack.EntryRoom != "" {
+		rooms, err := game.LoadRooms(os.DirFS(path), pack.RoomsFile)
+		if err != nil {
+			fmt.Fprintf(os.Stderr, "invalid content pack rooms: %v\n", err)
+			os.Exit(1)
+		}
+		if !packRoomExists(rooms, pack.EntryRoom) {
+			fmt.Fprintf(os.Stderr, "invalid content pack entry room: %q does not exist\n", pack.EntryRoom)
+			os.Exit(1)
+		}
+	}
 	if pack.StoryFile != "" {
 		if _, err := game.LoadStoryDocument(os.DirFS(path), pack.StoryFile); err != nil {
 			fmt.Fprintf(os.Stderr, "invalid content pack story: %v\n", err)
@@ -59,4 +70,13 @@ func validatePack(path string) {
 	}
 
 	fmt.Printf("valid content pack: %s\n", path)
+}
+
+func packRoomExists(rooms []game.Room, id string) bool {
+	for _, room := range rooms {
+		if room.ID == id {
+			return true
+		}
+	}
+	return false
 }

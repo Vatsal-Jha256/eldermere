@@ -383,3 +383,34 @@ func TestStoryRequiredTagsGateArcStart(t *testing.T) {
 		t.Fatalf("expected earned tag to unlock round-table-fractures, got %#v", events)
 	}
 }
+
+func TestTravelCommandMovesToContentPackEntryRoom(t *testing.T) {
+	world, err := NewStarterWorld().WithPackRuntimeContent(PackRuntimeContent{
+		Rooms: []Room{
+			{
+				ID:          "stone-yard",
+				Name:        "Stone Yard",
+				Description: "A valid content-pack room.",
+				Exits:       map[string]string{},
+			},
+		},
+		Entries: map[string]string{
+			"arthurian-core": "stone-yard",
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach pack runtime content: %v", err)
+	}
+	session := NewSession(world)
+
+	events := session.Handle("travel arthurian-core")
+	if len(events) != 2 {
+		t.Fatalf("expected move and room events, got %#v", events)
+	}
+	if session.RoomID() != "stone-yard" {
+		t.Fatalf("expected to travel to stone-yard, got %q", session.RoomID())
+	}
+	if events[1].Room == nil || events[1].Room.ID != "stone-yard" {
+		t.Fatalf("expected stone-yard room event, got %#v", events)
+	}
+}

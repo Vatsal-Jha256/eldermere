@@ -63,6 +63,7 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 - `story status`: inspect active story progress.
 - `story next`: advance the active story arc and collect outcome tags.
 - `story tags`: inspect earned branch and eligibility tags.
+- `travel arthurian-core`: move to a loaded content pack's entry room.
 - `look`: inspect the current room.
 - `go north`, `go east`, `go south`, `go west`: move through room exits.
 - `fight`: resolve the current room's encounter with a d20-style roll.

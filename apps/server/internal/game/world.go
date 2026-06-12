@@ -72,6 +72,7 @@ type World struct {
 	rooms         map[string]Room
 	stories       map[string]StoryArc
 	storySeedTags []string
+	packEntries   map[string]string
 }
 
 type Session struct {
@@ -131,19 +132,27 @@ func NewStarterWorld() World {
 }
 
 func LoadWorld(files fs.FS, path string) (World, error) {
-	payload, err := fs.ReadFile(files, path)
+	rooms, err := LoadRooms(files, path)
 	if err != nil {
 		return World{}, err
+	}
+	return NewWorld(rooms)
+}
+
+func LoadRooms(files fs.FS, path string) ([]Room, error) {
+	payload, err := fs.ReadFile(files, path)
+	if err != nil {
+		return nil, err
 	}
 
 	var document struct {
 		Rooms []Room `json:"rooms"`
 	}
 	if err := json.Unmarshal(payload, &document); err != nil {
-		return World{}, err
+		return nil, err
 	}
 
-	return NewWorld(document.Rooms)
+	return document.Rooms, nil
 }
 
 func NewWorld(rooms []Room) (World, error) {
@@ -199,7 +208,28 @@ func NewWorld(rooms []Room) (World, error) {
 		}
 	}
 
-	return World{rooms: byID, stories: map[string]StoryArc{}}, nil
+	return World{rooms: byID, stories: map[string]StoryArc{}, packEntries: map[string]string{}}, nil
+}
+
+func (w World) WithRooms(rooms []Room) (World, error) {
+	if len(rooms) == 0 {
+		return w, nil
+	}
+
+	combined := make([]Room, 0, len(w.rooms)+len(rooms))
+	for _, room := range w.rooms {
+		combined = append(combined, room)
+	}
+	combined = append(combined, rooms...)
+
+	next, err := NewWorld(combined)
+	if err != nil {
+		return World{}, err
+	}
+	next.stories = w.stories
+	next.storySeedTags = w.storySeedTags
+	next.packEntries = copyStringMap(w.packEntries)
+	return next, nil
 }
 
 func (w World) WithStoryArcs(arcs []StoryArc) (World, error) {
@@ -227,6 +257,24 @@ func (w World) WithStoryContent(content StoryContent) (World, error) {
 		return World{}, err
 	}
 	withStories.storySeedTags = appendStoryTags(withStories.storySeedTags, content.Tags...)
+	return withStories, nil
+}
+
+func (w World) WithPackRuntimeContent(content PackRuntimeContent) (World, error) {
+	withRooms, err := w.WithRooms(content.Rooms)
+	if err != nil {
+		return World{}, err
+	}
+	withStories, err := withRooms.WithStoryContent(content.Stories)
+	if err != nil {
+		return World{}, err
+	}
+	if withStories.packEntries == nil {
+		withStories.packEntries = map[string]string{}
+	}
+	for packID, roomID := range content.Entries {
+		withStories.packEntries[packID] = roomID
+	}
 	return withStories, nil
 }
 
@@ -329,6 +377,11 @@ func (s *Session) Handle(input string) []Event {
 			return []Event{{Type: "error", Text: "Go where? Try `go north`."}}
 		}
 		return s.goDirection(strings.ToLower(args[0]))
+	case "travel":
+		if len(args) == 0 {
+			return []Event{{Type: "error", Text: "Travel where? Try `travel arthurian-core`."}}
+		}
+		return s.travelToPack(strings.ToLower(args[0]))
 	case "say":
 		if len(args) == 0 {
 			return []Event{{Type: "error", Text: "Say what?"}}
@@ -356,7 +409,7 @@ func (s *Session) Handle(input string) []Event {
 		room := s.currentRoom()
 		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(s.visibleExitNames(room), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `story`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `story`, `travel arthurian-core`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
 	}
 }
 
@@ -381,6 +434,29 @@ func (s *Session) goDirection(direction string) []Event {
 	s.roomID = nextID
 	return []Event{
 		{Type: "move", Text: fmt.Sprintf("You go %s.", direction)},
+		s.look(),
+	}
+}
+
+func (s *Session) travelToPack(packID string) []Event {
+	roomID, ok := s.world.packEntries[packID]
+	if !ok {
+		packs := make([]string, 0, len(s.world.packEntries))
+		for id := range s.world.packEntries {
+			packs = append(packs, id)
+		}
+		sortStrings(packs)
+		if len(packs) == 0 {
+			return []Event{{Type: "error", Text: "No travel destinations are loaded yet."}}
+		}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown travel destination `%s`. Known packs: %s.", packID, strings.Join(packs, ", "))}}
+	}
+	if _, exists := s.world.rooms[roomID]; !exists {
+		return []Event{{Type: "error", Text: fmt.Sprintf("Travel destination `%s` points to missing room `%s`.", packID, roomID)}}
+	}
+	s.roomID = roomID
+	return []Event{
+		{Type: "move", Text: fmt.Sprintf("You travel to %s.", packID)},
 		s.look(),
 	}
 }
@@ -818,6 +894,14 @@ func sortItems(values []Item) {
 
 func copyFactions(values map[string]int) map[string]int {
 	copied := make(map[string]int, len(values))
+	for key, value := range values {
+		copied[key] = value
+	}
+	return copied
+}
+
+func copyStringMap(values map[string]string) map[string]string {
+	copied := make(map[string]string, len(values))
 	for key, value := range values {
 		copied[key] = value
 	}

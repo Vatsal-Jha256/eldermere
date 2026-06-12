@@ -56,21 +56,21 @@ func loadWorld(logger *slog.Logger, cfg config.Config) game.World {
 	candidates = append(candidates, "content-packs", "../../content-packs", "/app/content-packs")
 
 	for _, candidate := range candidates {
-		content, err := game.LoadStoryContentFromContentPacks(candidate)
+		content, err := game.LoadPackRuntimeContentFromContentPacks(candidate)
 		if err != nil {
 			logger.Debug("content packs not loaded", "path", candidate, "error", err)
 			continue
 		}
-		withStories, err := world.WithStoryContent(content)
+		withPacks, err := world.WithPackRuntimeContent(content)
 		if err != nil {
-			logger.Warn("content pack stories failed validation", "path", candidate, "error", err)
+			logger.Warn("content packs failed runtime validation", "path", candidate, "error", err)
 			return world
 		}
-		logger.Info("content pack stories loaded", "path", candidate, "arcs", len(content.Arcs), "seed_tags", len(content.Tags))
-		return withStories
+		logger.Info("content packs loaded", "path", candidate, "rooms", len(content.Rooms), "arcs", len(content.Stories.Arcs), "seed_tags", len(content.Stories.Tags))
+		return withPacks
 	}
 
-	logger.Warn("no content pack story directory found")
+	logger.Warn("no content pack directory found")
 	return world
 }
 

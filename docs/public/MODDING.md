@@ -20,6 +20,7 @@ go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly
 The validator checks:
 
 - Pack manifest has `id`, `name`, `myth_region`, and `rooms_file`.
+- Optional `entry_room` points `travel <pack-id>` to a specific room; otherwise the first room is used.
 - Pack interactions have ids, trigger tags, and descriptions.
 - Optional `story_file` documents have at least one story arc.
 - Story arcs include ids, titles, `main` or `side` kind, lore beats, source ids, summaries, original hooks, and steps.
@@ -40,6 +41,7 @@ Each pack has a `pack.json`:
   "myth_region": "Greek",
   "tags": ["greek", "oracle-network", "underworld-route"],
   "rooms_file": "rooms.json",
+  "entry_room": "oracle-jetty",
   "interactions": [
     {
       "id": "excalibur-rumor-reaches-oracle",
@@ -169,3 +171,5 @@ See:
 - `content-packs/greek-crossing`
 
 The Arthurian Core pack demonstrates source-grounded story arcs. The Greek Crossing pack demonstrates the connected-legend rule: it declares interactions that respond to Arthurian tags such as `excalibur-rumor` and `grail-curse` instead of behaving like an isolated Greek zone.
+
+At runtime, content-pack rooms are merged into the world and can be entered with `travel <pack-id>` using the pack's `entry_room`.

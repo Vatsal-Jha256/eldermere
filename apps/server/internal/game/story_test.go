@@ -76,9 +76,22 @@ func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 		"myth_region": "Arthurian",
 		"tags": ["arthurian"],
 		"rooms_file": "rooms.json",
+		"entry_room": "stone-yard",
 		"story_file": "story_arcs.json"
 	}`), 0o644); err != nil {
 		t.Fatalf("write pack manifest: %v", err)
+	}
+	if err := os.WriteFile(filepath.Join(packDir, "rooms.json"), []byte(`{
+		"rooms": [
+			{
+				"id": "stone-yard",
+				"name": "Stone Yard",
+				"description": "A valid room.",
+				"exits": {}
+			}
+		]
+	}`), 0o644); err != nil {
+		t.Fatalf("write rooms: %v", err)
 	}
 	if err := os.WriteFile(filepath.Join(packDir, "story_arcs.json"), []byte(`{
 		"arcs": [
@@ -117,5 +130,13 @@ func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 	}
 	if !storyContains(content.Tags, "arthurian") {
 		t.Fatalf("expected pack tags to seed story content, got %#v", content.Tags)
+	}
+
+	runtimeContent, err := LoadPackRuntimeContentFromContentPacks(root)
+	if err != nil {
+		t.Fatalf("load runtime content: %v", err)
+	}
+	if runtimeContent.Entries["arthurian-core"] != "stone-yard" {
+		t.Fatalf("expected arthurian-core entry room, got %#v", runtimeContent.Entries)
 	}
 }

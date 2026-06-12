@@ -95,9 +95,9 @@ This project should not fork, clone, or copy either reference. The implementatio
 1. Stage 0: scaffold repo with Go API/server, SvelteKit client, Docker Compose, PostgreSQL, public Docsify docs, and private local Docsify notes.
 2. Stage 1: single-player playable core loop with character creation, rooms, movement, room backgrounds/text, one recruitable companion/relic/ally, one probabilistic battle, and one short Arthurian quest arc.
 3. Stage 2: browser-MUD multiplayer with accounts/session auth, WebSocket command stream, room presence, local chat, and shared event log. Session-token auth, WebSocket command stream, room presence, local chat, and in-memory recent room event logs are in place.
-4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack.
+4. Stage 3: modding system with JSON or YAML content packs for rooms, NPCs, encounters, drops, factions, quests, validation CLI, and an example "Camelot Underbelly" mod pack. Content-pack rooms can be loaded into the runtime world and entered through pack entry rooms with `travel <pack-id>`.
 5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises. Initial map-gated route, faction reputation effects, party encounter bonuses, and quest-start variants are in place.
-6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes. Initial content-pack manifests, cross-pack interaction hooks, and a Greek Crossing example pack are in place.
+6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes. Initial content-pack manifests, cross-pack interaction hooks, runtime pack-room loading, travel entry points, and a Greek Crossing example pack are in place.
 7. Stage 6: Arthurian lore foundation. Collect, download, cite, and summarize public-domain Arthurian source material before expanding the Arthurian story. The game can add original content, but Arthurian main story and side arcs should first cover the major original lore beats, characters, relics, places, conflicts, and variations. Initial source corpus, citations, lore index, and story seed files are in place.
 8. Stage 7: story expansion. Use the Arthurian lore foundation to flesh out original main-story arcs, side quests, factions, companions, relics, and procedural variants while keeping modern adaptation material out of the source base. Initial validated Arthurian main and side arc data now exists in `content-packs/arthurian-core`; the server loads story arcs at startup and supports `story`, `story start`, `story status`, `story next`, and `story tags` with persisted progress, required-tag gates, and outcome tags. Deeper branching rules from factions and room state remain future work.
 9. Stage 8: dynamic atmospheric background generator. Add a system that generates or selects room backgrounds from structured room metadata so the browser MUD feels atmospheric while staying text-first and art-light. Initial metadata-driven CSS background generator is in place.
@@ -182,7 +182,7 @@ Stage 8: dynamic atmospheric background generator:
 ## Open Source And Modding
 
 - Public content packs should be data-first and reviewable.
-- Mods should be able to add rooms, NPCs, encounters, companions, relics, factions, and quests.
+- Mods should be able to add rooms, NPCs, encounters, companions, relics, factions, quests, story arcs, and travel entry points.
 - Content schemas should prefer clear IDs and tags over brittle code hooks.
 - The project should include a small example mod pack as soon as the core loop works.
 - Contributions should require tests for engine changes and validation for content changes.
