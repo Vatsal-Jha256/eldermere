@@ -14,6 +14,26 @@ Eldermere keeps local reference clones outside git in `reference-repos/`.
   - License observed locally: BSD 3-Clause
   - Useful references: game-agnostic MUD architecture, command/object/channel concepts, builder workflows, documentation depth, server/runtime separation.
 
+- `reference-repos/dikumud`
+  - Upstream: https://github.com/Seifert69/DikuMUD
+  - License observed locally: root LGPL 2.1 text plus `doc/license.doc` noting the 2020 LGPL release and preserving the original license for reference.
+  - Useful references: historical room files, command conventions, combat loop, credits/help traditions.
+
+- `reference-repos/circlemud`
+  - Upstream mirror: https://github.com/Yuffster/CircleMUD
+  - License observed locally: older CircleMUD/Diku license text with noncommercial and credit requirements.
+  - Use as architecture/history reference only unless a specific compatible source release is selected and notices are handled.
+
+- `reference-repos/fluffos`
+  - Upstream: https://github.com/fluffos/fluffos
+  - License observed locally: root `Copyright` carries LPmud/MudOS noncommercial restrictions; bundled third-party components have separate licenses.
+  - Use as architecture/history reference for driver/mudlib separation, LPC runtime ideas, WebSocket support, and test organization.
+
+- `reference-repos/ldmud`
+  - Upstream: https://github.com/ldmud/ldmud
+  - License observed locally: `COPYRIGHT` allows use/modification/redistribution but includes a no-monetary-gain restriction.
+  - Use as architecture/history reference for driver design, documentation, and mudlib support.
+
 ## Reuse Rules
 
 - Prefer original Eldermere code and data models unless a specific upstream implementation is intentionally reused.
@@ -35,9 +55,9 @@ These are not all Eldermere dependencies today. They are reference points to eva
 
 Historical MUD references to study carefully:
 
-- DikuMUD: historically important room/combat/content style. Treat as design history unless using a clearly compatible current source release with notices. Reference: https://dikumud.com/dikumud-license/
-- CircleMUD: useful for compact command-loop and builder workflow ideas; license status should be checked against the exact source used. Reference: https://www.circlemud.org/license.html
-- LPMud and modern LPMud drivers such as LDMud/FluffOS: useful for driver/mudlib separation and scripting architecture. References: https://www.ldmud.eu/ and https://github.com/fluffos/fluffos
+- DikuMUD: historically important room/combat/content style. Treat as design history unless using a clearly compatible current source release with notices. References: https://dikumud.com/dikumud-license/ and `reference-repos/dikumud`.
+- CircleMUD: useful for compact command-loop and builder workflow ideas; the checked mirror has older noncommercial requirements, so use as architecture/history reference by default. References: https://www.circlemud.org/license.html and `reference-repos/circlemud`.
+- LPMud and modern LPMud drivers such as LDMud/FluffOS: useful for driver/mudlib separation and scripting architecture. The checked LDMud and FluffOS roots retain no-monetary-gain restrictions, so use as architecture/history reference by default. References: https://www.ldmud.eu/, https://github.com/fluffos/fluffos, `reference-repos/ldmud`, and `reference-repos/fluffos`.
 - Merc, ROM, SMAUG, and Diku-family descendants: useful for command conventions, help systems, and area-file traditions, but reuse must respect derivative license chains and attribution requirements. Reference: https://github.com/alexmchale/merc-mud
 - DGD: useful reference for evented driver design and LPC-family architecture. Reference: https://www.dworkin.nl/dgd/
 
