@@ -280,3 +280,74 @@ func TestArthurianCoreMainPlotCanAdvanceInOrder(t *testing.T) {
 		}
 	}
 }
+
+func TestArthurianCoreSideArcsCanAdvanceWhenUnlocked(t *testing.T) {
+	_, file, _, ok := runtime.Caller(0)
+	if !ok {
+		t.Fatal("resolve test file path")
+	}
+	repoRoot := filepath.Clean(filepath.Join(filepath.Dir(file), "../../../.."))
+	content, err := LoadPackRuntimeContentFromContentPacks(filepath.Join(repoRoot, "content-packs"))
+	if err != nil {
+		t.Fatalf("load content packs: %v", err)
+	}
+	world, err := NewStarterWorld().WithPackRuntimeContent(content)
+	if err != nil {
+		t.Fatalf("attach runtime content: %v", err)
+	}
+	session := NewSessionWithRoller(world, func(sides int) int {
+		return 1
+	})
+	session.story.Tags = appendStoryTags(session.story.Tags,
+		"arthurian",
+		"avalon-road",
+		"excalibur-rumor",
+		"grail-witness",
+		"lost-scabbard",
+		"round-table-fracture",
+	)
+	session.factions["Avalon"] = 1
+	session.factions["Camelot Underbelly"] = 1
+	session.factions["Round Table"] = 1
+
+	sideArcIDs := []string{
+		"under-market-relic-trade",
+		"welsh-court-echoes",
+		"morgans-bargains",
+		"gawain-kinship-web",
+		"grail-witnesses",
+		"cross-myth-leaks",
+	}
+
+	for _, arcID := range sideArcIDs {
+		arc, ok := world.stories[arcID]
+		if !ok {
+			t.Fatalf("missing side arc %q", arcID)
+		}
+		events := session.Handle("story start " + arcID)
+		if len(events) != 1 || !strings.Contains(events[0].Text, "Story started") {
+			t.Fatalf("start %s: %#v", arcID, events)
+		}
+		for _, step := range arc.Steps {
+			if step.RoomHint != "" {
+				if _, ok := world.rooms[step.RoomHint]; !ok {
+					t.Fatalf("arc %s step %s points to missing room %q", arcID, step.ID, step.RoomHint)
+				}
+				session.roomID = step.RoomHint
+			}
+			events = session.Handle("story next")
+			if len(events) != 1 || strings.Contains(events[0].Text, "needs room") || strings.Contains(events[0].Text, "locked") {
+				t.Fatalf("advance %s/%s from room %q: %#v", arcID, step.ID, session.roomID, events)
+			}
+		}
+		if !storyContains(session.story.CompletedArcIDs, arcID) {
+			t.Fatalf("expected arc %s to be complete, got %#v", arcID, session.story)
+		}
+	}
+
+	for _, tag := range []string{"false-relic-market", "welsh-echo", "morgan-bargain", "gawain-kinship", "grail-testimony", "cross-myth-route"} {
+		if !storyContains(session.story.Tags, tag) {
+			t.Fatalf("expected completed side arc tag %q in %#v", tag, session.story.Tags)
+		}
+	}
+}
