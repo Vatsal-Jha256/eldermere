@@ -370,6 +370,8 @@ func (s *Session) Handle(input string) []Event {
 	args := parts[1:]
 
 	switch verb {
+	case "help", "commands", "?":
+		return []Event{s.helpStatus(args)}
 	case "look", "l":
 		return []Event{s.look()}
 	case "go", "move", "walk":
@@ -382,7 +384,7 @@ func (s *Session) Handle(input string) []Event {
 			return []Event{{Type: "error", Text: "Travel where? Try `travel arthurian-core`."}}
 		}
 		return s.travelToPack(strings.ToLower(args[0]))
-	case "say":
+	case "say", "talk":
 		if len(args) == 0 {
 			return []Event{{Type: "error", Text: "Say what?"}}
 		}
@@ -409,7 +411,33 @@ func (s *Session) Handle(input string) []Event {
 		room := s.currentRoom()
 		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(s.visibleExitNames(room), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `story`, `travel arthurian-core`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `help`.", verb)}}
+	}
+}
+
+func (s *Session) helpStatus(args []string) Event {
+	if len(args) == 0 {
+		return Event{
+			Type: "help",
+			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, map, say <text>. Try `help story`.",
+		}
+	}
+
+	switch strings.ToLower(strings.TrimSpace(args[0])) {
+	case "movement", "move", "go", "travel":
+		return Event{Type: "help", Text: "Movement: `look` shows the current room, `exits` lists visible exits, `go north` moves through exits, and `travel arthurian-core` enters a loaded content pack entry room."}
+	case "story", "quest", "plot":
+		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
+	case "combat", "fight", "recruit":
+		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, and `party` lists recruited allies."}
+	case "inventory", "items", "take":
+		return Event{Type: "help", Text: "Inventory: `take` collects the current room item, `inventory` lists carried relics/items, and some items unlock hidden map routes."}
+	case "social", "say", "talk", "multiplayer":
+		return Event{Type: "help", Text: "Social: `say hello` or `talk hello` sends local speech to players in the same room. Room presence and recent room events are shared over the WebSocket session."}
+	case "world", "factions", "map":
+		return Event{Type: "help", Text: "World state: `factions` shows reputation changes from encounters and story steps. `map` shows hidden or gated exits from the current room."}
+	default:
+		return Event{Type: "help", Text: fmt.Sprintf("Unknown help topic `%s`. Try `help`, `help story`, `help movement`, `help combat`, `help inventory`, `help social`, or `help world`.", args[0])}
 	}
 }
 

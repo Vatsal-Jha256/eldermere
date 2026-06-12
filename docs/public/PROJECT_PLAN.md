@@ -67,7 +67,7 @@ This changes the original Stage 5 from "add Greek, Celtic, Norse, South Asian, o
 - Public docs: install, modding, content schema, contribution guide, and contributor workflow.
 - Private docs: learning notes for Go concurrency, WebSockets, persistence, game loops, ECS/state modeling, testing, and deployment.
 
-The backend should expose a command-driven game loop inspired by MUD architecture: parse command, validate actor state, apply world rules, persist changes, broadcast room/player updates, and return a readable event log.
+The backend should expose a command-driven game loop inspired by MUD architecture: parse command, validate actor state, apply world rules, persist changes, broadcast room/player updates, and return a readable event log. The command layer should keep improving toward a classic MUD feel with discoverable `help` topics, aliases, room-aware feedback, and builder-friendly command surfaces.
 
 The frontend should be a browser-native MUD client, not a generic marketing site. First screen should be playable: terminal, room background, room text, exits, inventory/party panel, and event feed.
 

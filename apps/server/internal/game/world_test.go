@@ -36,6 +36,35 @@ func TestSessionUnknownCommand(t *testing.T) {
 	if events[0].Type != "error" {
 		t.Fatalf("expected error event, got %q", events[0].Type)
 	}
+	if !strings.Contains(events[0].Text, "Try `help`") {
+		t.Fatalf("expected unknown command to suggest help, got %q", events[0].Text)
+	}
+}
+
+func TestHelpCommandTopics(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("help")
+	if len(events) != 1 || events[0].Type != "help" {
+		t.Fatalf("expected help event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "Help topics") || !strings.Contains(events[0].Text, "story") {
+		t.Fatalf("expected help index, got %q", events[0].Text)
+	}
+
+	events = session.Handle("help story")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "story start <id>") {
+		t.Fatalf("expected story help, got %#v", events)
+	}
+}
+
+func TestTalkAliasUsesSayEvent(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("talk hello")
+	if len(events) != 1 || events[0].Type != "say" {
+		t.Fatalf("expected say event from talk alias, got %#v", events)
+	}
 }
 
 func TestLoadWorldValidatesExitTargets(t *testing.T) {

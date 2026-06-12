@@ -27,6 +27,8 @@
   };
 
   const commands = [
+    'help',
+    'help story',
     'quest',
     'story',
     'story start sword-test',

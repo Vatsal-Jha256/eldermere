@@ -56,6 +56,8 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 
 ## Starter Commands
 
+- `help`: list command families and discover focused help topics.
+- `help story`, `help movement`, `help combat`, `help inventory`, `help social`, `help world`: inspect focused MUD-style help topics.
 - `quest`: start or check the starter quest.
 - `story`: list loaded story arcs from content packs.
 - `story sword-test`: inspect a source-grounded Arthurian story arc.
@@ -73,7 +75,7 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 - `inventory`: list carried items.
 - `party`: list recruited companions.
 - `map`: inspect hidden or gated routes from the current room.
-- `say hello`: send a local speech event.
+- `say hello` or `talk hello`: send a local speech event.
 
 Players in the same room receive presence, `say`, fight, and recruit events. New arrivals receive the recent room event log.
 
