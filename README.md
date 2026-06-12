@@ -15,13 +15,13 @@ Stage 0 scaffold is in place. The current repo has:
 - Session-authenticated persistent player state for room, inventory, party, and quest progress
 - Room presence, local chat, and recent room event log
 - Arthurian starter region
-- Runtime-loaded Arthurian story arcs from content packs
+- Runtime-loaded Arthurian story arcs from content packs, with start/status/advance commands
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is deeper runtime quest execution from the validated story arc data.
+The next implementation target is deeper branching rules from story tags, factions, and room state.
 
 ## Run Locally
 
@@ -42,7 +42,7 @@ Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres i
 
 The browser stores an `eldermere.session` object in `localStorage`, created through `POST /api/v1/sessions`. The session token is required by the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects without exposing unauthenticated state changes.
 
-Try `story` in the command console to list loaded Arthurian story arcs, then `story sword-test` to inspect a source-grounded arc.
+Try `story` in the command console to list loaded Arthurian story arcs, `story sword-test` to inspect one, `story start sword-test` to begin, and `story next` to advance.
 
 ## Checks
 

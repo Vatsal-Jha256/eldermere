@@ -79,6 +79,7 @@ type Session struct {
 	party    map[string]bool
 	items    map[string]Item
 	quest    QuestState
+	story    StoryState
 	factions map[string]int
 	roll     func(sides int) int
 }
@@ -94,7 +95,16 @@ type PersistentState struct {
 	Party    []string       `json:"party"`
 	Items    []Item         `json:"items"`
 	Quest    QuestState     `json:"quest"`
+	Story    StoryState     `json:"story"`
 	Factions map[string]int `json:"factions"`
+}
+
+type StoryState struct {
+	ActiveArcID     string   `json:"active_arc_id"`
+	StepIndex       int      `json:"step_index"`
+	CompletedArcIDs []string `json:"completed_arc_ids"`
+	Tags            []string `json:"tags"`
+	VariantTag      string   `json:"variant_tag"`
 }
 
 type Event struct {
@@ -217,6 +227,7 @@ func NewSession(world World) Session {
 		party:    map[string]bool{},
 		items:    map[string]Item{},
 		quest:    QuestState{},
+		story:    StoryState{},
 		factions: map[string]int{},
 		roll:     defaultRoller(),
 	}
@@ -244,6 +255,7 @@ func NewSessionFromState(world World, state PersistentState) Session {
 		}
 	}
 	session.quest = state.Quest
+	session.story = state.Story
 	for name, value := range state.Factions {
 		if strings.TrimSpace(name) != "" {
 			session.factions[name] = value
@@ -270,6 +282,7 @@ func (s *Session) PersistentState() PersistentState {
 		Party:    party,
 		Items:    items,
 		Quest:    s.quest,
+		Story:    normalizeStoryState(s.story),
 		Factions: copyFactions(s.factions),
 	}
 }
@@ -538,10 +551,23 @@ func (s *Session) storyStatus(args []string) Event {
 	}
 
 	if len(args) > 0 {
+		action := strings.ToLower(strings.TrimSpace(args[0]))
+		switch action {
+		case "start":
+			if len(args) < 2 {
+				return Event{Type: "story", Text: "Start which story arc? Try `story start sword-test`."}
+			}
+			return s.startStoryArc(strings.ToLower(strings.TrimSpace(args[1])))
+		case "next", "advance":
+			return s.advanceStoryArc()
+		case "status", "active":
+			return s.activeStoryStatus()
+		}
+
 		id := strings.ToLower(strings.TrimSpace(args[0]))
 		arc, ok := s.world.stories[id]
 		if !ok {
-			return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is not loaded. Try `story` to list known arcs.", id)}
+			return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is not loaded. Try `story` to list known arcs or `story start sword-test` to begin one.", id)}
 		}
 		stepTitles := make([]string, 0, len(arc.Steps))
 		for _, step := range arc.Steps {
@@ -567,8 +593,111 @@ func (s *Session) storyStatus(args []string) Event {
 
 	return Event{
 		Type: "story",
-		Text: fmt.Sprintf("Story arcs loaded. Main: %s. Side: %s. Try `story sword-test` for details.", strings.Join(mainIDs, ", "), strings.Join(sideIDs, ", ")),
+		Text: fmt.Sprintf("Story arcs loaded. Main: %s. Side: %s. Try `story sword-test` for details or `story start sword-test` to play an arc.", strings.Join(mainIDs, ", "), strings.Join(sideIDs, ", ")),
 	}
+}
+
+func (s *Session) startStoryArc(id string) Event {
+	arc, ok := s.world.stories[id]
+	if !ok {
+		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is not loaded. Try `story` to list known arcs.", id)}
+	}
+	if storyContains(s.story.CompletedArcIDs, id) {
+		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is already complete. You can inspect it with `story %s`.", id, id)}
+	}
+
+	var variant string
+	if len(arc.VariationTags) > 0 {
+		index := s.roll(len(arc.VariationTags)) - 1
+		if index < 0 || index >= len(arc.VariationTags) {
+			index = 0
+		}
+		variant = arc.VariationTags[index]
+	}
+
+	s.story.ActiveArcID = id
+	s.story.StepIndex = 0
+	s.story.VariantTag = variant
+	step := arc.Steps[0]
+	text := fmt.Sprintf("Story started: %s. Step 1/%d - %s: %s", arc.Title, len(arc.Steps), step.Title, step.Objective)
+	if variant != "" {
+		text = fmt.Sprintf("%s Variant: %s.", text, variant)
+	}
+	return Event{Type: "story", Text: text}
+}
+
+func (s *Session) advanceStoryArc() Event {
+	if s.story.ActiveArcID == "" {
+		return Event{Type: "story", Text: "No story arc is active. Try `story start sword-test`."}
+	}
+	arc, ok := s.world.stories[s.story.ActiveArcID]
+	if !ok {
+		s.story.ActiveArcID = ""
+		s.story.StepIndex = 0
+		s.story.VariantTag = ""
+		return Event{Type: "story", Text: "The active story arc is no longer loaded, so progress was cleared."}
+	}
+
+	if s.story.StepIndex < 0 {
+		s.story.StepIndex = 0
+	}
+	if s.story.StepIndex >= len(arc.Steps) {
+		return s.completeStoryArc(arc)
+	}
+
+	step := arc.Steps[s.story.StepIndex]
+	s.story.Tags = appendStoryTags(s.story.Tags, step.OutcomeTags...)
+	if s.story.StepIndex < len(arc.Steps)-1 {
+		s.story.StepIndex++
+		next := arc.Steps[s.story.StepIndex]
+		return Event{
+			Type: "story",
+			Text: fmt.Sprintf("Story advanced: %s. Step %d/%d - %s: %s", arc.Title, s.story.StepIndex+1, len(arc.Steps), next.Title, next.Objective),
+		}
+	}
+
+	return s.completeStoryArc(arc)
+}
+
+func (s *Session) completeStoryArc(arc StoryArc) Event {
+	s.story.Tags = appendStoryTags(s.story.Tags, arc.AddsTags...)
+	if s.story.VariantTag != "" {
+		s.story.Tags = appendStoryTags(s.story.Tags, s.story.VariantTag)
+	}
+	s.story.CompletedArcIDs = appendStoryTags(s.story.CompletedArcIDs, arc.ID)
+	s.story.ActiveArcID = ""
+	s.story.StepIndex = 0
+	s.story.VariantTag = ""
+	return Event{Type: "story", Text: fmt.Sprintf("Story complete: %s. Tags gained: %s.", arc.Title, strings.Join(s.story.Tags, ", "))}
+}
+
+func (s *Session) activeStoryStatus() Event {
+	if s.story.ActiveArcID == "" {
+		completed := append([]string{}, s.story.CompletedArcIDs...)
+		sortStrings(completed)
+		if len(completed) == 0 {
+			return Event{Type: "story", Text: "No story arc is active and no story arcs are complete."}
+		}
+		return Event{Type: "story", Text: fmt.Sprintf("No story arc is active. Completed: %s.", strings.Join(completed, ", "))}
+	}
+
+	arc, ok := s.world.stories[s.story.ActiveArcID]
+	if !ok {
+		return Event{Type: "story", Text: fmt.Sprintf("Active story arc `%s` is not loaded.", s.story.ActiveArcID)}
+	}
+	index := s.story.StepIndex
+	if index < 0 {
+		index = 0
+	}
+	if index >= len(arc.Steps) {
+		index = len(arc.Steps) - 1
+	}
+	step := arc.Steps[index]
+	text := fmt.Sprintf("Story active: %s. Step %d/%d - %s: %s", arc.Title, index+1, len(arc.Steps), step.Title, step.Objective)
+	if s.story.VariantTag != "" {
+		text = fmt.Sprintf("%s Variant: %s.", text, s.story.VariantTag)
+	}
+	return Event{Type: "story", Text: text}
 }
 
 func (s *Session) hasItem(id string) bool {
@@ -666,6 +795,36 @@ func copyFactions(values map[string]int) map[string]int {
 		copied[key] = value
 	}
 	return copied
+}
+
+func normalizeStoryState(state StoryState) StoryState {
+	state.CompletedArcIDs = appendStoryTags(nil, state.CompletedArcIDs...)
+	state.Tags = appendStoryTags(nil, state.Tags...)
+	return state
+}
+
+func appendStoryTags(existing []string, incoming ...string) []string {
+	seen := map[string]bool{}
+	tags := make([]string, 0, len(existing)+len(incoming))
+	for _, tag := range append(existing, incoming...) {
+		tag = strings.TrimSpace(tag)
+		if tag == "" || seen[tag] {
+			continue
+		}
+		seen[tag] = true
+		tags = append(tags, tag)
+	}
+	sortStrings(tags)
+	return tags
+}
+
+func storyContains(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
 
 func defaultRoller() func(sides int) int {

@@ -263,3 +263,66 @@ func TestStoryCommandListsAndShowsLoadedArcs(t *testing.T) {
 		t.Fatalf("expected story detail with source id, got %#v", events)
 	}
 }
+
+func TestStoryCommandStartsAdvancesCompletesAndPersists(t *testing.T) {
+	world, err := NewStarterWorld().WithStoryArcs([]StoryArc{
+		{
+			ID:            "sword-test",
+			Title:         "The Sword Test",
+			Kind:          "main",
+			LoreBeats:     []string{"Sword test and contested kingship"},
+			SourceIDs:     []string{"malory-1251"},
+			Summary:       "Arthur's legitimacy is contested.",
+			OriginalHook:  "The under-market sells false proof.",
+			AddsTags:      []string{"sword-test", "contested-kingship"},
+			VariationTags: []string{"bribed-witness"},
+			Steps: []StoryStep{
+				{
+					ID:          "witness",
+					Title:       "Find a witness",
+					Objective:   "Find someone who saw the sword test.",
+					OutcomeTags: []string{"witness-contradiction"},
+				},
+				{
+					ID:          "publish",
+					Title:       "Publish a version",
+					Objective:   "Choose the public account.",
+					OutcomeTags: []string{"arthur-accepted"},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach stories: %v", err)
+	}
+	session := NewSessionWithRoller(world, func(sides int) int {
+		return 1
+	})
+
+	events := session.Handle("story start sword-test")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Variant: bribed-witness") {
+		t.Fatalf("expected story start with variant, got %#v", events)
+	}
+	if session.story.ActiveArcID != "sword-test" {
+		t.Fatalf("expected active sword-test story, got %#v", session.story)
+	}
+
+	resumed := NewSessionFromState(world, session.PersistentState())
+	events = resumed.Handle("story next")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Step 2/2") {
+		t.Fatalf("expected story to advance to second step, got %#v", events)
+	}
+
+	events = resumed.Handle("story next")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story complete") {
+		t.Fatalf("expected story completion, got %#v", events)
+	}
+	if resumed.story.ActiveArcID != "" || !storyContains(resumed.story.CompletedArcIDs, "sword-test") {
+		t.Fatalf("expected completed story state, got %#v", resumed.story)
+	}
+	for _, tag := range []string{"arthur-accepted", "bribed-witness", "contested-kingship", "sword-test", "witness-contradiction"} {
+		if !storyContains(resumed.story.Tags, tag) {
+			t.Fatalf("expected story tag %q in %#v", tag, resumed.story.Tags)
+		}
+	}
+}

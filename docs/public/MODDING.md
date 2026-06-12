@@ -93,7 +93,7 @@ And a `rooms.json`:
 
 ## Story Arc Shape
 
-A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through the `story` command. The richer quest engine still needs to turn these arcs into full branching runtime quests.
+A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, and `story next`. The richer quest engine still needs deeper branching rules from story tags, factions, and room state.
 
 ```json
 {
