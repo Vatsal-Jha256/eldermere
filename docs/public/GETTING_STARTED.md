@@ -52,7 +52,7 @@ npm run check
 - `docs/public`: public Docsify documentation.
 - `private-docs`: local learning notes, ignored by git.
 
-Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs.
+Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs. The browser combines CSS atmosphere layers with a procedural canvas backdrop, so content packs can look distinct without shipping image files.
 
 ## Starter Commands
 

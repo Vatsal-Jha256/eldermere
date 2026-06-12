@@ -164,7 +164,7 @@ Fields:
 - `myth_layer`: the room's mythic context, such as `arthurian court`, `under-market`, or `greek underworld`.
 - `motifs`: inspectable visual motifs that should influence future generated art prompts.
 
-The current implementation generates CSS backgrounds. A later renderer can use the same fields as prompts for generated bitmap backgrounds.
+The current implementation combines CSS atmosphere layers with a deterministic procedural canvas renderer. This creates bitmap-like room backdrops from the same metadata, including palette, weather, myth layer, and motifs. A later generated-image renderer can reuse the same fields as prompts for richer static bitmap assets.
 
 ## Current Example
 

@@ -33,6 +33,16 @@ TalesMUD's own acknowledgments point toward useful ecosystem references:
 
 These are not all Eldermere dependencies today. They are reference points to evaluate deliberately when a feature needs them.
 
+Historical MUD references to study carefully:
+
+- DikuMUD: historically important room/combat/content style. Treat as design history unless using a clearly compatible current source release with notices. Reference: https://dikumud.com/dikumud-license/
+- CircleMUD: useful for compact command-loop and builder workflow ideas; license status should be checked against the exact source used. Reference: https://www.circlemud.org/license.html
+- LPMud and modern LPMud drivers such as LDMud/FluffOS: useful for driver/mudlib separation and scripting architecture. References: https://www.ldmud.eu/ and https://github.com/fluffos/fluffos
+- Merc, ROM, SMAUG, and Diku-family descendants: useful for command conventions, help systems, and area-file traditions, but reuse must respect derivative license chains and attribution requirements. Reference: https://github.com/alexmchale/merc-mud
+- DGD: useful reference for evented driver design and LPC-family architecture. Reference: https://www.dworkin.nl/dgd/
+
+Do not import code from historical MUD codebases until the exact source, license, and required notices are recorded.
+
 ## Current Direction
 
 Near-term engine ideas to adapt:
