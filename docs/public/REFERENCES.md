@@ -4,6 +4,8 @@
 
 - Site/repository: <https://github.com/TalesMUD/talesmud>
 - Project docs page found during planning: <https://github.com/TalesMUD/talesmud/blob/master/PROJECT.md>
+- Local reference clone: `reference-repos/talesmud` outside git.
+- License observed locally: MIT.
 
 Relevant ideas:
 
@@ -16,12 +18,15 @@ How Eldermere should use it:
 - Treat TalesMUD as a product and architecture reference.
 - Do not copy implementation details, UI, world content, writing, or branding.
 - Re-check license and code boundaries before adopting any code directly.
+- Also note its ecosystem inspirations: MUD history, `gopher-lua`, `xterm.js`, Svelte, and Gin.
 
 ## Evennia
 
 - Site: <https://www.evennia.com/>
 - GitHub: <https://github.com/evennia/evennia>
 - Introduction: <https://www.evennia.com/docs/latest/Evennia-Introduction.html>
+- Local reference clone: `reference-repos/evennia` outside git.
+- License observed locally: BSD 3-Clause.
 
 Relevant ideas:
 
@@ -34,6 +39,10 @@ How Eldermere should use it:
 - Treat Evennia as a design reference for flexible MUD architecture.
 - Study its concepts, not its exact Python/Django/Twisted implementation.
 - Keep game-specific systems such as dice combat, companions, relics, and legend packs separate from the lower-level command/world engine.
+
+## Reference Audit
+
+See [Reference Audit](REFERENCE_AUDIT.md) for local clone locations, reuse rules, and wider MUD ecosystem notes.
 
 ## Public Domain And Adaptations
 

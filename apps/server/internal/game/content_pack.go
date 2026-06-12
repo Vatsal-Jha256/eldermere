@@ -122,12 +122,13 @@ type StoryArc struct {
 }
 
 type StoryStep struct {
-	ID          string   `json:"id"`
-	Title       string   `json:"title"`
-	RoomHint    string   `json:"room_hint,omitempty"`
-	Objective   string   `json:"objective"`
-	Commands    []string `json:"commands,omitempty"`
-	OutcomeTags []string `json:"outcome_tags,omitempty"`
+	ID             string         `json:"id"`
+	Title          string         `json:"title"`
+	RoomHint       string         `json:"room_hint,omitempty"`
+	Objective      string         `json:"objective"`
+	Commands       []string       `json:"commands,omitempty"`
+	OutcomeTags    []string       `json:"outcome_tags,omitempty"`
+	FactionEffects map[string]int `json:"faction_effects,omitempty"`
 }
 
 func LoadStoryDocument(files fs.FS, path string) (StoryDocument, error) {

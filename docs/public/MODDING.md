@@ -95,7 +95,7 @@ And a `rooms.json`:
 
 ## Story Arc Shape
 
-A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, `story next`, and `story tags`. Required tags lock arcs until earlier story outcomes add the right tags. The richer quest engine still needs deeper branching rules from factions and room state.
+A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, `story next`, and `story tags`. Required tags lock arcs until earlier story outcomes add the right tags. Steps with `room_hint` require the player to be in that room before `story next` advances. Story steps can also change faction reputation through `faction_effects`.
 
 ```json
 {
@@ -120,7 +120,11 @@ A pack can also include `story_file` in `pack.json`. The server loads validated 
           "room_hint": "stone-yard",
           "objective": "Find three incompatible accounts of the sword test.",
           "commands": ["look", "quest"],
-          "outcome_tags": ["witness-contradiction"]
+          "outcome_tags": ["witness-contradiction"],
+          "faction_effects": {
+            "Round Table": 1,
+            "Camelot Underbelly": -1
+          }
         }
       ]
     }
@@ -140,7 +144,7 @@ Story fields:
 - `required_tags`: world tags that must exist before the arc is eligible.
 - `adds_tags`: world tags the arc can add for later quests or cross-pack interactions.
 - `variation_tags`: branch tags for probabilistic or source-variant outcomes.
-- `steps`: playable objectives with optional room hints, commands, and outcome tags.
+- `steps`: playable objectives with optional room hints, commands, outcome tags, and faction effects.
 
 ## Writing Rules
 

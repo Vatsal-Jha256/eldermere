@@ -414,3 +414,66 @@ func TestTravelCommandMovesToContentPackEntryRoom(t *testing.T) {
 		t.Fatalf("expected stone-yard room event, got %#v", events)
 	}
 }
+
+func TestStoryStepRequiresRoomAndCanChangeFaction(t *testing.T) {
+	world, err := NewStarterWorld().WithPackRuntimeContent(PackRuntimeContent{
+		Rooms: []Room{
+			{
+				ID:          "stone-yard",
+				Name:        "Stone Yard",
+				Description: "A valid content-pack room.",
+				Exits:       map[string]string{},
+			},
+		},
+		Stories: StoryContent{
+			Tags: []string{"arthurian"},
+			Arcs: []StoryArc{
+				{
+					ID:           "sword-test",
+					Title:        "The Sword Test",
+					Kind:         "main",
+					LoreBeats:    []string{"Sword test and contested kingship"},
+					SourceIDs:    []string{"malory-1251"},
+					Summary:      "Arthur's legitimacy is contested.",
+					OriginalHook: "The under-market sells false proof.",
+					RequiredTags: []string{"arthurian"},
+					Steps: []StoryStep{
+						{
+							ID:          "witness",
+							Title:       "Find a witness",
+							RoomHint:    "stone-yard",
+							Objective:   "Find someone who saw the sword test.",
+							OutcomeTags: []string{"witness-contradiction"},
+							FactionEffects: map[string]int{
+								"Round Table": 1,
+							},
+						},
+					},
+				},
+			},
+		},
+		Entries: map[string]string{
+			"arthurian-core": "stone-yard",
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach pack runtime content: %v", err)
+	}
+	session := NewSession(world)
+
+	session.Handle("story start sword-test")
+	events := session.Handle("story next")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "needs room `stone-yard`") {
+		t.Fatalf("expected room-gated story step, got %#v", events)
+	}
+
+	session.Handle("travel arthurian-core")
+	events = session.Handle("story next")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story complete") {
+		t.Fatalf("expected story completion after reaching room, got %#v", events)
+	}
+	events = session.Handle("factions")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Round Table +1") {
+		t.Fatalf("expected story faction effect, got %#v", events)
+	}
+}

@@ -741,7 +741,18 @@ func (s *Session) advanceStoryArc() Event {
 	}
 
 	step := arc.Steps[s.story.StepIndex]
+	if strings.TrimSpace(step.RoomHint) != "" && step.RoomHint != s.roomID {
+		return Event{
+			Type: "story",
+			Text: fmt.Sprintf("Story step needs room `%s`; you are in `%s`. Travel or move there before advancing.", step.RoomHint, s.roomID),
+		}
+	}
 	s.story.Tags = appendStoryTags(s.story.Tags, step.OutcomeTags...)
+	for faction, delta := range step.FactionEffects {
+		if strings.TrimSpace(faction) != "" {
+			s.factions[faction] += delta
+		}
+	}
 	if s.story.StepIndex < len(arc.Steps)-1 {
 		s.story.StepIndex++
 		next := arc.Steps[s.story.StepIndex]

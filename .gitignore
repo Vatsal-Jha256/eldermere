@@ -27,3 +27,5 @@ logs/
 # Private local learning notes
 private-docs/
 
+# Local upstream reference clones
+reference-repos/

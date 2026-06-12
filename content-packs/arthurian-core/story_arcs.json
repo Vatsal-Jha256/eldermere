@@ -37,7 +37,11 @@
           "room_hint": "stone-yard",
           "objective": "Publish a version that shapes which factions accept Arthur first.",
           "commands": ["go west", "quest"],
-          "outcome_tags": ["arthur-accepted", "faction-friction"]
+          "outcome_tags": ["arthur-accepted", "faction-friction"],
+          "faction_effects": {
+            "Round Table": 1,
+            "Camelot Underbelly": -1
+          }
         }
       ]
     },
@@ -78,7 +82,11 @@
           "room_hint": "scabbard-vault",
           "objective": "Record who pays when prophecy prevents one disaster and invites another.",
           "commands": ["go east", "look"],
-          "outcome_tags": ["prophecy-cost-known"]
+          "outcome_tags": ["prophecy-cost-known"],
+          "faction_effects": {
+            "Merlin's Couriers": 1,
+            "Mordred's Brokers": -1
+          }
         }
       ]
     },
@@ -119,7 +127,11 @@
           "room_hint": "avalon-shore",
           "objective": "Use the map scrap to prove Avalon is a route the world can negotiate with.",
           "commands": ["go east", "look"],
-          "outcome_tags": ["avalon-road-open"]
+          "outcome_tags": ["avalon-road-open"],
+          "faction_effects": {
+            "Avalon": 1,
+            "Relic Dealers": -1
+          }
         }
       ]
     },
@@ -160,7 +172,11 @@
           "room_hint": "round-table-threshold",
           "objective": "Choose a compromise that preserves fellowship while leaving a future cost on the board.",
           "commands": ["quest", "say terms"],
-          "outcome_tags": ["fellowship-preserved"]
+          "outcome_tags": ["fellowship-preserved"],
+          "faction_effects": {
+            "Round Table": 1,
+            "Camelot Underbelly": -1
+          }
         }
       ]
     },
@@ -201,7 +217,11 @@
           "room_hint": "ferry-shrine",
           "objective": "Let the Grail wound disturb cross-legend roads so other myth packs can react.",
           "commands": ["go south", "quest"],
-          "outcome_tags": ["grail-wound-crosses-world"]
+          "outcome_tags": ["grail-wound-crosses-world"],
+          "faction_effects": {
+            "Grail Witnesses": 1,
+            "Underworld Ferries": -1
+          }
         }
       ]
     },
@@ -242,7 +262,11 @@
           "room_hint": "mordreds-writ-room",
           "objective": "Answer Mordred with law, mercy, exposure, or force, each carrying a different road to Camlann.",
           "commands": ["quest", "fight"],
-          "outcome_tags": ["camlann-route-set"]
+          "outcome_tags": ["camlann-route-set"],
+          "faction_effects": {
+            "Round Table": 1,
+            "Mordred's Brokers": -1
+          }
         }
       ]
     },
@@ -283,7 +307,11 @@
           "room_hint": "avalon-shore",
           "objective": "Resolve the campaign by choosing which uncertainty the world must live with.",
           "commands": ["quest"],
-          "outcome_tags": ["ending-uncertain-by-design"]
+          "outcome_tags": ["ending-uncertain-by-design"],
+          "faction_effects": {
+            "Avalon": 2,
+            "Round Table": 1
+          }
         }
       ]
     },

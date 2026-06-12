@@ -3,4 +3,5 @@
 - [Project Plan](PROJECT_PLAN.md)
 - [Modding](MODDING.md)
 - [References](REFERENCES.md)
+- [Reference Audit](REFERENCE_AUDIT.md)
 - [Checkpoint Workflow](CHECKPOINTS.md)

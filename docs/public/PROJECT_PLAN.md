@@ -88,7 +88,9 @@ Evennia is a reference for:
 - Builder-friendly content workflows.
 - Keeping the engine flexible instead of forcing one combat or class system.
 
-This project should not fork, clone, or copy either reference. The implementation should use original code and its own data model unless a dependency is deliberately adopted under its license.
+This project should not become a fork or clone of either reference. The implementation should use original code and its own data model unless a dependency or upstream implementation is deliberately adopted under its license.
+
+Local reference clones of TalesMUD and Evennia are kept in ignored `reference-repos/` for architecture study. Their licenses and wider ecosystem notes are recorded in `docs/public/REFERENCE_AUDIT.md`. Eldermere can selectively adapt compatible implementation ideas with attribution, but the default path remains original code, original content, and project-specific mechanics.
 
 ## Implementation Stages
 
@@ -99,8 +101,8 @@ This project should not fork, clone, or copy either reference. The implementatio
 5. Stage 4: richer world with map-gated navigation, factions, party encounters, and procedural quest variations so legend-knowers still get surprises. Initial map-gated route, faction reputation effects, party encounter bonuses, and quest-start variants are in place.
 6. Stage 5: expanded legend universe where Greek, Celtic, Norse, South Asian, and other legend packs interact with the same world state rather than sitting in separate game modes. Initial content-pack manifests, cross-pack interaction hooks, runtime pack-room loading, travel entry points, and a Greek Crossing example pack are in place.
 7. Stage 6: Arthurian lore foundation. Collect, download, cite, and summarize public-domain Arthurian source material before expanding the Arthurian story. The game can add original content, but Arthurian main story and side arcs should first cover the major original lore beats, characters, relics, places, conflicts, and variations. Initial source corpus, citations, lore index, and story seed files are in place.
-8. Stage 7: story expansion. Use the Arthurian lore foundation to flesh out original main-story arcs, side quests, factions, companions, relics, and procedural variants while keeping modern adaptation material out of the source base. Initial validated Arthurian main and side arc data now exists in `content-packs/arthurian-core`; the server loads story arcs at startup and supports `story`, `story start`, `story status`, `story next`, and `story tags` with persisted progress, required-tag gates, and outcome tags. Deeper branching rules from factions and room state remain future work.
-9. Stage 8: dynamic atmospheric background generator. Add a system that generates or selects room backgrounds from structured room metadata so the browser MUD feels atmospheric while staying text-first and art-light. Initial metadata-driven CSS background generator is in place.
+8. Stage 7: story expansion. Use the Arthurian lore foundation to flesh out original main-story arcs, side quests, factions, companions, relics, and procedural variants while keeping modern adaptation material out of the source base. Initial validated Arthurian main and side arc data now exists in `content-packs/arthurian-core`; the server loads story arcs at startup and supports `story`, `story start`, `story status`, `story next`, and `story tags` with persisted progress, required-tag gates, room-gated steps, outcome tags, and faction effects. Deeper branching rules from full faction thresholds and richer room state remain future work.
+9. Stage 8: dynamic atmospheric background generator. Add a system that generates or selects room backgrounds from structured room metadata so the browser MUD feels atmospheric while staying text-first and art-light. Initial metadata-driven CSS background generator is in place. Deeper bitmap or generated-image background work should come after the core Arthurian plot is fully playable and checked.
 
 ## Original Stage Details To Preserve
 
@@ -162,6 +164,7 @@ Stage 8: dynamic atmospheric background generator:
 - Generate or select atmospheric backgrounds for rooms without making art production block gameplay.
 - Keep text as the primary interface while backgrounds reinforce place, faction, weather, myth layer, and story state.
 - Support modded content by letting content packs provide background metadata.
+- Do deeper bitmap or generated-image background work only after the core Arthurian plot is fully playable and checked.
 
 ## Near-Term Milestones
 
@@ -176,8 +179,8 @@ Stage 8: dynamic atmospheric background generator:
 9. Public modding guide and content-pack validation. Initial room-pack validator, modding guide, and example "Camelot Underbelly" content pack are in place.
 10. Private learning docs explaining each major system and checkpoint.
 11. After Stages 0-5 are complete, add Arthurian lore collection/download/indexing as a formal source base. Initial corpus and indexes are in `lore/arthurian`.
-12. After the lore source base exists, expand main story and side arcs from that source base. Initial validated Arthurian main and side arc data is in `content-packs/arthurian-core/story_arcs.json`; runtime story browsing, persisted start/status/advance progress, story tags, and required-tag gates are available through the `story` command family, and deeper branching rules remain.
-13. Add dynamic atmospheric background generation/selection for rooms and modded content. Initial room atmosphere metadata and generated CSS renderer are in place; future generated bitmap backgrounds can reuse the same metadata.
+12. After the lore source base exists, expand main story and side arcs from that source base. Initial validated Arthurian main and side arc data is in `content-packs/arthurian-core/story_arcs.json`; runtime story browsing, persisted start/status/advance progress, story tags, required-tag gates, room-gated steps, and story faction effects are available through the `story` command family, and deeper branching rules remain.
+13. Add dynamic atmospheric background generation/selection for rooms and modded content. Initial room atmosphere metadata and generated CSS renderer is in place; future generated bitmap backgrounds can reuse the same metadata. This remains after core story work, not before it.
 
 ## Open Source And Modding
 
