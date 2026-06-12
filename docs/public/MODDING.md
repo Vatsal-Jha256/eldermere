@@ -93,7 +93,7 @@ And a `rooms.json`:
 
 ## Story Arc Shape
 
-A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, and `story next`. The richer quest engine still needs deeper branching rules from story tags, factions, and room state.
+A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, `story next`, and `story tags`. Required tags lock arcs until earlier story outcomes add the right tags. The richer quest engine still needs deeper branching rules from factions and room state.
 
 ```json
 {

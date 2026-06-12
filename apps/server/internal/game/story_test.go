@@ -110,4 +110,12 @@ func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 	if len(arcs) != 1 || arcs[0].ID != "sword-test" {
 		t.Fatalf("unexpected arcs: %#v", arcs)
 	}
+
+	content, err := LoadStoryContentFromContentPacks(root)
+	if err != nil {
+		t.Fatalf("load story content: %v", err)
+	}
+	if !storyContains(content.Tags, "arthurian") {
+		t.Fatalf("expected pack tags to seed story content, got %#v", content.Tags)
+	}
 }

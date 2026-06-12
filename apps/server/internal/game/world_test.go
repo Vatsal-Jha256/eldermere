@@ -326,3 +326,60 @@ func TestStoryCommandStartsAdvancesCompletesAndPersists(t *testing.T) {
 		}
 	}
 }
+
+func TestStoryRequiredTagsGateArcStart(t *testing.T) {
+	baseWorld, err := NewStarterWorld().WithStoryContent(StoryContent{
+		Tags: []string{"arthurian"},
+		Arcs: []StoryArc{
+			{
+				ID:           "sword-test",
+				Title:        "The Sword Test",
+				Kind:         "main",
+				LoreBeats:    []string{"Sword test and contested kingship"},
+				SourceIDs:    []string{"malory-1251"},
+				Summary:      "Arthur's legitimacy is contested.",
+				OriginalHook: "The under-market sells false proof.",
+				RequiredTags: []string{"arthurian"},
+				AddsTags:     []string{"arthur-accepted"},
+				Steps: []StoryStep{
+					{ID: "witness", Title: "Find a witness", Objective: "Find someone who saw the sword test."},
+				},
+			},
+			{
+				ID:           "round-table-fractures",
+				Title:        "The Table Makes Rivals Sit Still",
+				Kind:         "main",
+				LoreBeats:    []string{"The Round Table is both ideal and pressure cooker."},
+				SourceIDs:    []string{"malory-1251"},
+				Summary:      "Seat politics strain fellowship.",
+				OriginalHook: "Every seat has a shadow claimant.",
+				RequiredTags: []string{"arthur-accepted"},
+				Steps: []StoryStep{
+					{ID: "seat", Title: "Answer a seat claim", Objective: "Settle a claim."},
+				},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach stories: %v", err)
+	}
+	session := NewSession(baseWorld)
+
+	events := session.Handle("story start round-table-fractures")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Missing tags: arthur-accepted") {
+		t.Fatalf("expected locked story arc, got %#v", events)
+	}
+
+	events = session.Handle("story start sword-test")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story started") {
+		t.Fatalf("expected seed arthurian tag to unlock sword-test, got %#v", events)
+	}
+	events = session.Handle("story next")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story complete") {
+		t.Fatalf("expected sword-test completion, got %#v", events)
+	}
+	events = session.Handle("story start round-table-fractures")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story started") {
+		t.Fatalf("expected earned tag to unlock round-table-fractures, got %#v", events)
+	}
+}

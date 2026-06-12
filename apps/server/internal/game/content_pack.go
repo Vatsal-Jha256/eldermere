@@ -95,6 +95,11 @@ type StoryDocument struct {
 	Arcs []StoryArc `json:"arcs"`
 }
 
+type StoryContent struct {
+	Arcs []StoryArc
+	Tags []string
+}
+
 type StoryArc struct {
 	ID            string      `json:"id"`
 	Title         string      `json:"title"`
@@ -135,9 +140,17 @@ func LoadStoryDocument(files fs.FS, path string) (StoryDocument, error) {
 }
 
 func LoadStoryArcsFromContentPacks(root string) ([]StoryArc, error) {
-	entries, err := os.ReadDir(root)
+	content, err := LoadStoryContentFromContentPacks(root)
 	if err != nil {
 		return nil, err
+	}
+	return content.Arcs, nil
+}
+
+func LoadStoryContentFromContentPacks(root string) (StoryContent, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return StoryContent{}, err
 	}
 
 	names := make([]string, 0, len(entries))
@@ -148,7 +161,7 @@ func LoadStoryArcsFromContentPacks(root string) ([]StoryArc, error) {
 	}
 	sort.Strings(names)
 
-	var arcs []StoryArc
+	var content StoryContent
 	for _, name := range names {
 		packPath := filepath.Join(root, name)
 		pack, err := LoadContentPack(os.DirFS(packPath), "pack.json")
@@ -156,19 +169,21 @@ func LoadStoryArcsFromContentPacks(root string) ([]StoryArc, error) {
 			if errors.Is(err, os.ErrNotExist) {
 				continue
 			}
-			return nil, fmt.Errorf("load pack %s: %w", name, err)
+			return StoryContent{}, fmt.Errorf("load pack %s: %w", name, err)
 		}
+		content.Tags = append(content.Tags, pack.Tags...)
 		if pack.StoryFile == "" {
 			continue
 		}
 		document, err := LoadStoryDocument(os.DirFS(packPath), pack.StoryFile)
 		if err != nil {
-			return nil, fmt.Errorf("load story file for pack %s: %w", name, err)
+			return StoryContent{}, fmt.Errorf("load story file for pack %s: %w", name, err)
 		}
-		arcs = append(arcs, document.Arcs...)
+		content.Arcs = append(content.Arcs, document.Arcs...)
 	}
 
-	return arcs, nil
+	content.Tags = appendStoryTags(nil, content.Tags...)
+	return content, nil
 }
 
 func ValidateStoryDocument(document StoryDocument) error {

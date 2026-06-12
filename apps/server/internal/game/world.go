@@ -69,8 +69,9 @@ type Atmosphere struct {
 }
 
 type World struct {
-	rooms   map[string]Room
-	stories map[string]StoryArc
+	rooms         map[string]Room
+	stories       map[string]StoryArc
+	storySeedTags []string
 }
 
 type Session struct {
@@ -220,14 +221,25 @@ func (w World) WithStoryArcs(arcs []StoryArc) (World, error) {
 	return w, nil
 }
 
+func (w World) WithStoryContent(content StoryContent) (World, error) {
+	withStories, err := w.WithStoryArcs(content.Arcs)
+	if err != nil {
+		return World{}, err
+	}
+	withStories.storySeedTags = appendStoryTags(withStories.storySeedTags, content.Tags...)
+	return withStories, nil
+}
+
 func NewSession(world World) Session {
 	return Session{
-		world:    world,
-		roomID:   "lantern-yard",
-		party:    map[string]bool{},
-		items:    map[string]Item{},
-		quest:    QuestState{},
-		story:    StoryState{},
+		world:  world,
+		roomID: "lantern-yard",
+		party:  map[string]bool{},
+		items:  map[string]Item{},
+		quest:  QuestState{},
+		story: StoryState{
+			Tags: appendStoryTags(nil, world.storySeedTags...),
+		},
 		factions: map[string]int{},
 		roll:     defaultRoller(),
 	}
@@ -256,6 +268,7 @@ func NewSessionFromState(world World, state PersistentState) Session {
 	}
 	session.quest = state.Quest
 	session.story = state.Story
+	session.story.Tags = appendStoryTags(session.story.Tags, world.storySeedTags...)
 	for name, value := range state.Factions {
 		if strings.TrimSpace(name) != "" {
 			session.factions[name] = value
@@ -562,6 +575,8 @@ func (s *Session) storyStatus(args []string) Event {
 			return s.advanceStoryArc()
 		case "status", "active":
 			return s.activeStoryStatus()
+		case "tags":
+			return s.storyTagsStatus()
 		}
 
 		id := strings.ToLower(strings.TrimSpace(args[0]))
@@ -604,6 +619,10 @@ func (s *Session) startStoryArc(id string) Event {
 	}
 	if storyContains(s.story.CompletedArcIDs, id) {
 		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is already complete. You can inspect it with `story %s`.", id, id)}
+	}
+	missing := missingStoryTags(s.story.Tags, arc.RequiredTags)
+	if len(missing) > 0 {
+		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is locked. Missing tags: %s.", id, strings.Join(missing, ", "))}
 	}
 
 	var variant string
@@ -698,6 +717,14 @@ func (s *Session) activeStoryStatus() Event {
 		text = fmt.Sprintf("%s Variant: %s.", text, s.story.VariantTag)
 	}
 	return Event{Type: "story", Text: text}
+}
+
+func (s *Session) storyTagsStatus() Event {
+	tags := appendStoryTags(nil, s.story.Tags...)
+	if len(tags) == 0 {
+		return Event{Type: "story", Text: "Story tags: none."}
+	}
+	return Event{Type: "story", Text: fmt.Sprintf("Story tags: %s.", strings.Join(tags, ", "))}
 }
 
 func (s *Session) hasItem(id string) bool {
@@ -825,6 +852,19 @@ func storyContains(values []string, target string) bool {
 		}
 	}
 	return false
+}
+
+func missingStoryTags(existing []string, required []string) []string {
+	missing := []string{}
+	for _, tag := range required {
+		tag = strings.TrimSpace(tag)
+		if tag == "" || storyContains(existing, tag) {
+			continue
+		}
+		missing = append(missing, tag)
+	}
+	sortStrings(missing)
+	return missing
 }
 
 func defaultRoller() func(sides int) int {

@@ -42,7 +42,7 @@ Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres i
 
 The browser stores an `eldermere.session` object in `localStorage`, created through `POST /api/v1/sessions`. The session token is required by the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects without exposing unauthenticated state changes.
 
-Try `story` in the command console to list loaded Arthurian story arcs, `story sword-test` to inspect one, `story start sword-test` to begin, and `story next` to advance.
+Try `story` in the command console to list loaded Arthurian story arcs, `story sword-test` to inspect one, `story start sword-test` to begin, `story next` to advance, and `story tags` to inspect branch tags.
 
 ## Checks
 
