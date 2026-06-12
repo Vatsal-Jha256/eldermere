@@ -1,0 +1,30 @@
+{
+  "id": "arthurian-core",
+  "name": "Arthurian Core",
+  "myth_region": "Arthurian",
+  "tags": [
+    "arthurian",
+    "lore-core",
+    "sword-test",
+    "excalibur-rumor",
+    "grail-curse",
+    "avalon-road",
+    "round-table-fracture"
+  ],
+  "rooms_file": "rooms.json",
+  "story_file": "story_arcs.json",
+  "interactions": [
+    {
+      "id": "grail-wound-reaches-underworld",
+      "when_tags": ["greek", "underworld-route"],
+      "adds_tags": ["underworld-unrest", "grail-witness-requested"],
+      "description": "A wounded Grail trail makes foreign underworld ferries demand testimony from Arthurian witnesses."
+    },
+    {
+      "id": "avalon-road-answers-oracle",
+      "when_tags": ["greek", "oracle-network"],
+      "adds_tags": ["oracle-dreams-of-avalon"],
+      "description": "Oracle networks begin dreaming of Avalon as a road, not an island, and send envoys to Camelot."
+    }
+  ]
+}

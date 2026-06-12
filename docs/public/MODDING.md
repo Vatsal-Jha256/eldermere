@@ -21,6 +21,8 @@ The validator checks:
 
 - Pack manifest has `id`, `name`, `myth_region`, and `rooms_file`.
 - Pack interactions have ids, trigger tags, and descriptions.
+- Optional `story_file` documents have at least one story arc.
+- Story arcs include ids, titles, `main` or `side` kind, lore beats, source ids, summaries, original hooks, and steps.
 - At least one room exists.
 - Every room has an `id`, `name`, and `description`.
 - Room ids are unique.
@@ -89,6 +91,55 @@ And a `rooms.json`:
 }
 ```
 
+## Story Arc Shape
+
+A pack can also include `story_file` in `pack.json`. Story arcs are not fully loaded into the live quest engine yet, but the validator already checks them so modders can build source-grounded story packs safely.
+
+```json
+{
+  "arcs": [
+    {
+      "id": "sword-test",
+      "title": "The Sword Test Is Not A Receipt",
+      "kind": "main",
+      "lore_beats": [
+        "Arthur's kingship is proved through the sword test, but public acceptance still depends on witnesses and politics."
+      ],
+      "source_ids": ["malory-1251", "geoffrey-37848"],
+      "summary": "Players investigate the sword test as both miracle and political event.",
+      "original_hook": "The under-market sells forged witness marks.",
+      "required_tags": ["arthurian"],
+      "adds_tags": ["sword-test", "contested-kingship"],
+      "variation_tags": ["stone-version", "bribed-witness"],
+      "steps": [
+        {
+          "id": "collect-witness-marks",
+          "title": "Collect Witness Marks",
+          "room_hint": "stone-yard",
+          "objective": "Find three incompatible accounts of the sword test.",
+          "commands": ["look", "quest"],
+          "outcome_tags": ["witness-contradiction"]
+        }
+      ]
+    }
+  ]
+}
+```
+
+Story fields:
+
+- `id`: stable arc id for saves, validation, and future runtime loading.
+- `title`: player-facing title.
+- `kind`: `main` or `side`.
+- `lore_beats`: source-grounded lore beats covered by the arc.
+- `source_ids`: ids from `lore/arthurian/sources/SOURCES.md` or a pack's own cited source manifest.
+- `summary`: concise arc purpose.
+- `original_hook`: original Eldermere story angle built from the lore beats.
+- `required_tags`: world tags that must exist before the arc is eligible.
+- `adds_tags`: world tags the arc can add for later quests or cross-pack interactions.
+- `variation_tags`: branch tags for probabilistic or source-variant outcomes.
+- `steps`: playable objectives with optional room hints, commands, and outcome tags.
+
 ## Writing Rules
 
 - Write original prose.
@@ -113,7 +164,8 @@ The current implementation generates CSS backgrounds. A later renderer can use t
 
 See:
 
+- `content-packs/arthurian-core`
 - `content-packs/camelot-underbelly`
 - `content-packs/greek-crossing`
 
-The Greek Crossing pack demonstrates the connected-legend rule: it declares interactions that respond to Arthurian tags such as `excalibur-rumor` and `grail-curse` instead of behaving like an isolated Greek zone.
+The Arthurian Core pack demonstrates source-grounded story arcs. The Greek Crossing pack demonstrates the connected-legend rule: it declares interactions that respond to Arthurian tags such as `excalibur-rumor` and `grail-curse` instead of behaving like an isolated Greek zone.

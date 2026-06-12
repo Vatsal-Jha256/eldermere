@@ -13,6 +13,7 @@ type ContentPack struct {
 	MythRegion   string            `json:"myth_region"`
 	Tags         []string          `json:"tags"`
 	RoomsFile    string            `json:"rooms_file"`
+	StoryFile    string            `json:"story_file,omitempty"`
 	Interactions []PackInteraction `json:"interactions"`
 }
 
@@ -79,6 +80,100 @@ func ValidateContentPack(pack ContentPack) error {
 		for _, tag := range interaction.AddsTags {
 			if strings.TrimSpace(tag) == "" {
 				return fmt.Errorf("pack %q interaction %q has empty adds_tag", pack.ID, interaction.ID)
+			}
+		}
+	}
+
+	return nil
+}
+
+type StoryDocument struct {
+	Arcs []StoryArc `json:"arcs"`
+}
+
+type StoryArc struct {
+	ID            string      `json:"id"`
+	Title         string      `json:"title"`
+	Kind          string      `json:"kind"`
+	LoreBeats     []string    `json:"lore_beats"`
+	SourceIDs     []string    `json:"source_ids"`
+	Summary       string      `json:"summary"`
+	OriginalHook  string      `json:"original_hook"`
+	RequiredTags  []string    `json:"required_tags,omitempty"`
+	AddsTags      []string    `json:"adds_tags,omitempty"`
+	Steps         []StoryStep `json:"steps"`
+	VariationTags []string    `json:"variation_tags,omitempty"`
+}
+
+type StoryStep struct {
+	ID          string   `json:"id"`
+	Title       string   `json:"title"`
+	RoomHint    string   `json:"room_hint,omitempty"`
+	Objective   string   `json:"objective"`
+	Commands    []string `json:"commands,omitempty"`
+	OutcomeTags []string `json:"outcome_tags,omitempty"`
+}
+
+func LoadStoryDocument(files fs.FS, path string) (StoryDocument, error) {
+	payload, err := fs.ReadFile(files, path)
+	if err != nil {
+		return StoryDocument{}, err
+	}
+
+	var document StoryDocument
+	if err := json.Unmarshal(payload, &document); err != nil {
+		return StoryDocument{}, err
+	}
+	if err := ValidateStoryDocument(document); err != nil {
+		return StoryDocument{}, err
+	}
+	return document, nil
+}
+
+func ValidateStoryDocument(document StoryDocument) error {
+	if len(document.Arcs) == 0 {
+		return fmt.Errorf("story document must include at least one arc")
+	}
+
+	seen := map[string]bool{}
+	for _, arc := range document.Arcs {
+		if strings.TrimSpace(arc.ID) == "" {
+			return fmt.Errorf("story arc id is required")
+		}
+		if seen[arc.ID] {
+			return fmt.Errorf("duplicate story arc id %q", arc.ID)
+		}
+		seen[arc.ID] = true
+		if strings.TrimSpace(arc.Title) == "" {
+			return fmt.Errorf("story arc %q title is required", arc.ID)
+		}
+		if arc.Kind != "main" && arc.Kind != "side" {
+			return fmt.Errorf("story arc %q kind must be main or side", arc.ID)
+		}
+		if len(arc.LoreBeats) == 0 {
+			return fmt.Errorf("story arc %q must cite at least one lore beat", arc.ID)
+		}
+		if len(arc.SourceIDs) == 0 {
+			return fmt.Errorf("story arc %q must cite at least one source id", arc.ID)
+		}
+		if strings.TrimSpace(arc.Summary) == "" {
+			return fmt.Errorf("story arc %q summary is required", arc.ID)
+		}
+		if strings.TrimSpace(arc.OriginalHook) == "" {
+			return fmt.Errorf("story arc %q original_hook is required", arc.ID)
+		}
+		if len(arc.Steps) == 0 {
+			return fmt.Errorf("story arc %q must include at least one step", arc.ID)
+		}
+		for _, step := range arc.Steps {
+			if strings.TrimSpace(step.ID) == "" {
+				return fmt.Errorf("story arc %q has step with empty id", arc.ID)
+			}
+			if strings.TrimSpace(step.Title) == "" {
+				return fmt.Errorf("story arc %q step %q title is required", arc.ID, step.ID)
+			}
+			if strings.TrimSpace(step.Objective) == "" {
+				return fmt.Errorf("story arc %q step %q objective is required", arc.ID, step.ID)
 			}
 		}
 	}

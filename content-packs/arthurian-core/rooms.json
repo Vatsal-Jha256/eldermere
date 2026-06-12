@@ -1,0 +1,145 @@
+{
+  "rooms": [
+    {
+      "id": "stone-yard",
+      "name": "Stone Yard",
+      "description": "The old test stone sits behind temporary rails while witnesses argue over who saw what and who got paid.",
+      "atmosphere": {
+        "palette": "rain-gold",
+        "weather": "market rain",
+        "myth_layer": "contested kingship",
+        "motifs": ["test stone", "wet banners", "witness rails"]
+      },
+      "exits": {
+        "east": "merlins-counting-room",
+        "north": "round-table-threshold"
+      },
+      "quest": {
+        "start": "The yard clerk offers you three witness marks for the sword test, and every one of them contradicts the others.",
+        "start_variants": [
+          "A mason swears the stone moved before Arthur touched it.",
+          "A page says the sword chose a king, then chose silence.",
+          "A debt collector claims half the witnesses were bought before dawn."
+        ],
+        "incomplete": "The yard still wants clean proof, but clean proof is not how Camelot was born.",
+        "complete": "You file a version of the sword test that is honest about its contradictions."
+      }
+    },
+    {
+      "id": "merlins-counting-room",
+      "name": "Merlin's Counting Room",
+      "description": "Wax tablets, bird bones, and royal debts sit in careful stacks. Merlin's absence feels like a person in the chair.",
+      "atmosphere": {
+        "palette": "candle-smoke",
+        "weather": "still candle heat",
+        "myth_layer": "prophecy ledger",
+        "motifs": ["wax tablets", "bird bones", "empty chair"]
+      },
+      "exits": {
+        "west": "stone-yard",
+        "east": "scabbard-vault"
+      },
+      "recruitable": {
+        "name": "Ledger Squire",
+        "dc": 11,
+        "success": "The Ledger Squire joins you and can spot a false prophecy by the ink cost.",
+        "failure": "The Ledger Squire decides your account is still too untidy."
+      }
+    },
+    {
+      "id": "scabbard-vault",
+      "name": "Scabbard Vault",
+      "description": "An empty mount marks where a better treasure than a blade once rested. The guards talk about steel and ignore the wound.",
+      "atmosphere": {
+        "palette": "relic-vault",
+        "weather": "cold mineral air",
+        "myth_layer": "lost protection",
+        "motifs": ["empty mount", "polished locks", "old wound"]
+      },
+      "exits": {
+        "west": "merlins-counting-room"
+      },
+      "gated_exits": {
+        "east": {
+          "target": "avalon-shore",
+          "requires_item": "map-scrap",
+          "locked_text": "The vault wall shows a shore only when a true map scrap is held against the empty mount."
+        }
+      },
+      "item": {
+        "id": "map-scrap",
+        "name": "Avalon Map Scrap",
+        "description": "a damp scrap that draws roads only after someone admits what they lost"
+      }
+    },
+    {
+      "id": "round-table-threshold",
+      "name": "Round Table Threshold",
+      "description": "The hall door is open, but every seat beyond it already has a rumor standing behind it.",
+      "atmosphere": {
+        "palette": "tavern-red",
+        "weather": "crowded hall warmth",
+        "myth_layer": "round table politics",
+        "motifs": ["open hall door", "seat shadows", "rival banners"]
+      },
+      "exits": {
+        "south": "stone-yard",
+        "east": "grail-choir"
+      },
+      "encounter": {
+        "name": "Seat Claimant",
+        "dc": 14,
+        "win": "The claimant backs down and admits the table makes brothers out of rivals only on its best days.",
+        "lose": "The claimant wins the room and leaves you carrying a rumor with teeth.",
+        "faction_effects": {
+          "Round Table": 1,
+          "Camelot Underbelly": -1
+        }
+      }
+    },
+    {
+      "id": "grail-choir",
+      "name": "Grail Choir",
+      "description": "No cup is visible, but the walls sing like a question that only wounded kings and hungry knights can hear.",
+      "atmosphere": {
+        "palette": "avalon-green",
+        "weather": "thin sacred mist",
+        "myth_layer": "grail witness",
+        "motifs": ["unseen cup", "singing walls", "wounded crown"]
+      },
+      "exits": {
+        "west": "round-table-threshold",
+        "south": "mordreds-writ-room"
+      }
+    },
+    {
+      "id": "mordreds-writ-room",
+      "name": "Mordred's Writ Room",
+      "description": "A quiet clerk copies rival claims to the crown. Each version looks legal if read by bad candlelight.",
+      "atmosphere": {
+        "palette": "blackwater",
+        "weather": "ink-dark hush",
+        "myth_layer": "succession conflict",
+        "motifs": ["rival writs", "bad candlelight", "sealed claims"]
+      },
+      "exits": {
+        "north": "grail-choir",
+        "east": "avalon-shore"
+      }
+    },
+    {
+      "id": "avalon-shore",
+      "name": "Avalon Shore",
+      "description": "The shore refuses to decide whether it is a place, a mercy, or a delay. Boats wait with no oars showing.",
+      "atmosphere": {
+        "palette": "avalon-green",
+        "weather": "otherworld fog",
+        "myth_layer": "avalon ambiguity",
+        "motifs": ["oarless boats", "green shore", "delayed king"]
+      },
+      "exits": {
+        "west": "mordreds-writ-room"
+      }
+    }
+  ]
+}

@@ -18,6 +18,7 @@ test-web:
 	cd apps/web && npm run check
 
 validate-content:
+	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/arthurian-core
 	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/camelot-underbelly
 	cd apps/server && go run ./cmd/eldermere-content validate ../../content-packs/greek-crossing
 

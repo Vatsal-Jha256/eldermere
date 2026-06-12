@@ -51,6 +51,12 @@ func validatePack(path string) {
 		fmt.Fprintf(os.Stderr, "invalid content pack rooms: %v\n", err)
 		os.Exit(1)
 	}
+	if pack.StoryFile != "" {
+		if _, err := game.LoadStoryDocument(os.DirFS(path), pack.StoryFile); err != nil {
+			fmt.Fprintf(os.Stderr, "invalid content pack story: %v\n", err)
+			os.Exit(1)
+		}
+	}
 
 	fmt.Printf("valid content pack: %s\n", path)
 }

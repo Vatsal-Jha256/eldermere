@@ -1,0 +1,489 @@
+{
+  "arcs": [
+    {
+      "id": "sword-test",
+      "title": "The Sword Test Is Not A Receipt",
+      "kind": "main",
+      "lore_beats": [
+        "Arthur's kingship is proved through the sword test, but public acceptance still depends on witnesses, politics, and competing versions.",
+        "The sword motif should remain unstable enough for variant quests: stone, anvil, lake, and royal proof can each matter differently."
+      ],
+      "source_ids": ["malory-1251", "geoffrey-37848"],
+      "summary": "Players investigate the sword test as both miracle and political event, establishing that legitimacy in Camelot is fought over after the wonder happens.",
+      "original_hook": "The under-market sells forged witness marks, forcing players to decide whether Camelot needs clean truth, useful truth, or a dangerous public contradiction.",
+      "required_tags": ["arthurian"],
+      "adds_tags": ["sword-test", "excalibur-rumor", "contested-kingship"],
+      "variation_tags": ["stone-version", "anvil-version", "lake-version", "bribed-witness"],
+      "steps": [
+        {
+          "id": "collect-witness-marks",
+          "title": "Collect Witness Marks",
+          "room_hint": "stone-yard",
+          "objective": "Find three incompatible accounts of the sword test.",
+          "commands": ["look", "quest", "say witness"],
+          "outcome_tags": ["witness-contradiction"]
+        },
+        {
+          "id": "audit-false-proof",
+          "title": "Audit False Proof",
+          "room_hint": "merlins-counting-room",
+          "objective": "Compare public testimony against Merlin's missing ledger and the under-market's forged marks.",
+          "commands": ["go east", "look", "recruit"],
+          "outcome_tags": ["ledger-doubt"]
+        },
+        {
+          "id": "choose-public-version",
+          "title": "Choose The Public Version",
+          "room_hint": "stone-yard",
+          "objective": "Publish a version that shapes which factions accept Arthur first.",
+          "commands": ["go west", "quest"],
+          "outcome_tags": ["arthur-accepted", "faction-friction"]
+        }
+      ]
+    },
+    {
+      "id": "merlins-ledger",
+      "title": "Merlin's Ledger Has Teeth",
+      "kind": "main",
+      "lore_beats": [
+        "Merlin engineers, interprets, or warns around Arthur's rise depending on the source tradition.",
+        "Prophecy should be useful, costly, and incomplete rather than a simple spoiler."
+      ],
+      "source_ids": ["malory-1251", "geoffrey-37848", "nennius-1972"],
+      "summary": "Players treat Merlin's prophecies as operating records: debts, bargains, hidden warnings, and omissions that can save Camelot or bankrupt it morally.",
+      "original_hook": "Merlin's old accounting system has been copied by clerks who sell prophecies as contracts, and some contracts appear to sign back.",
+      "required_tags": ["sword-test"],
+      "adds_tags": ["prophecy-ledger", "merlin-debt", "future-not-fixed"],
+      "variation_tags": ["true-prophecy", "misread-prophecy", "paid-prophecy", "prophecy-tax"],
+      "steps": [
+        {
+          "id": "find-empty-chair",
+          "title": "Find The Empty Chair",
+          "room_hint": "merlins-counting-room",
+          "objective": "Inspect Merlin's absent office and recover the first prophecy debt.",
+          "commands": ["look", "quest"],
+          "outcome_tags": ["merlin-absence"]
+        },
+        {
+          "id": "settle-a-warning",
+          "title": "Settle A Warning",
+          "room_hint": "round-table-threshold",
+          "objective": "Use or suppress a warning that would embarrass a future knight.",
+          "commands": ["go north", "say warning"],
+          "outcome_tags": ["warning-spent"]
+        },
+        {
+          "id": "mark-the-cost",
+          "title": "Mark The Cost",
+          "room_hint": "scabbard-vault",
+          "objective": "Record who pays when prophecy prevents one disaster and invites another.",
+          "commands": ["go east", "look"],
+          "outcome_tags": ["prophecy-cost-known"]
+        }
+      ]
+    },
+    {
+      "id": "scabbard-problem",
+      "title": "The Scabbard Problem",
+      "kind": "main",
+      "lore_beats": [
+        "Excalibur's scabbard is treated as a protective treasure whose loss matters as much as the sword's fame.",
+        "Arthurian relic quests work best when power and protection are separate questions."
+      ],
+      "source_ids": ["malory-1251"],
+      "summary": "Players discover that Camelot overvalues famous weapons while ignoring the lost protections that keep a kingdom alive.",
+      "original_hook": "Relic dealers advertise blade fragments while a quieter ring trades maps to the missing scabbard, each map demanding a confession of loss.",
+      "required_tags": ["excalibur-rumor"],
+      "adds_tags": ["lost-scabbard", "avalon-road", "relic-politics"],
+      "variation_tags": ["true-scabbard-map", "decoy-scabbard-map", "protection-for-sale"],
+      "steps": [
+        {
+          "id": "inspect-empty-mount",
+          "title": "Inspect The Empty Mount",
+          "room_hint": "scabbard-vault",
+          "objective": "Learn why the missing scabbard frightens careful people more than a stolen blade.",
+          "commands": ["look", "use map"],
+          "outcome_tags": ["scabbard-loss-known"]
+        },
+        {
+          "id": "recover-map-scrap",
+          "title": "Recover The Map Scrap",
+          "room_hint": "scabbard-vault",
+          "objective": "Claim the map scrap without letting a relic dealer define its meaning.",
+          "commands": ["look", "go east"],
+          "outcome_tags": ["map-scrap-found"]
+        },
+        {
+          "id": "open-avalon-wall",
+          "title": "Open The Avalon Wall",
+          "room_hint": "avalon-shore",
+          "objective": "Use the map scrap to prove Avalon is a route the world can negotiate with.",
+          "commands": ["go east", "look"],
+          "outcome_tags": ["avalon-road-open"]
+        }
+      ]
+    },
+    {
+      "id": "round-table-fractures",
+      "title": "The Table Makes Rivals Sit Still",
+      "kind": "main",
+      "lore_beats": [
+        "The Round Table gathers heroic peers, but kinship, honor, rivalry, and private vows keep producing instability.",
+        "The fellowship should function as both ideal and pressure cooker."
+      ],
+      "source_ids": ["malory-1251", "malory-1252", "tennyson-610"],
+      "summary": "Players manage the Round Table as a living faction network where honor checks, seat claims, and rumor economies change who will stand together.",
+      "original_hook": "Every seat has a shadow claimant sponsored by lenders, prophets, or grieving families, so the table's equality has to be maintained like a dangerous engine.",
+      "required_tags": ["arthur-accepted"],
+      "adds_tags": ["round-table-fracture", "seat-politics", "fellowship-strain"],
+      "variation_tags": ["kinship-feud", "honor-test", "seat-claim", "public-boast"],
+      "steps": [
+        {
+          "id": "answer-seat-claim",
+          "title": "Answer A Seat Claim",
+          "room_hint": "round-table-threshold",
+          "objective": "Face a claimant whose legal proof is weak but whose grievance is real.",
+          "commands": ["go north", "fight"],
+          "outcome_tags": ["seat-claim-settled"]
+        },
+        {
+          "id": "trace-sponsor",
+          "title": "Trace The Sponsor",
+          "room_hint": "coin-arch",
+          "objective": "Find who profits when knights confuse honor with unpaid debt.",
+          "commands": ["say debt", "look"],
+          "outcome_tags": ["sponsor-known"]
+        },
+        {
+          "id": "keep-table-breathing",
+          "title": "Keep The Table Breathing",
+          "room_hint": "round-table-threshold",
+          "objective": "Choose a compromise that preserves fellowship while leaving a future cost on the board.",
+          "commands": ["quest", "say terms"],
+          "outcome_tags": ["fellowship-preserved"]
+        }
+      ]
+    },
+    {
+      "id": "grail-sorting",
+      "title": "The Grail Sorts The Room",
+      "kind": "main",
+      "lore_beats": [
+        "The Grail quest tests spiritual fitness, wounded kingship, purity, perception, and the limits of ordinary chivalric ambition.",
+        "Galahad, Percival, and other Grail figures should create different quest lenses rather than one fixed route."
+      ],
+      "source_ids": ["malory-1252", "tennyson-610"],
+      "summary": "Players encounter the Grail as a force that sorts witnesses, not as a prize that can simply be taken.",
+      "original_hook": "A sacred choir begins selecting the wrong people by worldly standards, exposing which heroic reputations were built for applause rather than repair.",
+      "required_tags": ["round-table-fracture"],
+      "adds_tags": ["grail-curse", "grail-witness", "wounded-kingship"],
+      "variation_tags": ["galahad-lens", "percival-lens", "false-relic", "wounded-king-question"],
+      "steps": [
+        {
+          "id": "hear-unseen-cup",
+          "title": "Hear The Unseen Cup",
+          "room_hint": "grail-choir",
+          "objective": "Stand where the Grail is heard before it is seen and record who can bear the sound.",
+          "commands": ["go east", "look"],
+          "outcome_tags": ["grail-heard"]
+        },
+        {
+          "id": "test-witnesses",
+          "title": "Test The Witnesses",
+          "room_hint": "grail-choir",
+          "objective": "Let chance and character decide whether the witness is ready, ambitious, frightened, or useful.",
+          "commands": ["quest", "say grail"],
+          "outcome_tags": ["witness-sorted"]
+        },
+        {
+          "id": "send-the-wound-outward",
+          "title": "Send The Wound Outward",
+          "room_hint": "ferry-shrine",
+          "objective": "Let the Grail wound disturb cross-legend roads so other myth packs can react.",
+          "commands": ["go south", "quest"],
+          "outcome_tags": ["grail-wound-crosses-world"]
+        }
+      ]
+    },
+    {
+      "id": "mordreds-claim",
+      "title": "Mordred Files The Crown",
+      "kind": "main",
+      "lore_beats": [
+        "Mordred's role varies by tradition, but succession pressure, betrayal, and final conflict are central Arthurian beats.",
+        "The fall of Camelot should grow from accumulated obligations, not a single surprise villain switch."
+      ],
+      "source_ids": ["malory-1252", "geoffrey-37848", "tennyson-610"],
+      "summary": "Players track Mordred's claim as paperwork, rumor, bloodline, opportunism, and a crisis that feeds on every unresolved faction debt.",
+      "original_hook": "Mordred's clerks do not need to lie if Camelot has already produced enough contradictory truths to weaponize.",
+      "required_tags": ["fellowship-strain", "grail-witness"],
+      "adds_tags": ["mordred-claim", "succession-crisis", "camlann-shadow"],
+      "variation_tags": ["legal-claim", "rumor-claim", "bloodline-claim", "foreign-backed-claim"],
+      "steps": [
+        {
+          "id": "read-rival-writs",
+          "title": "Read Rival Writs",
+          "room_hint": "mordreds-writ-room",
+          "objective": "Compare claims to the crown and identify which earlier player choices made them stronger.",
+          "commands": ["look", "quest"],
+          "outcome_tags": ["claim-map-known"]
+        },
+        {
+          "id": "audit-faction-debts",
+          "title": "Audit Faction Debts",
+          "room_hint": "round-table-threshold",
+          "objective": "Discover which knights, clerks, and foreign envoys will change sides if debts come due.",
+          "commands": ["go north", "say debt"],
+          "outcome_tags": ["debt-web-visible"]
+        },
+        {
+          "id": "choose-a-counterclaim",
+          "title": "Choose A Counterclaim",
+          "room_hint": "mordreds-writ-room",
+          "objective": "Answer Mordred with law, mercy, exposure, or force, each carrying a different road to Camlann.",
+          "commands": ["quest", "fight"],
+          "outcome_tags": ["camlann-route-set"]
+        }
+      ]
+    },
+    {
+      "id": "avalon-ambiguity",
+      "title": "Avalon Refuses The Ending",
+      "kind": "main",
+      "lore_beats": [
+        "Avalon holds the ambiguity of Arthur's departure, survival, healing, and possible return.",
+        "The ending should preserve mythic uncertainty while still resolving player choices."
+      ],
+      "source_ids": ["malory-1252", "geoffrey-37848", "tennyson-610"],
+      "summary": "Players reach Avalon as a contested mercy where factions want proof of death, proof of return, or control over the story between them.",
+      "original_hook": "Avalon behaves like a court that only hears unfinished cases, so the player's record of contradictions becomes the passport.",
+      "required_tags": ["camlann-route-set", "avalon-road"],
+      "adds_tags": ["avalon-ambiguity", "once-and-future-question", "arthurian-v1-spine-complete"],
+      "variation_tags": ["return-rumor", "healing-voyage", "false-avalon", "witness-silence"],
+      "steps": [
+        {
+          "id": "pay-the-passage",
+          "title": "Pay The Passage",
+          "room_hint": "avalon-shore",
+          "objective": "Pay Avalon's price with a truth the player chose not to simplify earlier.",
+          "commands": ["go east", "quest"],
+          "outcome_tags": ["avalon-passage-paid"]
+        },
+        {
+          "id": "answer-the-court",
+          "title": "Answer The Court",
+          "room_hint": "avalon-shore",
+          "objective": "Present the record of Camelot's contradictions without pretending they are clean.",
+          "commands": ["say record", "look"],
+          "outcome_tags": ["avalon-hears-record"]
+        },
+        {
+          "id": "leave-the-question",
+          "title": "Leave The Question",
+          "room_hint": "avalon-shore",
+          "objective": "Resolve the campaign by choosing which uncertainty the world must live with.",
+          "commands": ["quest"],
+          "outcome_tags": ["ending-uncertain-by-design"]
+        }
+      ]
+    },
+    {
+      "id": "under-market-relic-trade",
+      "title": "The Under-Market Prices Miracles",
+      "kind": "side",
+      "lore_beats": [
+        "Arthurian relics carry political and spiritual meaning beyond combat utility.",
+        "False relics and partial relics can create useful procedural uncertainty."
+      ],
+      "source_ids": ["malory-1251", "malory-1252"],
+      "summary": "Players investigate a relic trade that turns public faith into inventory, revealing which factions profit from confusion around Excalibur, the scabbard, and the Grail.",
+      "original_hook": "Camelot's under-market offers honest prices for dishonest miracles, and some false relics still do real damage.",
+      "required_tags": ["excalibur-rumor"],
+      "adds_tags": ["false-relic-market", "underworld-market", "relic-debt"],
+      "variation_tags": ["real-fragment", "useful-fake", "cursed-receipt"],
+      "steps": [
+        {
+          "id": "price-a-fragment",
+          "title": "Price A Fragment",
+          "room_hint": "coin-arch",
+          "objective": "Learn what different factions will pay for a supposed Excalibur fragment.",
+          "commands": ["say price", "look"],
+          "outcome_tags": ["fragment-price-known"]
+        },
+        {
+          "id": "test-the-receipt",
+          "title": "Test The Receipt",
+          "room_hint": "candle-court",
+          "objective": "Use chance to decide whether the receipt, the relic, or the buyer is cursed.",
+          "commands": ["quest", "recruit"],
+          "outcome_tags": ["relic-trade-complication"]
+        }
+      ]
+    },
+    {
+      "id": "welsh-court-echoes",
+      "title": "Welsh Court Echoes",
+      "kind": "side",
+      "lore_beats": [
+        "Welsh and broader Celtic materials preserve different textures for Arthurian courts, marvels, kinship, and honor.",
+        "Arthur should not be flattened into only one later chivalric mode."
+      ],
+      "source_ids": ["mabinogion-5160", "nennius-1972"],
+      "summary": "Players follow older court echoes that complicate Camelot's polished version of itself.",
+      "original_hook": "A visiting storyteller accepts payment only in corrected boasts, forcing Camelot's knights to admit which old names they borrowed from.",
+      "required_tags": ["arthurian"],
+      "adds_tags": ["welsh-echo", "older-court-memory", "boast-debt"],
+      "variation_tags": ["court-marvel", "kinship-test", "storyteller-price"],
+      "steps": [
+        {
+          "id": "hear-older-boast",
+          "title": "Hear The Older Boast",
+          "room_hint": "stone-yard",
+          "objective": "Record a Welsh court echo that disagrees with Camelot's polished account.",
+          "commands": ["say story", "look"],
+          "outcome_tags": ["older-version-known"]
+        },
+        {
+          "id": "pay-corrected-boast",
+          "title": "Pay In Corrected Boasts",
+          "room_hint": "round-table-threshold",
+          "objective": "Trade reputation for a truer account of marvel, kinship, or honor.",
+          "commands": ["quest", "say boast"],
+          "outcome_tags": ["boast-corrected"]
+        }
+      ]
+    },
+    {
+      "id": "morgans-bargains",
+      "title": "Morgan's Bargains",
+      "kind": "side",
+      "lore_beats": [
+        "Morgan le Fay shifts across traditions as healer, antagonist, enchantress, political actor, and otherworldly presence.",
+        "Morgan arcs should allow ambiguous help and harm rather than one fixed alignment."
+      ],
+      "source_ids": ["malory-1251", "malory-1252", "geoffrey-37848"],
+      "summary": "Players encounter Morgan through bargains that may heal, expose, punish, or preserve Camelot depending on what the player owes.",
+      "original_hook": "Morgan's agents do not ask whether a bargain is good or evil; they ask whether Camelot read the small print before needing rescue.",
+      "required_tags": ["lost-scabbard"],
+      "adds_tags": ["morgan-bargain", "ambiguous-enchantment", "avalon-politics"],
+      "variation_tags": ["healer-morgan", "rival-morgan", "teacher-morgan", "trap-morgan"],
+      "steps": [
+        {
+          "id": "receive-small-print",
+          "title": "Receive The Small Print",
+          "room_hint": "scabbard-vault",
+          "objective": "Accept or reject a bargain that can point toward the scabbard at a moral cost.",
+          "commands": ["quest", "say bargain"],
+          "outcome_tags": ["morgan-terms-known"]
+        },
+        {
+          "id": "test-help-or-harm",
+          "title": "Test Help Or Harm",
+          "room_hint": "avalon-shore",
+          "objective": "Let the bargain's result depend on prior debts, chance, and faction reputation.",
+          "commands": ["go east", "quest"],
+          "outcome_tags": ["morgan-result-set"]
+        }
+      ]
+    },
+    {
+      "id": "gawain-kinship-web",
+      "title": "Gawain's Kinship Web",
+      "kind": "side",
+      "lore_beats": [
+        "Gawain and his kin create dense webs of loyalty, vengeance, honor, and rivalry across Arthurian stories.",
+        "Family obligations can make a heroic choice costly even when it is correct."
+      ],
+      "source_ids": ["malory-1251", "malory-1252", "tennyson-610"],
+      "summary": "Players handle kinship claims around Gawain's circle, where every settlement strengthens one loyalty and insults another.",
+      "original_hook": "A family debt ledger claims to be older than the Round Table and refuses to recognize the table's authority without compensation.",
+      "required_tags": ["round-table-fracture"],
+      "adds_tags": ["gawain-kinship", "family-debt", "honor-ledger"],
+      "variation_tags": ["vengeance-claim", "oath-conflict", "public-honor", "private-mercy"],
+      "steps": [
+        {
+          "id": "map-family-debt",
+          "title": "Map The Family Debt",
+          "room_hint": "merlins-counting-room",
+          "objective": "Build a kinship debt map before judging a dispute.",
+          "commands": ["look", "say kinship"],
+          "outcome_tags": ["kinship-map-known"]
+        },
+        {
+          "id": "choose-honor-or-mercy",
+          "title": "Choose Honor Or Mercy",
+          "room_hint": "round-table-threshold",
+          "objective": "Resolve a dispute in a way that creates a future ally and a future grievance.",
+          "commands": ["quest", "say terms"],
+          "outcome_tags": ["kinship-cost-set"]
+        }
+      ]
+    },
+    {
+      "id": "grail-witnesses",
+      "title": "Grail Witnesses",
+      "kind": "side",
+      "lore_beats": [
+        "Grail traditions emphasize witness, worthiness, wounds, and spiritual perception.",
+        "Multiple Grail figures should produce multiple kinds of playable testimony."
+      ],
+      "source_ids": ["malory-1252", "tennyson-610"],
+      "summary": "Players gather witnesses whose accounts of the Grail disagree because each saw only what they were able to bear.",
+      "original_hook": "The Grail choir sells no answers, but it will rent the player three silences, each from a different witness.",
+      "required_tags": ["grail-witness"],
+      "adds_tags": ["grail-testimony", "partial-vision", "wound-record"],
+      "variation_tags": ["pure-witness", "wounded-witness", "ambitious-witness", "silent-witness"],
+      "steps": [
+        {
+          "id": "rent-a-silence",
+          "title": "Rent A Silence",
+          "room_hint": "grail-choir",
+          "objective": "Choose which witness silence to preserve and which to break.",
+          "commands": ["quest", "say witness"],
+          "outcome_tags": ["silence-chosen"]
+        },
+        {
+          "id": "compare-visions",
+          "title": "Compare Visions",
+          "room_hint": "grail-choir",
+          "objective": "Turn incompatible Grail visions into branching procedural quest states.",
+          "commands": ["look", "quest"],
+          "outcome_tags": ["vision-branches-ready"]
+        }
+      ]
+    },
+    {
+      "id": "cross-myth-leaks",
+      "title": "Cross-Myth Leaks",
+      "kind": "side",
+      "lore_beats": [
+        "Arthurian roads to Avalon and otherworldly sites create a natural bridge to connected legend packs.",
+        "Cross-legend play should be earned through routes, witnesses, messengers, curses, and relic consequences."
+      ],
+      "source_ids": ["malory-1252", "mabinogion-5160", "geoffrey-37848"],
+      "summary": "Players stabilize leaks between Arthurian routes and other myth regions so future packs can react through tags rather than hardcoded pairings.",
+      "original_hook": "Avalon is not the only place with strange ferries, and the first foreign messenger arrives carrying a receipt for a curse Camelot has not issued yet.",
+      "required_tags": ["avalon-road"],
+      "adds_tags": ["cross-myth-route", "foreign-witness", "shared-world-state"],
+      "variation_tags": ["dream-road", "ferry-road", "curse-road", "diplomatic-road"],
+      "steps": [
+        {
+          "id": "identify-leak",
+          "title": "Identify The Leak",
+          "room_hint": "avalon-shore",
+          "objective": "Determine whether the cross-myth route is a dream, ferry, curse, or invitation.",
+          "commands": ["look", "quest"],
+          "outcome_tags": ["route-type-known"]
+        },
+        {
+          "id": "tag-the-world-state",
+          "title": "Tag The World State",
+          "room_hint": "ferry-shrine",
+          "objective": "Emit shared tags that Greek, Celtic, Norse, South Asian, and later packs can respond to.",
+          "commands": ["say route", "quest"],
+          "outcome_tags": ["shared-tags-emitted"]
+        }
+      ]
+    }
+  ]
+}
