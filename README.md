@@ -15,14 +15,14 @@ Stage 0 scaffold is in place. The current repo has:
 - Session-authenticated persistent player state for room, inventory, party, and quest progress
 - Room presence, local chat, and recent room event log
 - Arthurian starter region
-- Runtime-loaded Arthurian story arcs from content packs, with start/status/advance commands
+- Runtime-loaded Arthurian story arcs from content packs, with start/status/advance and eligibility commands
 - Runtime-loaded content-pack rooms with `travel <pack-id>` entry points
 - Recruitable companions, relics, and allies
 - Dice/probability-driven encounters
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 
-The next implementation target is deeper branching rules from story tags, factions, and room state.
+The next implementation target is deeper branching from richer room state and broader side-arc playthrough coverage.
 
 ## Run Locally
 
@@ -43,7 +43,7 @@ Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres i
 
 The browser stores an `eldermere.session` object in `localStorage`, created through `POST /api/v1/sessions`. The session token is required by the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects without exposing unauthenticated state changes.
 
-Try `story` in the command console to list loaded Arthurian story arcs, `story sword-test` to inspect one, `story start sword-test` to begin, `story next` to advance, and `story tags` to inspect branch tags.
+Try `story` in the command console to list loaded Arthurian story arcs, `story eligible` to see playable arcs, `story locked` to see tag/faction locks, `story sword-test` to inspect one, `story start sword-test` to begin, `story next` to advance, and `story tags` to inspect branch tags.
 
 Try `travel arthurian-core`, `travel camelot-underbelly`, or `travel greek-crossing` to enter loaded content-pack regions.
 

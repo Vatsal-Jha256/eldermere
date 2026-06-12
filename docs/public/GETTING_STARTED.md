@@ -60,6 +60,8 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 - `help story`, `help movement`, `help combat`, `help inventory`, `help social`, `help world`: inspect focused MUD-style help topics.
 - `quest`: start or check the starter quest.
 - `story`: list loaded story arcs from content packs.
+- `story eligible`: list currently playable story arcs.
+- `story locked`: list blocked story arcs and the missing tags or faction reputation.
 - `story sword-test`: inspect a source-grounded Arthurian story arc.
 - `story start sword-test`: begin a loaded story arc.
 - `story status`: inspect active story progress, including the room and suggested commands for the current step.

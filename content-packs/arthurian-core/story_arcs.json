@@ -327,6 +327,9 @@
       "summary": "Players investigate a relic trade that turns public faith into inventory, revealing which factions profit from confusion around Excalibur, the scabbard, and the Grail.",
       "original_hook": "Camelot's under-market offers honest prices for dishonest miracles, and some false relics still do real damage.",
       "required_tags": ["excalibur-rumor"],
+      "required_factions": {
+        "Camelot Underbelly": 1
+      },
       "adds_tags": ["false-relic-market", "underworld-market", "relic-debt"],
       "variation_tags": ["real-fragment", "useful-fake", "cursed-receipt"],
       "steps": [
@@ -393,6 +396,9 @@
       "summary": "Players encounter Morgan through bargains that may heal, expose, punish, or preserve Camelot depending on what the player owes.",
       "original_hook": "Morgan's agents do not ask whether a bargain is good or evil; they ask whether Camelot read the small print before needing rescue.",
       "required_tags": ["lost-scabbard"],
+      "required_factions": {
+        "Avalon": 1
+      },
       "adds_tags": ["morgan-bargain", "ambiguous-enchantment", "avalon-politics"],
       "variation_tags": ["healer-morgan", "rival-morgan", "teacher-morgan", "trap-morgan"],
       "steps": [
@@ -426,6 +432,9 @@
       "summary": "Players handle kinship claims around Gawain's circle, where every settlement strengthens one loyalty and insults another.",
       "original_hook": "A family debt ledger claims to be older than the Round Table and refuses to recognize the table's authority without compensation.",
       "required_tags": ["round-table-fracture"],
+      "required_factions": {
+        "Round Table": 1
+      },
       "adds_tags": ["gawain-kinship", "family-debt", "honor-ledger"],
       "variation_tags": ["vengeance-claim", "oath-conflict", "public-honor", "private-mercy"],
       "steps": [

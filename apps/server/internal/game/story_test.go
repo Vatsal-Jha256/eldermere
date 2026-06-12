@@ -66,6 +66,31 @@ func TestValidateStoryDocumentRequiresLoreBeats(t *testing.T) {
 	}
 }
 
+func TestValidateStoryDocumentRejectsEmptyRequiredFaction(t *testing.T) {
+	err := ValidateStoryDocument(StoryDocument{
+		Arcs: []StoryArc{
+			{
+				ID:           "bad",
+				Title:        "Bad",
+				Kind:         "side",
+				LoreBeats:    []string{"Faction gates should name a faction."},
+				SourceIDs:    []string{"malory-1251"},
+				Summary:      "Bad faction gate.",
+				OriginalHook: "No faction name.",
+				RequiredFactions: map[string]int{
+					" ": 1,
+				},
+				Steps: []StoryStep{
+					{ID: "step", Title: "Step", Objective: "Do thing."},
+				},
+			},
+		},
+	})
+	if err == nil {
+		t.Fatal("expected empty required faction to fail")
+	}
+}
+
 func TestLoadStoryArcsFromContentPacks(t *testing.T) {
 	root := t.TempDir()
 	packDir := filepath.Join(root, "arthurian-core")

@@ -108,17 +108,18 @@ type PackRuntimeContent struct {
 }
 
 type StoryArc struct {
-	ID            string      `json:"id"`
-	Title         string      `json:"title"`
-	Kind          string      `json:"kind"`
-	LoreBeats     []string    `json:"lore_beats"`
-	SourceIDs     []string    `json:"source_ids"`
-	Summary       string      `json:"summary"`
-	OriginalHook  string      `json:"original_hook"`
-	RequiredTags  []string    `json:"required_tags,omitempty"`
-	AddsTags      []string    `json:"adds_tags,omitempty"`
-	Steps         []StoryStep `json:"steps"`
-	VariationTags []string    `json:"variation_tags,omitempty"`
+	ID               string         `json:"id"`
+	Title            string         `json:"title"`
+	Kind             string         `json:"kind"`
+	LoreBeats        []string       `json:"lore_beats"`
+	SourceIDs        []string       `json:"source_ids"`
+	Summary          string         `json:"summary"`
+	OriginalHook     string         `json:"original_hook"`
+	RequiredTags     []string       `json:"required_tags,omitempty"`
+	RequiredFactions map[string]int `json:"required_factions,omitempty"`
+	AddsTags         []string       `json:"adds_tags,omitempty"`
+	Steps            []StoryStep    `json:"steps"`
+	VariationTags    []string       `json:"variation_tags,omitempty"`
 }
 
 type StoryStep struct {
@@ -263,6 +264,11 @@ func ValidateStoryDocument(document StoryDocument) error {
 		}
 		if len(arc.Steps) == 0 {
 			return fmt.Errorf("story arc %q must include at least one step", arc.ID)
+		}
+		for faction := range arc.RequiredFactions {
+			if strings.TrimSpace(faction) == "" {
+				return fmt.Errorf("story arc %q has empty required faction", arc.ID)
+			}
 		}
 		for _, step := range arc.Steps {
 			if strings.TrimSpace(step.ID) == "" {

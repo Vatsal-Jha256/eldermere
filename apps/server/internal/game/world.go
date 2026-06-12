@@ -427,7 +427,7 @@ func (s *Session) helpStatus(args []string) Event {
 	case "movement", "move", "go", "travel":
 		return Event{Type: "help", Text: "Movement: `look` shows the current room, `exits` lists visible exits, `go north` moves through exits, and `travel arthurian-core` enters a loaded content pack entry room."}
 	case "story", "quest", "plot":
-		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
+		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story eligible` shows playable arcs, `story locked` explains blocked arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
 	case "combat", "fight", "recruit":
 		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, and `party` lists recruited allies."}
 	case "inventory", "items", "take":
@@ -681,6 +681,10 @@ func (s *Session) storyStatus(args []string) Event {
 			return s.activeStoryStatus()
 		case "tags":
 			return s.storyTagsStatus()
+		case "eligible", "available", "open":
+			return s.storyEligibilityStatus(false)
+		case "locked", "locks":
+			return s.storyEligibilityStatus(true)
 		}
 
 		id := strings.ToLower(strings.TrimSpace(args[0]))
@@ -712,7 +716,7 @@ func (s *Session) storyStatus(args []string) Event {
 
 	return Event{
 		Type: "story",
-		Text: fmt.Sprintf("Story arcs loaded. Main: %s. Side: %s. Try `story sword-test` for details or `story start sword-test` to play an arc.", strings.Join(mainIDs, ", "), strings.Join(sideIDs, ", ")),
+		Text: fmt.Sprintf("Story arcs loaded. Main: %s. Side: %s. Try `story eligible`, `story locked`, `story sword-test`, or `story start sword-test`.", strings.Join(mainIDs, ", "), strings.Join(sideIDs, ", ")),
 	}
 }
 
@@ -725,8 +729,9 @@ func (s *Session) startStoryArc(id string) Event {
 		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is already complete. You can inspect it with `story %s`.", id, id)}
 	}
 	missing := missingStoryTags(s.story.Tags, arc.RequiredTags)
-	if len(missing) > 0 {
-		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is locked. Missing tags: %s.", id, strings.Join(missing, ", "))}
+	missingFactions := s.missingFactionRequirements(arc.RequiredFactions)
+	if len(missing) > 0 || len(missingFactions) > 0 {
+		return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is locked. %s", id, formatStoryLockReason(missing, missingFactions))}
 	}
 
 	var variant string
@@ -842,6 +847,45 @@ func (s *Session) storyTagsStatus() Event {
 	return Event{Type: "story", Text: fmt.Sprintf("Story tags: %s.", strings.Join(tags, ", "))}
 }
 
+func (s *Session) storyEligibilityStatus(lockedOnly bool) Event {
+	ids := make([]string, 0, len(s.world.stories))
+	for id := range s.world.stories {
+		ids = append(ids, id)
+	}
+	sortStrings(ids)
+
+	parts := []string{}
+	for _, id := range ids {
+		arc := s.world.stories[id]
+		if storyContains(s.story.CompletedArcIDs, id) {
+			continue
+		}
+		missingTags := missingStoryTags(s.story.Tags, arc.RequiredTags)
+		missingFactions := s.missingFactionRequirements(arc.RequiredFactions)
+		locked := len(missingTags) > 0 || len(missingFactions) > 0
+		if lockedOnly {
+			if locked {
+				parts = append(parts, fmt.Sprintf("%s (%s)", id, formatStoryLockReason(missingTags, missingFactions)))
+			}
+			continue
+		}
+		if !locked {
+			parts = append(parts, id)
+		}
+	}
+
+	if lockedOnly {
+		if len(parts) == 0 {
+			return Event{Type: "story", Text: "Locked story arcs: none."}
+		}
+		return Event{Type: "story", Text: fmt.Sprintf("Locked story arcs: %s.", strings.Join(parts, "; "))}
+	}
+	if len(parts) == 0 {
+		return Event{Type: "story", Text: "Eligible story arcs: none."}
+	}
+	return Event{Type: "story", Text: fmt.Sprintf("Eligible story arcs: %s.", strings.Join(parts, ", "))}
+}
+
 func formatStoryStep(step StoryStep) string {
 	parts := []string{fmt.Sprintf("%s: %s", step.Title, step.Objective)}
 	if strings.TrimSpace(step.RoomHint) != "" {
@@ -851,6 +895,36 @@ func formatStoryStep(step StoryStep) string {
 		parts = append(parts, fmt.Sprintf("Try: %s", strings.Join(step.Commands, ", ")))
 	}
 	return strings.Join(parts, ". ")
+}
+
+func (s *Session) missingFactionRequirements(required map[string]int) []string {
+	if len(required) == 0 {
+		return nil
+	}
+	missing := []string{}
+	for faction, requiredValue := range required {
+		faction = strings.TrimSpace(faction)
+		if faction == "" {
+			continue
+		}
+		current := s.factions[faction]
+		if current < requiredValue {
+			missing = append(missing, fmt.Sprintf("%s %+d (current %+d)", faction, requiredValue, current))
+		}
+	}
+	sortStrings(missing)
+	return missing
+}
+
+func formatStoryLockReason(missingTags []string, missingFactions []string) string {
+	parts := []string{}
+	if len(missingTags) > 0 {
+		parts = append(parts, fmt.Sprintf("Missing tags: %s", strings.Join(missingTags, ", ")))
+	}
+	if len(missingFactions) > 0 {
+		parts = append(parts, fmt.Sprintf("Missing factions: %s", strings.Join(missingFactions, ", ")))
+	}
+	return fmt.Sprintf("%s.", strings.Join(parts, ". "))
 }
 
 func (s *Session) hasItem(id string) bool {

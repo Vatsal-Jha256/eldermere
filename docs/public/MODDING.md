@@ -23,7 +23,7 @@ The validator checks:
 - Optional `entry_room` points `travel <pack-id>` to a specific room; otherwise the first room is used.
 - Pack interactions have ids, trigger tags, and descriptions.
 - Optional `story_file` documents have at least one story arc.
-- Story arcs include ids, titles, `main` or `side` kind, lore beats, source ids, summaries, original hooks, and steps.
+- Story arcs include ids, titles, `main` or `side` kind, lore beats, source ids, summaries, original hooks, optional tag/faction gates, and steps.
 - At least one room exists.
 - Every room has an `id`, `name`, and `description`.
 - Room ids are unique.
@@ -95,7 +95,7 @@ And a `rooms.json`:
 
 ## Story Arc Shape
 
-A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story start <id>`, `story status`, `story next`, and `story tags`. Required tags lock arcs until earlier story outcomes add the right tags. Steps with `room_hint` require the player to be in that room before `story next` advances. `story start`, `story status`, and `story next` show room hints and suggested commands when provided. Story steps can also change faction reputation through `faction_effects`.
+A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through `story`, `story eligible`, `story locked`, `story start <id>`, `story status`, `story next`, and `story tags`. Required tags lock arcs until earlier story outcomes add the right tags. Required faction thresholds lock arcs until combat, quests, or story steps have moved reputation far enough. Steps with `room_hint` require the player to be in that room before `story next` advances. `story start`, `story status`, and `story next` show room hints and suggested commands when provided. Story steps can also change faction reputation through `faction_effects`.
 
 ```json
 {
@@ -111,6 +111,9 @@ A pack can also include `story_file` in `pack.json`. The server loads validated 
       "summary": "Players investigate the sword test as both miracle and political event.",
       "original_hook": "The under-market sells forged witness marks.",
       "required_tags": ["arthurian"],
+      "required_factions": {
+        "Round Table": 1
+      },
       "adds_tags": ["sword-test", "contested-kingship"],
       "variation_tags": ["stone-version", "bribed-witness"],
       "steps": [
@@ -142,6 +145,7 @@ Story fields:
 - `summary`: concise arc purpose.
 - `original_hook`: original Eldermere story angle built from the lore beats.
 - `required_tags`: world tags that must exist before the arc is eligible.
+- `required_factions`: faction reputation thresholds that must be met before the arc is eligible, such as `{ "Round Table": 1 }`.
 - `adds_tags`: world tags the arc can add for later quests or cross-pack interactions.
 - `variation_tags`: branch tags for probabilistic or source-variant outcomes.
 - `steps`: playable objectives with optional room hints, commands, outcome tags, and faction effects.

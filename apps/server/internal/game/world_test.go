@@ -413,6 +413,56 @@ func TestStoryRequiredTagsGateArcStart(t *testing.T) {
 	}
 }
 
+func TestStoryRequiredFactionsGateArcStartAndEligibility(t *testing.T) {
+	world, err := NewStarterWorld().WithStoryArcs([]StoryArc{
+		{
+			ID:           "broker-audit",
+			Title:        "Broker Audit",
+			Kind:         "side",
+			LoreBeats:    []string{"Faction trust can unlock side business."},
+			SourceIDs:    []string{"malory-1251"},
+			Summary:      "A broker only speaks after the under-market trusts the player.",
+			OriginalHook: "A locked ledger turns faction reputation into a story key.",
+			RequiredFactions: map[string]int{
+				"Camelot Underbelly": 1,
+			},
+			Steps: []StoryStep{
+				{ID: "audit", Title: "Audit The Broker", Objective: "Read the broker's hidden ledger."},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach stories: %v", err)
+	}
+	session := NewSession(world)
+
+	events := session.Handle("story eligible")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Eligible story arcs: none.") {
+		t.Fatalf("expected no eligible arcs, got %#v", events)
+	}
+
+	events = session.Handle("story locked")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Missing factions: Camelot Underbelly +1 (current +0)") {
+		t.Fatalf("expected locked faction reason, got %#v", events)
+	}
+
+	events = session.Handle("story start broker-audit")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Missing factions: Camelot Underbelly +1 (current +0)") {
+		t.Fatalf("expected faction lock on start, got %#v", events)
+	}
+
+	session.factions["Camelot Underbelly"] = 1
+	events = session.Handle("story eligible")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "broker-audit") {
+		t.Fatalf("expected broker-audit to become eligible, got %#v", events)
+	}
+
+	events = session.Handle("story start broker-audit")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Story started") {
+		t.Fatalf("expected faction-gated story to start, got %#v", events)
+	}
+}
+
 func TestTravelCommandMovesToContentPackEntryRoom(t *testing.T) {
 	world, err := NewStarterWorld().WithPackRuntimeContent(PackRuntimeContent{
 		Rooms: []Room{
