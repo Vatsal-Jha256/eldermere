@@ -7,18 +7,20 @@ import (
 )
 
 type Config struct {
-	AppEnv      string
-	ServerAddr  string
-	DatabaseURL string
-	LogLevel    slog.Level
+	AppEnv          string
+	ServerAddr      string
+	DatabaseURL     string
+	ContentPacksDir string
+	LogLevel        slog.Level
 }
 
 func FromEnv() Config {
 	return Config{
-		AppEnv:      getEnv("APP_ENV", "development"),
-		ServerAddr:  getEnv("SERVER_ADDR", ":8080"),
-		DatabaseURL: getEnv("DATABASE_URL", "postgres://eldermere:eldermere@localhost:5432/eldermere?sslmode=disable"),
-		LogLevel:    parseLogLevel(getEnv("LOG_LEVEL", "info")),
+		AppEnv:          getEnv("APP_ENV", "development"),
+		ServerAddr:      getEnv("SERVER_ADDR", ":8080"),
+		DatabaseURL:     getEnv("DATABASE_URL", "postgres://eldermere:eldermere@localhost:5432/eldermere?sslmode=disable"),
+		ContentPacksDir: getEnv("CONTENT_PACKS_DIR", ""),
+		LogLevel:        parseLogLevel(getEnv("LOG_LEVEL", "info")),
 	}
 }
 

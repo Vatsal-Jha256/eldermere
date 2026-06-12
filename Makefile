@@ -4,7 +4,7 @@ dev:
 	docker compose up --build
 
 server:
-	cd apps/server && go run ./cmd/eldermere
+	cd apps/server && CONTENT_PACKS_DIR=../../content-packs go run ./cmd/eldermere
 
 web:
 	cd apps/web && npm run dev -- --host 0.0.0.0

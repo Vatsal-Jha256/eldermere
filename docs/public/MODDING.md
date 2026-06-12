@@ -93,7 +93,7 @@ And a `rooms.json`:
 
 ## Story Arc Shape
 
-A pack can also include `story_file` in `pack.json`. Story arcs are not fully loaded into the live quest engine yet, but the validator already checks them so modders can build source-grounded story packs safely.
+A pack can also include `story_file` in `pack.json`. The server loads validated story arcs at startup and exposes them through the `story` command. The richer quest engine still needs to turn these arcs into full branching runtime quests.
 
 ```json
 {

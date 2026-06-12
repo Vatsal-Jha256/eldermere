@@ -46,6 +46,7 @@ npm run check
 - `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
 - `apps/web`: SvelteKit browser client with a live WebSocket command console.
 - `apps/server/internal/game/content/starter/rooms.json`: starter room data loaded by the server.
+- `content-packs`: validated mod packs loaded by local and Docker server runs.
 - `apps/server/internal/storage`: PostgreSQL and in-memory persistence implementations.
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
@@ -56,6 +57,8 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 ## Starter Commands
 
 - `quest`: start or check the starter quest.
+- `story`: list loaded story arcs from content packs.
+- `story sword-test`: inspect a source-grounded Arthurian story arc.
 - `look`: inspect the current room.
 - `go north`, `go east`, `go south`, `go west`: move through room exits.
 - `fight`: resolve the current room's encounter with a d20-style roll.

@@ -2,8 +2,12 @@ package game
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io/fs"
+	"os"
+	"path/filepath"
+	"sort"
 	"strings"
 )
 
@@ -128,6 +132,43 @@ func LoadStoryDocument(files fs.FS, path string) (StoryDocument, error) {
 		return StoryDocument{}, err
 	}
 	return document, nil
+}
+
+func LoadStoryArcsFromContentPacks(root string) ([]StoryArc, error) {
+	entries, err := os.ReadDir(root)
+	if err != nil {
+		return nil, err
+	}
+
+	names := make([]string, 0, len(entries))
+	for _, entry := range entries {
+		if entry.IsDir() {
+			names = append(names, entry.Name())
+		}
+	}
+	sort.Strings(names)
+
+	var arcs []StoryArc
+	for _, name := range names {
+		packPath := filepath.Join(root, name)
+		pack, err := LoadContentPack(os.DirFS(packPath), "pack.json")
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				continue
+			}
+			return nil, fmt.Errorf("load pack %s: %w", name, err)
+		}
+		if pack.StoryFile == "" {
+			continue
+		}
+		document, err := LoadStoryDocument(os.DirFS(packPath), pack.StoryFile)
+		if err != nil {
+			return nil, fmt.Errorf("load story file for pack %s: %w", name, err)
+		}
+		arcs = append(arcs, document.Arcs...)
+	}
+
+	return arcs, nil
 }
 
 func ValidateStoryDocument(document StoryDocument) error {

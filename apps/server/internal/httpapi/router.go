@@ -20,7 +20,7 @@ type healthResponse struct {
 
 func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http.Handler {
 	mux := http.NewServeMux()
-	world := game.NewStarterWorld()
+	world := loadWorld(logger, cfg)
 	hub := newRoomHub()
 
 	mux.HandleFunc("GET /healthz", func(w http.ResponseWriter, r *http.Request) {
@@ -45,6 +45,33 @@ func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http
 	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store, hub))
 
 	return withRequestLogging(logger, withCORS(mux))
+}
+
+func loadWorld(logger *slog.Logger, cfg config.Config) game.World {
+	world := game.NewStarterWorld()
+	candidates := []string{}
+	if cfg.ContentPacksDir != "" {
+		candidates = append(candidates, cfg.ContentPacksDir)
+	}
+	candidates = append(candidates, "content-packs", "../../content-packs", "/app/content-packs")
+
+	for _, candidate := range candidates {
+		arcs, err := game.LoadStoryArcsFromContentPacks(candidate)
+		if err != nil {
+			logger.Debug("content packs not loaded", "path", candidate, "error", err)
+			continue
+		}
+		withStories, err := world.WithStoryArcs(arcs)
+		if err != nil {
+			logger.Warn("content pack stories failed validation", "path", candidate, "error", err)
+			return world
+		}
+		logger.Info("content pack stories loaded", "path", candidate, "arcs", len(arcs))
+		return withStories
+	}
+
+	logger.Warn("no content pack story directory found")
+	return world
 }
 
 func writeJSON(w http.ResponseWriter, status int, payload any) {

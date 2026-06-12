@@ -69,7 +69,8 @@ type Atmosphere struct {
 }
 
 type World struct {
-	rooms map[string]Room
+	rooms   map[string]Room
+	stories map[string]StoryArc
 }
 
 type Session struct {
@@ -187,7 +188,26 @@ func NewWorld(rooms []Room) (World, error) {
 		}
 	}
 
-	return World{rooms: byID}, nil
+	return World{rooms: byID, stories: map[string]StoryArc{}}, nil
+}
+
+func (w World) WithStoryArcs(arcs []StoryArc) (World, error) {
+	if len(arcs) == 0 {
+		return w, nil
+	}
+	if err := ValidateStoryDocument(StoryDocument{Arcs: arcs}); err != nil {
+		return World{}, err
+	}
+
+	stories := make(map[string]StoryArc, len(w.stories)+len(arcs))
+	for id, arc := range w.stories {
+		stories[id] = arc
+	}
+	for _, arc := range arcs {
+		stories[arc.ID] = arc
+	}
+	w.stories = stories
+	return w, nil
 }
 
 func NewSession(world World) Session {
@@ -302,13 +322,15 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.inventoryStatus()}
 	case "quest":
 		return []Event{s.questStatus()}
+	case "story", "stories", "arcs":
+		return []Event{s.storyStatus(args)}
 	case "take", "get":
 		return []Event{s.takeItem()}
 	case "exits":
 		room := s.currentRoom()
 		return []Event{{Type: "system", Text: fmt.Sprintf("Exits: %s", strings.Join(s.visibleExitNames(room), ", "))}}
 	default:
-		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
+		return []Event{{Type: "error", Text: fmt.Sprintf("Unknown command `%s`. Try `look`, `quest`, `story`, `go north`, `fight`, `recruit`, `take`, `inventory`, `party`, `factions`, `map`, `exits`, or `say hello`.", verb)}}
 	}
 }
 
@@ -508,6 +530,45 @@ func (s *Session) questStatus() Event {
 		return Event{Type: "quest", Text: "Quest active: find the stolen Excalibur fragment in the under-market route."}
 	}
 	return Event{Type: "quest", Text: "No quest is active. Try asking around in Lantern Yard."}
+}
+
+func (s *Session) storyStatus(args []string) Event {
+	if len(s.world.stories) == 0 {
+		return Event{Type: "story", Text: "No story arcs are loaded yet."}
+	}
+
+	if len(args) > 0 {
+		id := strings.ToLower(strings.TrimSpace(args[0]))
+		arc, ok := s.world.stories[id]
+		if !ok {
+			return Event{Type: "story", Text: fmt.Sprintf("Story arc `%s` is not loaded. Try `story` to list known arcs.", id)}
+		}
+		stepTitles := make([]string, 0, len(arc.Steps))
+		for _, step := range arc.Steps {
+			stepTitles = append(stepTitles, step.Title)
+		}
+		return Event{
+			Type: "story",
+			Text: fmt.Sprintf("%s [%s]: %s Sources: %s. Steps: %s.", arc.Title, arc.Kind, arc.Summary, strings.Join(arc.SourceIDs, ", "), strings.Join(stepTitles, " -> ")),
+		}
+	}
+
+	mainIDs := make([]string, 0, len(s.world.stories))
+	sideIDs := make([]string, 0, len(s.world.stories))
+	for id, arc := range s.world.stories {
+		if arc.Kind == "main" {
+			mainIDs = append(mainIDs, id)
+			continue
+		}
+		sideIDs = append(sideIDs, id)
+	}
+	sortStrings(mainIDs)
+	sortStrings(sideIDs)
+
+	return Event{
+		Type: "story",
+		Text: fmt.Sprintf("Story arcs loaded. Main: %s. Side: %s. Try `story sword-test` for details.", strings.Join(mainIDs, ", "), strings.Join(sideIDs, ", ")),
+	}
 }
 
 func (s *Session) hasItem(id string) bool {

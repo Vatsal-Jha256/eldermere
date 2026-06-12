@@ -1,6 +1,7 @@
 package game
 
 import (
+	"strings"
 	"testing"
 	"testing/fstest"
 )
@@ -226,5 +227,39 @@ func TestQuestStoresVariant(t *testing.T) {
 	events := session.Handle("quest")
 	if len(events) != 1 || events[0].Text == "Quest active: find the stolen Excalibur fragment in the under-market route." {
 		t.Fatalf("expected variant quest text, got %#v", events)
+	}
+}
+
+func TestStoryCommandListsAndShowsLoadedArcs(t *testing.T) {
+	world, err := NewStarterWorld().WithStoryArcs([]StoryArc{
+		{
+			ID:           "sword-test",
+			Title:        "The Sword Test",
+			Kind:         "main",
+			LoreBeats:    []string{"Sword test and contested kingship"},
+			SourceIDs:    []string{"malory-1251"},
+			Summary:      "Arthur's legitimacy is contested.",
+			OriginalHook: "The under-market sells false proof.",
+			Steps: []StoryStep{
+				{ID: "witness", Title: "Find a witness", Objective: "Find someone who saw the sword test."},
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("attach stories: %v", err)
+	}
+	session := NewSession(world)
+
+	events := session.Handle("story")
+	if len(events) != 1 || events[0].Type != "story" {
+		t.Fatalf("expected story list event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "sword-test") {
+		t.Fatalf("expected story list to include sword-test, got %q", events[0].Text)
+	}
+
+	events = session.Handle("story sword-test")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "malory-1251") {
+		t.Fatalf("expected story detail with source id, got %#v", events)
 	}
 }

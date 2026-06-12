@@ -20,10 +20,12 @@ services:
   server:
     image: eldermere-server:dev
     build:
-      context: ./apps/server
+      context: .
+      dockerfile: apps/server/Dockerfile
     environment:
       APP_ENV: development
       SERVER_ADDR: :8080
+      CONTENT_PACKS_DIR: /app/content-packs
       DATABASE_URL: postgres://eldermere:eldermere@db:5432/eldermere?sslmode=disable
     ports:
       - "8080:8080"
