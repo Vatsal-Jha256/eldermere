@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"reflect"
 	"strings"
 	"time"
 
@@ -105,13 +106,17 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			}
 
 			beforeRoomID := session.RoomID()
+			beforeState := session.PersistentState()
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 			events := session.Handle(command)
-			if saveErr := store.SavePlayerState(ctx, playerID, session.PersistentState()); saveErr != nil {
-				cancel()
-				logger.Warn("save player state failed", "player_id", playerID, "error", saveErr)
-				conn.Close(websocket.StatusInternalError, "failed to save state")
-				return
+			afterState := session.PersistentState()
+			if persistentStateChanged(beforeState, afterState) {
+				if saveErr := store.SavePlayerState(ctx, playerID, afterState); saveErr != nil {
+					cancel()
+					logger.Warn("save player state failed", "player_id", playerID, "error", saveErr)
+					conn.Close(websocket.StatusInternalError, "failed to save state")
+					return
+				}
 			}
 			if beforeRoomID != session.RoomID() {
 				hub.leave(ctx, client)
@@ -126,6 +131,10 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			}
 		}
 	}
+}
+
+func persistentStateChanged(before game.PersistentState, after game.PersistentState) bool {
+	return !reflect.DeepEqual(before, after)
 }
 
 func broadcastRoomEvents(ctx context.Context, hub *roomHub, client *clientConn, roomID string, displayName string, events []game.Event) {
