@@ -14,21 +14,6 @@ import (
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/storage"
 )
 
-func corsMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE")
-		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
-
-		if r.Method == "OPTIONS" {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		next.ServeHTTP(w, r)
-	})
-}
-
 func main() {
 	cfg := config.FromEnv()
 	logger := slog.New(slog.NewTextHandler(os.Stdout, &slog.HandlerOptions{
@@ -44,7 +29,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:              cfg.ServerAddr,
-		Handler:           corsMiddleware(httpapi.NewRouter(cfg, logger, store)),
+		Handler:           httpapi.NewRouter(cfg, logger, store),
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 

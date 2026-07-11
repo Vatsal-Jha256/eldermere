@@ -66,3 +66,41 @@ func TestCreateSession(t *testing.T) {
 		t.Fatal("expected session token to verify")
 	}
 }
+
+func TestCORSPreflight(t *testing.T) {
+	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default(), storage.NewMemoryStore())
+
+	req := httptest.NewRequest(http.MethodOptions, "/api/v1/sessions", nil)
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusNoContent {
+		t.Fatalf("expected status 204, got %d", res.Code)
+	}
+	if got := res.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Fatalf("allow origin = %q, want *", got)
+	}
+	if got := res.Header().Get("Access-Control-Allow-Methods"); got != "GET, POST, OPTIONS" {
+		t.Fatalf("allow methods = %q", got)
+	}
+	if got := res.Header().Get("Access-Control-Allow-Headers"); got != "Content-Type, Authorization" {
+		t.Fatalf("allow headers = %q", got)
+	}
+}
+
+func TestCORSHeadersOnAPIResponse(t *testing.T) {
+	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default(), storage.NewMemoryStore())
+
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", res.Code)
+	}
+	if got := res.Header().Get("Access-Control-Allow-Origin"); got != "*" {
+		t.Fatalf("allow origin = %q, want *", got)
+	}
+}
