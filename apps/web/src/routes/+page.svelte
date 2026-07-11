@@ -50,6 +50,7 @@
 
   const sessionKey = 'eldermere.session';
   const displayNameKey = 'eldermere.displayName';
+  const maxCommandLength = 512;
   const commands = [
     'help',
     'exits',
@@ -1015,12 +1016,13 @@
         disabled={!connected}
         autocapitalize="none"
         enterkeyhint="send"
+        maxlength={maxCommandLength}
         aria-describedby="command-hint"
         onkeydown={handleCommandKeydown}
       />
       <button type="submit" disabled={!connected}>Send</button>
     </form>
-    <p id="command-hint" class="sr-only">Enter a MUD command, then press Send. Use the example command buttons to fill common commands.</p>
+    <p id="command-hint" class="sr-only">Enter a MUD command of 512 characters or fewer, then press Send. Use the example command buttons to fill common commands.</p>
 
     <div class="chips" aria-label="Example commands">
       {#each commands as item}
