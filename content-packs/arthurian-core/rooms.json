@@ -12,7 +12,8 @@
       },
       "exits": {
         "east": "merlins-counting-room",
-        "north": "round-table-threshold"
+        "north": "round-table-threshold",
+        "west": "tintagel-sea-crypt"
       },
       "quest": {
         "start": "The yard clerk offers you three witness marks for the sword test, and every one of them contradicts the others.",
@@ -87,7 +88,9 @@
       },
       "exits": {
         "south": "stone-yard",
-        "east": "grail-choir"
+        "east": "grail-choir",
+        "north": "queen-gallery",
+        "west": "kays-bench"
       },
       "encounter": {
         "name": "Seat Claimant",
@@ -130,7 +133,8 @@
       },
       "exits": {
         "north": "grail-choir",
-        "east": "avalon-shore"
+        "east": "avalon-shore",
+        "south": "bedivere-bank"
       }
     },
     {
@@ -144,7 +148,107 @@
         "motifs": ["oarless boats", "green shore", "delayed king"]
       },
       "exits": {
-        "west": "mordreds-writ-room"
+        "west": "mordreds-writ-room",
+        "south": "bedivere-bank"
+      }
+    },
+    {
+      "id": "tintagel-sea-crypt",
+      "name": "Tintagel Sea Crypt",
+      "description": "Salt water knocks beneath a sealed birth ledger. Uther's seal, Igraine's name, and Merlin's handwriting refuse to sit in the same column.",
+      "atmosphere": {
+        "palette": "blackwater",
+        "weather": "salt mist",
+        "myth_layer": "hidden birth",
+        "motifs": ["sea crypt", "birth ledger", "broken seal"]
+      },
+      "exits": {
+        "east": "stone-yard"
+      },
+      "item": {
+        "id": "tintagel-seal",
+        "name": "Tintagel Seal",
+        "description": "a cracked seal naming the night Arthur's parentage became a political weapon"
+      }
+    },
+    {
+      "id": "queen-gallery",
+      "name": "Queen's Gallery",
+      "description": "Guinevere's gallery overlooks the table without belonging to it. Every curtain has learned to keep counsel.",
+      "atmosphere": {
+        "palette": "rain-gold",
+        "weather": "quiet court air",
+        "myth_layer": "queen's counsel",
+        "motifs": ["curtains", "watching balcony", "court whispers"]
+      },
+      "exits": {
+        "south": "round-table-threshold",
+        "east": "lancelot-mews"
+      }
+    },
+    {
+      "id": "lancelot-mews",
+      "name": "Lancelot Mews",
+      "description": "Falcons, saddles, and sealed letters wait under a roof too low for clean heroism. The best knight's name arrives before he does.",
+      "atmosphere": {
+        "palette": "candle-smoke",
+        "weather": "feather-dust hush",
+        "myth_layer": "courtly fracture",
+        "motifs": ["falcon hoods", "sealed letters", "saddle hooks"]
+      },
+      "exits": {
+        "west": "queen-gallery"
+      },
+      "recruitable": {
+        "name": "Mews Falconer",
+        "dc": 13,
+        "roll_mode": "advantage",
+        "success": "The Mews Falconer joins you and knows which letters traveled by wing instead of courier.",
+        "failure": "The Mews Falconer smiles politely and keeps the birds facing away.",
+        "crit_win": "The Mews Falconer joins and brings a letter nobody admits was sent.",
+        "crit_lose": "The falcons scream before you ask your first question."
+      }
+    },
+    {
+      "id": "kays-bench",
+      "name": "Kay's Bench",
+      "description": "A hard bench beside the hall stores keys, insults, ration tallies, and the oldest version of court discipline.",
+      "atmosphere": {
+        "palette": "tavern-red",
+        "weather": "kitchen heat",
+        "myth_layer": "seneschal office",
+        "motifs": ["key rings", "ration boards", "sharp knives"]
+      },
+      "exits": {
+        "east": "round-table-threshold"
+      },
+      "encounter": {
+        "name": "Sharp-Tongued Steward",
+        "dc": 13,
+        "modifier": 1,
+        "win": "You survive the steward's audit and learn why Kay's office keeps the court from eating itself.",
+        "lose": "The steward files you under decorative trouble and assigns you dish duty.",
+        "crit_win": "You answer the audit so well the steward lends you Kay's spare key.",
+        "crit_lose": "The steward finds three contradictions in your posture alone.",
+        "faction_effects": {
+          "Kay's Household": 1,
+          "Court Gossips": -1
+        }
+      }
+    },
+    {
+      "id": "bedivere-bank",
+      "name": "Bedivere Bank",
+      "description": "A riverbank keeps practicing the sound a sword makes when nobody can bear to throw it away.",
+      "atmosphere": {
+        "palette": "avalon-green",
+        "weather": "cold river breath",
+        "myth_layer": "last loyalist",
+        "motifs": ["riverbank", "empty hand", "returning blade"]
+      },
+      "exits": {
+        "north": "mordreds-writ-room",
+        "east": "avalon-shore"
       }
     }
   ]

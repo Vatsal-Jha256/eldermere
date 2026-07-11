@@ -49,6 +49,12 @@ This is the first working lore index for Eldermere. It is intentionally source-f
 - Mordred's rebellion or usurpation.
 - Final battle and Arthur's departure/death/Avalon ambiguity.
 
+## Current Eldermere Coverage
+
+- Covered in initial playable arcs: sword test, Merlin's prophecy/debt role, Excalibur/scabbard separation, Round Table politics, Grail sorting, Mordred's claim, Avalon ambiguity, Morgan's bargains, Gawain kinship, Welsh court echoes, Grail witnesses, under-market relic trade, and cross-myth routes.
+- Added in the next expansion slice: Tintagel/Uther/Igraine birth secrecy, Guinevere and Lancelot court pressure, Kay/Kai's seneschal role, and Bedivere's final-sword witness problem.
+- Still thin or missing: early wars against rival kings, Roman campaign traditions, Caerleon as a court setting, Gareth, Tristram, Pellinore and the Questing Beast, Accolon in Morgan's scabbard conflict, Bors as a Grail witness, fuller Lancelot adventure material before scandal, and a more detailed Camlann battlefield sequence.
+
 ## Source Variation Points
 
 - Arthur's earliest historical traces differ from later romance kingship.
@@ -64,4 +70,3 @@ This is the first working lore index for Eldermere. It is intentionally source-f
 - Then add original Eldermere connective tissue: under-market factions, companions, relic variants, dice outcomes, and cross-myth interactions.
 - Every original main-story arc should cite which lore beat it grows from.
 - Every major lore contradiction should become a possible branch, rumor, faction claim, or probabilistic event.
-

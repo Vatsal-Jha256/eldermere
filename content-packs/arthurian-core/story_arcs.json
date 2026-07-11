@@ -490,6 +490,158 @@
       ]
     },
     {
+      "id": "tintagel-birth-ledger",
+      "title": "Tintagel Keeps The First Debt",
+      "kind": "side",
+      "lore_beats": [
+        "Arthur's conception, parentage, and hidden upbringing shape the legitimacy problem before the sword test ever happens.",
+        "Uther, Igraine, Merlin, and Tintagel should remain politically active memories rather than a flat prologue."
+      ],
+      "source_ids": ["malory-1251", "geoffrey-37848"],
+      "summary": "Players recover and interpret the birth secrecy behind Arthur's claim, turning parentage into a faction and prophecy problem.",
+      "original_hook": "A sea crypt keeps a birth ledger that refuses to decide whether it is evidence, blackmail, or confession.",
+      "required_tags": ["arthurian"],
+      "adds_tags": ["tintagel-secret", "uther-debt", "igraine-record", "hidden-birth-known"],
+      "variation_tags": ["clean-lineage", "stolen-night", "merlin-arranged", "ledger-forged"],
+      "steps": [
+        {
+          "id": "break-the-seal",
+          "title": "Break The Seal",
+          "room_hint": "tintagel-sea-crypt",
+          "objective": "Open the Tintagel ledger and decide which witness names are too dangerous to publish.",
+          "commands": ["look", "take"],
+          "outcome_tags": ["birth-ledger-opened"]
+        },
+        {
+          "id": "price-the-parentage",
+          "title": "Price The Parentage",
+          "room_hint": "merlins-counting-room",
+          "objective": "Compare Uther's seal, Igraine's record, and Merlin's handwriting as competing debts.",
+          "commands": ["look", "say tintagel"],
+          "outcome_tags": ["parentage-debt-priced"],
+          "faction_effects": {
+            "Merlin's Couriers": 1,
+            "Court Gossips": -1
+          }
+        }
+      ]
+    },
+    {
+      "id": "guinevere-lancelot-pressure",
+      "title": "The Queen's Gallery Hears Too Much",
+      "kind": "side",
+      "lore_beats": [
+        "Guinevere and Lancelot become central to later court fracture, loyalty, love, scandal, and Camelot's fall.",
+        "The romance material should create political pressure before it becomes a final disaster."
+      ],
+      "source_ids": ["malory-1252", "tennyson-610"],
+      "summary": "Players track letters, court surveillance, and knightly reputation around Guinevere and Lancelot without reducing either figure to a single accusation.",
+      "original_hook": "A falconer knows which letters travel faster than honor, and every witness wants payment in silence.",
+      "required_tags": ["round-table-fracture"],
+      "adds_tags": ["queen-pressure", "lancelot-rumor", "courtly-scandal-seed", "fellowship-crack-deepens"],
+      "variation_tags": ["true-letter", "planted-letter", "protective-silence", "public-accusation"],
+      "steps": [
+        {
+          "id": "hear-the-gallery",
+          "title": "Hear The Gallery",
+          "room_hint": "queen-gallery",
+          "objective": "Record what the queen's household knows without letting gossip become proof by itself.",
+          "commands": ["look", "say counsel"],
+          "outcome_tags": ["gallery-counsel-heard"]
+        },
+        {
+          "id": "follow-the-falcon",
+          "title": "Follow The Falcon",
+          "room_hint": "lancelot-mews",
+          "objective": "Recruit or question the falconer to learn which sealed letter matters and which one was bait.",
+          "commands": ["recruit", "look"],
+          "outcome_tags": ["letter-route-known"]
+        },
+        {
+          "id": "choose-the-silence",
+          "title": "Choose The Silence",
+          "room_hint": "round-table-threshold",
+          "objective": "Decide whether to bury the rumor, expose it, or hold it as a debt against the court.",
+          "commands": ["quest", "say silence"],
+          "outcome_tags": ["scandal-handled-for-now"],
+          "faction_effects": {
+            "Round Table": -1,
+            "Court Gossips": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "kays-hard-office",
+      "title": "Kay's Hard Office",
+      "kind": "side",
+      "lore_beats": [
+        "Kay/Kai appears across Welsh and romance materials with shifting tone, from heroic companion to sharp court officer.",
+        "Court logistics, household discipline, and rough speech should matter alongside famous quests."
+      ],
+      "source_ids": ["mabinogion-5160", "malory-1251"],
+      "summary": "Players learn that Camelot's ideals rely on Kay's harsh practical office: food, keys, insults, punishments, and the daily prevention of collapse.",
+      "original_hook": "Kay's bench has a ledger of impossible errands, and every corrected boast becomes a ration problem by supper.",
+      "required_tags": ["arthurian"],
+      "adds_tags": ["kay-office", "household-discipline", "court-logistics"],
+      "variation_tags": ["heroic-kai", "sharp-kay", "kitchen-trial", "key-debt"],
+      "steps": [
+        {
+          "id": "survive-the-audit",
+          "title": "Survive The Audit",
+          "room_hint": "kays-bench",
+          "objective": "Face the household audit and learn what Camelot owes before it can afford ideals.",
+          "commands": ["fight", "look"],
+          "outcome_tags": ["household-audit-survived"]
+        },
+        {
+          "id": "file-the-boast",
+          "title": "File The Boast",
+          "room_hint": "stone-yard",
+          "objective": "Turn an old Welsh boast into a playable court obligation instead of a decorative reference.",
+          "commands": ["say boast", "quest"],
+          "outcome_tags": ["boast-filed"]
+        }
+      ]
+    },
+    {
+      "id": "bediveres-last-witness",
+      "title": "Bedivere's Last Witness",
+      "kind": "side",
+      "lore_beats": [
+        "Bedivere is the last loyal witness around Arthur's end and the return of the sword in later traditions.",
+        "The final sword-return motif should be prepared before Avalon so the ending has earned witnesses."
+      ],
+      "source_ids": ["malory-1252", "tennyson-610"],
+      "summary": "Players prepare the final-sword witness problem by testing whether loyalty means obedience, delay, mercy, or truth.",
+      "original_hook": "A riverbank keeps replaying the sound of a sword not thrown, because even loyal hands can hesitate for the right reason.",
+      "required_tags": ["camlann-route-set"],
+      "adds_tags": ["bedivere-witness", "sword-return-question", "last-loyalist-record"],
+      "variation_tags": ["throws-first-time", "hesitates-twice", "reports-truth", "protects-legend"],
+      "steps": [
+        {
+          "id": "hear-the-bank",
+          "title": "Hear The Bank",
+          "room_hint": "bedivere-bank",
+          "objective": "Listen to the riverbank's repeated endings and mark which version asks for obedience.",
+          "commands": ["look", "say sword"],
+          "outcome_tags": ["river-ending-heard"]
+        },
+        {
+          "id": "test-the-return",
+          "title": "Test The Return",
+          "room_hint": "avalon-shore",
+          "objective": "Decide whether the sword-return story should reward obedience, honest hesitation, or mercy.",
+          "commands": ["quest", "say return"],
+          "outcome_tags": ["return-witness-set"],
+          "faction_effects": {
+            "Avalon": 1,
+            "Round Table": 1
+          }
+        }
+      ]
+    },
+    {
       "id": "cross-myth-leaks",
       "title": "Cross-Myth Leaks",
       "kind": "side",

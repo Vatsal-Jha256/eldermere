@@ -301,6 +301,7 @@ func TestArthurianCoreSideArcsCanAdvanceWhenUnlocked(t *testing.T) {
 	session.story.Tags = appendStoryTags(session.story.Tags,
 		"arthurian",
 		"avalon-road",
+		"camlann-route-set",
 		"excalibur-rumor",
 		"grail-witness",
 		"lost-scabbard",
@@ -316,6 +317,10 @@ func TestArthurianCoreSideArcsCanAdvanceWhenUnlocked(t *testing.T) {
 		"morgans-bargains",
 		"gawain-kinship-web",
 		"grail-witnesses",
+		"tintagel-birth-ledger",
+		"guinevere-lancelot-pressure",
+		"kays-hard-office",
+		"bediveres-last-witness",
 		"cross-myth-leaks",
 	}
 
@@ -345,7 +350,7 @@ func TestArthurianCoreSideArcsCanAdvanceWhenUnlocked(t *testing.T) {
 		}
 	}
 
-	for _, tag := range []string{"false-relic-market", "welsh-echo", "morgan-bargain", "gawain-kinship", "grail-testimony", "cross-myth-route"} {
+	for _, tag := range []string{"false-relic-market", "welsh-echo", "morgan-bargain", "gawain-kinship", "grail-testimony", "tintagel-secret", "queen-pressure", "kay-office", "bedivere-witness", "cross-myth-route"} {
 		if !storyContains(session.story.Tags, tag) {
 			t.Fatalf("expected completed side arc tag %q in %#v", tag, session.story.Tags)
 		}

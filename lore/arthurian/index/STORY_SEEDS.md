@@ -21,3 +21,18 @@ These are original Eldermere seeds derived from the lore index. They are not sou
 - Grail witnesses: different companions interpret the same miracle differently.
 - Cross-myth leaks: Greek oracles, Celtic otherworld routes, and later legend packs react to Arthurian tags.
 
+## Added Expansion Seeds
+
+- Tintagel birth ledger: Uther, Igraine, Merlin, secrecy, legitimacy, and parentage become playable evidence rather than a static prologue.
+- Guinevere/Lancelot pressure: courtly love, surveillance, loyalty, and rumor begin as social pressure before they become a fall-of-Camelot disaster.
+- Kay's hard office: Kai/Kay's older and later tones become a court-logistics arc about keys, food, insults, and discipline.
+- Bedivere's last witness: the sword-return and last-loyalist motifs become an ending-preparation arc before Avalon.
+
+## Next Missing Seed Families
+
+- Early consolidation wars and rival kings.
+- Roman campaign / imperial Arthur traditions.
+- Caerleon as an alternate court and Welsh texture hub.
+- Pellinore and the Questing Beast as a weird dynastic omen chain.
+- Gareth, Tristram, Bors, and Accolon-focused arcs.
+- A fuller Camlann battlefield sequence that connects Mordred, Lancelot/Guinevere fallout, Gawain's grievance, Bedivere, and Avalon.
