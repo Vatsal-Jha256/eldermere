@@ -1,32 +1,12 @@
 # Eldermere
 
-Working title for a browser-based MUD and creature-RPG inspired by Arthurian legend, old-school text worlds, tabletop-style probability, and modern web play.
+Eldermere is an early browser MUD and creature-RPG for exploring Arthurian legend through play.
 
-The project direction is documented in [docs/public/PROJECT_PLAN.md](docs/public/PROJECT_PLAN.md).
+It mixes room-based exploration, source-grounded story arcs, recruitable companions, relics, faction reputation, and d20-style checks. The project is intentionally mod-friendly: most world content lives in JSON content packs.
 
-## Current Status
+The project began as a way to turn interest in Arthurian adaptations into a more source-grounded, playable way to learn the legends. It is currently a prototype and will grow gradually. Contributions are welcome from anyone interested in lore, world building, mechanics, accessibility, or polish.
 
-Stage 0 scaffold is in place. The current repo has:
-
-- Text-first browser MUD interface
-- Go backend
-- SvelteKit frontend
-- WebSocket command loop with movement, speech, fight, recruit, and party commands
-- Session-authenticated persistent player state for room, inventory, party, and quest progress
-- Room presence, local chat, and recent room event log
-- Arthurian starter region
-- Runtime-loaded Arthurian story arcs from content packs, with start/status/advance and eligibility commands
-- Runtime-loaded content-pack rooms with `travel <pack-id>` entry points
-- Recruitable companions, relics, and allies
-- Dice/probability-driven encounters with modifiers, advantage/disadvantage, and critical outcomes
-- Public modding docs
-- Private learning docs for architecture and CSE concepts
-
-The next implementation target is deeper branching from richer room state and broader side-arc playthrough coverage.
-
-## Run Locally
-
-Docker is the recommended path:
+## Run
 
 ```sh
 docker compose up --build
@@ -36,29 +16,61 @@ Then open:
 
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
-- WebSocket command endpoint: `ws://localhost:8080/ws`
-- Session endpoint: `POST http://localhost:8080/api/v1/sessions`
 
-Postgres is exposed on `localhost:5433` to avoid conflicts with local Postgres installs on `5432`.
+## Useful Commands
 
-The browser stores an `eldermere.session` object in `localStorage`, created through `POST /api/v1/sessions`. The session token is required by the WebSocket endpoint so location, inventory, party, and quest progress survive reconnects without exposing unauthenticated state changes.
+In the game:
 
-Try `story` in the command console to list loaded Arthurian story arcs, `story eligible` to see playable arcs, `story locked` to see tag/faction locks, `story sword-test` to inspect one, `story start sword-test` to begin, `story next` to advance, and `story tags` to inspect branch tags.
+- `help`
+- `look`
+- `go north`
+- `quest`
+- `story`
+- `story eligible`
+- `story start sword-test`
+- `fight`
+- `recruit`
+- `inventory`
+- `party`
+- `travel arthurian-core`
 
-Try `travel arthurian-core`, `travel camelot-underbelly`, or `travel greek-crossing` to enter loaded content-pack regions.
-
-## Checks
+For development:
 
 ```sh
-docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.26-alpine go test ./...
-cd apps/web && npm run check
+make test
+make validate-content
 ```
 
-## Reference Projects
+## Project Layout
 
-The main references are:
+- `apps/server`: Go API, WebSocket command loop, game engine, persistence.
+- `apps/web`: SvelteKit browser client.
+- `content-packs`: JSON world packs.
+- `lore/arthurian`: public-domain source notes and local lore index.
+- `docs/public`: Docsify documentation.
 
-- [TalesMUD](https://github.com/TalesMUD/talesmud): modern browser MUD direction, Go/Svelte inspiration, WebSocket-first play.
-- [Evennia](https://www.evennia.com/): content-first MUD architecture, command/world modeling, builder-friendly design.
+## Docs
 
-This project should learn from those projects without cloning their code, data model, UI, writing, or brand.
+Run the public docs locally:
+
+```sh
+make docs-public
+```
+
+Then open <http://localhost:3000>.
+
+## Contributing
+
+Eldermere is nascent. Good contributions are small, tested, and easy to review.
+
+Useful areas:
+
+- Arthurian lore coverage
+- Room and quest writing
+- Content-pack validation
+- DnD-style mechanics
+- Browser MUD usability
+- Accessibility and responsive UI
+- Modding documentation
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a PR.

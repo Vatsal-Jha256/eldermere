@@ -168,16 +168,16 @@ Story fields:
 
 ## Atmospheric Backgrounds
 
-Rooms can include `atmosphere` metadata. The web client uses this to generate a lightweight atmospheric background, so mods can feel visually distinct without shipping art assets.
+Rooms can include `atmosphere` metadata. The web client uses this to generate a lightweight atmospheric background and matching ambient audio, so mods can feel distinct without shipping art assets.
 
 Fields:
 
 - `palette`: a named color palette. Existing examples include `rain-gold`, `blackwater`, `candle-smoke`, `tavern-red`, `avalon-green`, `relic-vault`, `coin-shadow`, `oracle-blue`, and `bronze-ash`.
 - `weather`: short sensory weather or air description.
 - `myth_layer`: the room's mythic context, such as `arthurian court`, `under-market`, or `greek underworld`.
-- `motifs`: inspectable visual motifs that should influence future generated art prompts.
+- `motifs`: inspectable visual motifs used by the browser renderer.
 
-The current implementation combines CSS atmosphere layers with a deterministic procedural canvas renderer. This creates bitmap-like room backdrops from the same metadata, including palette, weather, myth layer, and motifs. A later generated-image renderer can reuse the same fields as prompts for richer static bitmap assets.
+The current implementation combines CSS atmosphere layers with a deterministic procedural canvas renderer. This creates lightweight room backdrops from the same metadata, including palette, weather, myth layer, and motifs.
 
 ## Current Example
 

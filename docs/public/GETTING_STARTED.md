@@ -41,7 +41,7 @@ npm install
 npm run check
 ```
 
-## Current Scaffold
+## Project Layout
 
 - `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
 - `apps/web`: SvelteKit browser client with a live WebSocket command console.
@@ -50,9 +50,8 @@ npm run check
 - `apps/server/internal/storage`: PostgreSQL and in-memory persistence implementations.
 - `docker-compose.yml`: Postgres, server, and web services.
 - `docs/public`: public Docsify documentation.
-- `private-docs`: local learning notes, ignored by git.
 
-Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs. The browser combines CSS atmosphere layers with a procedural canvas backdrop, so content packs can look distinct without shipping image files.
+Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs. The browser combines CSS atmosphere layers with a procedural canvas backdrop, and the same metadata also shapes ambient audio.
 
 ## Starter Commands
 

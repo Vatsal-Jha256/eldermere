@@ -1,14 +1,25 @@
-# Eldermere Public Docs
+# Eldermere
 
-Eldermere is a browser-based MUD and creature-RPG built around connected legends.
+Eldermere is an early browser MUD and creature-RPG for exploring Arthurian legend through play.
 
-The first release starts with Arthurian legend. Later legend packs should interact with the same world state instead of acting like isolated expansion zones.
+The game is text-first. Players move through rooms, follow story arcs, recruit companions, collect relics, and resolve encounters with d20-style checks. Most content is data-driven so contributors can add rooms, factions, quests, and legends without changing engine code.
 
-## Design Pillars
+## Current Focus
 
-- Text-first play with strong room writing and lightweight visuals.
-- Browser-native MUD interface, inspired by old MUDs but easier to enter.
-- Probabilistic encounters so known legends still create surprise.
-- Collectible companions, relics, techniques, curses, and allies.
-- Open-source modding through documented content packs.
-- Connected myth universe where different legends can affect each other.
+- Make the core Arthurian world more complete and better sourced.
+- Keep the game simple to run and easy to mod.
+- Improve the browser MUD interface.
+- Keep mechanics understandable and testable.
+
+## Contributing
+
+This is a nascent side project. Contributions are welcome, especially around:
+
+- Arthurian lore coverage
+- World building
+- Quest and room writing
+- Game mechanics
+- Modding tools
+- Documentation
+
+Start with [Getting Started](GETTING_STARTED.md), then read [Contributing](CONTRIBUTING.md).

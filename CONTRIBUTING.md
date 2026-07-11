@@ -1,34 +1,32 @@
 # Contributing
 
-Eldermere is early. Contributions should make the game easier to run, easier to mod, or more playable.
+Eldermere is in an early prototype stage. Contributions should make the project easier to run, easier to mod, or more playable.
 
-## Local Setup
+## Useful Areas
 
-Use Docker first:
+- Arthurian lore coverage
+- World building and story arcs
+- Content-pack validation
+- Game mechanics
+- Browser MUD usability
+- Accessibility and responsive layout
+- Documentation
 
-```sh
-docker compose up --build
-```
+## Content Rules
 
-Services:
+- Write original prose.
+- Use public-domain myth and legend material as source grounding.
+- Do not copy dialogue, scenes, character designs, or unique plot inventions from modern adaptations.
+- Cite source ids when adding Arthurian story arcs.
+- Keep new content connected to the shared world model through tags, factions, routes, relics, or consequences.
 
-- Web client: <http://localhost:5173>
-- API health: <http://localhost:8080/healthz>
-- Postgres: `localhost:5433`
-
-## Before Opening A Pull Request
+## Before A PR
 
 Run:
 
 ```sh
-docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.26-alpine go test ./...
-cd apps/web && npm run check
+make test
+make validate-content
 ```
 
-If Go is installed locally, `make test-server` also works.
-
-## Content Contributions
-
-Content should be original writing. Arthurian legend names and public-domain myth material are allowed, but do not copy dialogue, character designs, scenes, or unique plot inventions from modern adaptations.
-
-Future content packs should connect to the shared world model rather than acting like isolated zones.
+Keep changes focused. Explain what changed, why it matters, and how you checked it.

@@ -1,5 +1,20 @@
 <script lang="ts">
-  import { onMount } from 'svelte';
+  import { onMount, onDestroy } from 'svelte';
+  import FastNoiseLite from 'fastnoise-lite';
+  import { AtmosphereAudio } from '$lib/audio';
+  import { buildAtmosphereProfile, paletteFor, hashText, mulberry32 } from '$lib/atmosphere';
+
+  const noise = new FastNoiseLite();
+  noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+  noise.SetFractalType(FastNoiseLite.FractalType.FBm);
+
+  const canvasCache = {
+    key: '',
+    bg: typeof document !== 'undefined' ? document.createElement('canvas') : null,
+    motifs: typeof document !== 'undefined' ? document.createElement('canvas') : null,
+    overlay: typeof document !== 'undefined' ? document.createElement('canvas') : null
+  };
+
 
   type RoomView = {
     id: string;
@@ -50,7 +65,21 @@
   const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8080';
   const atmosphereStyle = $derived(buildAtmosphereStyle(room));
 
+  let audio: AtmosphereAudio | null = null;
+
   onMount(() => {
+    audio = new AtmosphereAudio();
+
+    const unlockAudio = async () => {
+      if (audio) {
+        await audio.start();
+        window.removeEventListener('click', unlockAudio);
+        window.removeEventListener('keydown', unlockAudio);
+      }
+    };
+    window.addEventListener('click', unlockAudio);
+    window.addEventListener('keydown', unlockAudio);
+
     let active = true;
     connect().catch((error) => {
       if (active) {
@@ -61,7 +90,18 @@
     return () => {
       active = false;
       socket?.close();
+      window.removeEventListener('click', unlockAudio);
+      window.removeEventListener('keydown', unlockAudio);
+      if (audio) {
+        audio.stopAll();
+      }
     };
+  });
+
+  $effect(() => {
+    if (audio && room) {
+      audio.updateMood(room);
+    }
   });
 
   $effect(() => {
@@ -70,17 +110,29 @@
     if (!canvas) return;
 
     let frame = 0;
+    let time = 0;
+    const loop = (t: number) => {
+      time = t;
+      drawAtmosphereCanvas(canvas, currentRoom, time);
+      frame = requestAnimationFrame(loop);
+    };
+
     const draw = () => {
-      cancelAnimationFrame(frame);
-      frame = requestAnimationFrame(() => drawAtmosphereCanvas(canvas, currentRoom));
+      if (!frame) frame = requestAnimationFrame(loop);
     };
 
     draw();
-    const observer = new ResizeObserver(draw);
+    const observer = new ResizeObserver(() => {
+      const rect = canvas.getBoundingClientRect();
+      const pixelRatio = window.devicePixelRatio || 1;
+      canvas.width = Math.max(1, Math.floor(rect.width * pixelRatio));
+      canvas.height = Math.max(1, Math.floor(rect.height * pixelRatio));
+    });
     observer.observe(canvas);
 
     return () => {
       cancelAnimationFrame(frame);
+      frame = 0;
       observer.disconnect();
     };
   });
@@ -98,6 +150,7 @@
       if (parsed.room) {
         room = parsed.room;
       }
+      audio?.playCue(parsed.type, parsed.text);
       log = [...log, parsed.text];
     });
 
@@ -175,30 +228,7 @@
     ].join(';');
   }
 
-  function paletteFor(name?: string) {
-    const palettes: Record<string, [string, string, string]> = {
-      'rain-gold': ['#0e1612', '#7f6a32', '#d9b45f'],
-      blackwater: ['#090d10', '#13232a', '#6b7f87'],
-      'candle-smoke': ['#17110d', '#6f3e24', '#d9a45d'],
-      'tavern-red': ['#190c0c', '#612018', '#d67b45'],
-      'avalon-green': ['#081411', '#174736', '#96c7a1'],
-      'relic-vault': ['#100f15', '#594c7a', '#c4a45d'],
-      'coin-shadow': ['#11100b', '#5c4a1f', '#c59a3a'],
-      'oracle-blue': ['#07131f', '#164466', '#8fc6d9'],
-      'bronze-ash': ['#15100d', '#694421', '#c28f52']
-    };
-    return palettes[name ?? ''] ?? ['#101511', '#314439', '#e2b65f'];
-  }
-
-  function hashText(value: string) {
-    let hash = 0;
-    for (let index = 0; index < value.length; index += 1) {
-      hash = (hash * 31 + value.charCodeAt(index)) >>> 0;
-    }
-    return hash;
-  }
-
-  function drawAtmosphereCanvas(canvas: HTMLCanvasElement, current: RoomView | null) {
+  function drawAtmosphereCanvas(canvas: HTMLCanvasElement, current: RoomView | null, time: number = 0) {
     const rect = canvas.getBoundingClientRect();
     const pixelRatio = window.devicePixelRatio || 1;
     const width = Math.max(1, Math.floor(rect.width * pixelRatio));
@@ -211,38 +241,108 @@
     const context = canvas.getContext('2d');
     if (!context) return;
 
-    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    const profile = buildAtmosphereProfile(current);
     const w = rect.width;
     const h = rect.height;
-    const palette = paletteFor(current?.atmosphere?.palette);
+    const paletteStr = profile.palette;
+    const palette = paletteFor(paletteStr);
     const colors = palette.map(hexToRgb);
-    const seed = hashText([
-      current?.id ?? 'eldermere',
-      current?.atmosphere?.weather ?? '',
-      current?.atmosphere?.myth_layer ?? '',
-      current?.atmosphere?.motifs?.join('|') ?? ''
-    ].join('|'));
-    const random = mulberry32(seed);
+    const motifsList = profile.motifs;
+    const weatherStr = profile.weather;
 
-    const sky = context.createLinearGradient(0, 0, w, h);
-    sky.addColorStop(0, rgb(colors[0]));
-    sky.addColorStop(0.62, rgb(mix(colors[0], colors[1], 0.62)));
-    sky.addColorStop(1, rgb(colors[1]));
-    context.fillStyle = sky;
-    context.fillRect(0, 0, w, h);
+    const cacheKey = `${profile.seed}-${width}-${height}`;
 
-    drawGlow(context, w, h, colors[2], 0.18 + random() * 0.14, 0.16 + random() * 0.18, Math.min(w, h) * 0.5);
-    drawGlow(context, w, h, colors[1], 0.72 + random() * 0.16, 0.2 + random() * 0.18, Math.min(w, h) * 0.38);
-    drawHorizon(context, w, h, colors, random);
-    drawMotifs(context, w, h, colors, current?.atmosphere?.motifs ?? [], random);
-    drawWeather(context, w, h, current?.atmosphere?.weather ?? '', colors, random);
-    drawGrain(context, w, h, colors[2], random);
+    if (canvasCache.key !== cacheKey && canvasCache.bg && canvasCache.motifs && canvasCache.overlay) {
+      canvasCache.key = cacheKey;
 
-    const vignette = context.createRadialGradient(w * 0.45, h * 0.42, Math.min(w, h) * 0.1, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
-    vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
-    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.72)');
-    context.fillStyle = vignette;
-    context.fillRect(0, 0, w, h);
+      const setupOffscreen = (c: HTMLCanvasElement) => {
+        c.width = width;
+        c.height = height;
+        const ctx = c.getContext('2d');
+        ctx?.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+        return ctx;
+      };
+
+      const bgCtx = setupOffscreen(canvasCache.bg);
+      if (bgCtx) {
+        const sky = bgCtx.createLinearGradient(0, 0, w, h);
+        sky.addColorStop(0, rgb(colors[0]));
+        sky.addColorStop(0.62, rgb(mix(colors[0], colors[1], 0.62)));
+        sky.addColorStop(1, rgb(colors[1]));
+        bgCtx.fillStyle = sky;
+        bgCtx.fillRect(0, 0, w, h);
+
+        const randomBg = mulberry32(profile.seed);
+        drawGlow(bgCtx, w, h, colors[2], 0.18 + randomBg() * 0.14, 0.16 + randomBg() * 0.18, Math.min(w, h) * 0.5);
+        drawGlow(bgCtx, w, h, colors[1], 0.72 + randomBg() * 0.16, 0.2 + randomBg() * 0.18, Math.min(w, h) * 0.38);
+      }
+
+      const motifsCtx = setupOffscreen(canvasCache.motifs);
+      if (motifsCtx) {
+        const randomMotifs = mulberry32(profile.seed);
+        drawMotifs(motifsCtx, w, h, colors, motifsList, randomMotifs);
+      }
+
+      const overlayCtx = setupOffscreen(canvasCache.overlay);
+      if (overlayCtx) {
+        const randomOverlay = mulberry32(profile.seed);
+        drawGrain(overlayCtx, w, h, colors[2], randomOverlay);
+
+        const vignette = overlayCtx.createRadialGradient(w * 0.45, h * 0.42, Math.min(w, h) * 0.1, w * 0.5, h * 0.5, Math.max(w, h) * 0.75);
+        vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+        vignette.addColorStop(1, 'rgba(0, 0, 0, 0.72)');
+        overlayCtx.fillStyle = vignette;
+        overlayCtx.fillRect(0, 0, w, h);
+      }
+    }
+
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    if (canvasCache.bg) context.drawImage(canvasCache.bg, 0, 0);
+
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    noise.SetSeed(profile.seed);
+    const dynRandom = mulberry32(profile.seed);
+
+    drawProceduralMood(context, w, h, paletteStr ?? '', colors, time, dynRandom);
+    drawHorizon(context, w, h, colors, time);
+
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    if (canvasCache.motifs) context.drawImage(canvasCache.motifs, 0, 0);
+
+    context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+    drawWeather(context, w, h, weatherStr, colors, dynRandom, time);
+
+    context.setTransform(1, 0, 0, 1, 0, 0);
+    if (canvasCache.overlay) context.drawImage(canvasCache.overlay, 0, 0);
+  }
+
+  function drawProceduralMood(context: CanvasRenderingContext2D, w: number, h: number, palette: string, colors: RGB[], time: number, random: () => number) {
+    if (palette === 'fey-realm' || palette === 'eldritch-void') {
+      context.fillStyle = rgba(colors[2], 0.5);
+      for (let i = 0; i < 50; i++) {
+        let x = random() * w;
+        let y = random() * h;
+        const particleTime = time * 0.05 + random() * 1000;
+        x += noise.GetNoise(x * 0.1, particleTime) * 30;
+        y += noise.GetNoise(y * 0.1, particleTime + 100) * 30;
+        context.beginPath();
+        context.arc(x, y, 1 + random() * 2, 0, Math.PI * 2);
+        context.fill();
+      }
+    } else if (palette === 'inferno') {
+      context.fillStyle = rgba(colors[2], 0.7);
+      for (let i = 0; i < 80; i++) {
+        let x = random() * w;
+        let y = random() * h;
+        const particleTime = time * 0.08 + random() * 1000;
+        x += noise.GetNoise(x * 0.2, particleTime) * 20;
+        y -= (particleTime * 0.5) % h;
+        if (y < 0) y += h;
+        context.beginPath();
+        context.arc(x, y, 1 + random() * 3, 0, Math.PI * 2);
+        context.fill();
+      }
+    }
   }
 
   function drawGlow(context: CanvasRenderingContext2D, w: number, h: number, color: RGB, x: number, y: number, radius: number) {
@@ -254,28 +354,34 @@
     context.fillRect(0, 0, w, h);
   }
 
-  function drawHorizon(context: CanvasRenderingContext2D, w: number, h: number, colors: RGB[], random: () => number) {
+  function drawHorizon(context: CanvasRenderingContext2D, w: number, h: number, colors: RGB[], time: number) {
     context.save();
     context.fillStyle = rgba(mix(colors[0], colors[1], 0.42), 0.72);
     context.beginPath();
-    context.moveTo(0, h * 0.74);
-    for (let x = 0; x <= w; x += Math.max(18, w / 18)) {
-      const y = h * (0.58 + random() * 0.14);
+    context.moveTo(0, h);
+    const timeOffset = time * 0.05;
+
+    for (let x = 0; x <= w; x += 10) {
+      // Use FastNoiseLite for rolling hills
+      const yOffset = noise.GetNoise(x * 0.3, 0) * (h * 0.1);
+      const y = h * 0.65 + yOffset;
       context.lineTo(x, y);
     }
     context.lineTo(w, h);
-    context.lineTo(0, h);
     context.closePath();
     context.fill();
 
     context.globalAlpha = 0.28;
     for (let i = 0; i < 8; i += 1) {
-      const y = h * (0.48 + i * 0.055);
+      const startY = h * (0.48 + i * 0.055);
       context.strokeStyle = rgba(colors[2], 0.2 - i * 0.015);
-      context.lineWidth = 1;
+      context.lineWidth = 1.5;
       context.beginPath();
-      context.moveTo(0, y + random() * 18);
-      context.bezierCurveTo(w * 0.28, y - 22, w * 0.7, y + 24, w, y + random() * 18);
+      for (let x = 0; x <= w; x += 20) {
+        const wave = noise.GetNoise(x * 0.4 + timeOffset, i * 100) * 20;
+        if (x === 0) context.moveTo(x, startY + wave);
+        else context.lineTo(x, startY + wave);
+      }
       context.stroke();
     }
     context.restore();
@@ -361,27 +467,48 @@
     context.stroke();
   }
 
-  function drawWeather(context: CanvasRenderingContext2D, w: number, h: number, weather: string, colors: RGB[], random: () => number) {
+  function drawWeather(context: CanvasRenderingContext2D, w: number, h: number, weather: string, colors: RGB[], random: () => number, time: number) {
     const lower = weather.toLowerCase();
     context.save();
+    const timeOffset = time * 0.05;
     if (lower.includes('rain') || lower.includes('drizzle')) {
-      context.strokeStyle = rgba(colors[2], 0.18);
+      context.strokeStyle = rgba(colors[2], 0.25);
       context.lineWidth = 1;
-      for (let i = 0; i < 90; i += 1) {
-        const x = random() * w;
-        const y = random() * h;
+      const speed = 0.8;
+      for (let i = 0; i < 150; i += 1) {
+        let rx = random();
+        let ry = random();
+        let x = rx * w;
+        let y = ry * h;
+        y = (y + time * speed * (0.5 + random())) % h;
+        // Use FastNoiseLite to skew rain slightly as if blown by wind
+        const wind = noise.GetNoise(x * 0.5, y * 0.5) * 10;
         context.beginPath();
         context.moveTo(x, y);
-        context.lineTo(x - 18, y + 44);
+        context.lineTo(x - 12 + wind, y + 40);
         context.stroke();
       }
     } else {
-      context.strokeStyle = rgba(colors[2], 0.1);
-      for (let i = 0; i < 28; i += 1) {
-        const y = random() * h;
+      // Draw organic mist/flow lines using FastNoiseLite and domain warping concept
+      context.strokeStyle = rgba(colors[2], 0.08);
+      context.lineWidth = 1.5;
+      for (let i = 0; i < 60; i += 1) {
+        let baseRx = random();
+        let baseRy = random();
+        let driftRx = random();
+        
+        // Add time-based drift to starting coordinates so they flow across the screen
+        let x = (baseRx * w + time * 0.02 * (0.5 + driftRx)) % w;
+        let y = (baseRy * h + time * 0.01 * (0.5 + driftRx)) % h;
+        
         context.beginPath();
-        context.moveTo(0, y);
-        context.bezierCurveTo(w * 0.26, y - 26, w * 0.6, y + 34, w, y + random() * 20);
+        context.moveTo(x, y);
+        for(let step = 0; step < 20; step++) {
+          const angle = noise.GetNoise(x * 0.3 + timeOffset * 0.5, y * 0.3) * Math.PI * 2;
+          x += Math.cos(angle) * 15;
+          y += Math.sin(angle) * 15;
+          context.lineTo(x, y);
+        }
         context.stroke();
       }
     }
@@ -423,14 +550,6 @@
     return `rgba(${color[0]}, ${color[1]}, ${color[2]}, ${alpha})`;
   }
 
-  function mulberry32(seed: number) {
-    return function random() {
-      let value = (seed += 0x6D2B79F5);
-      value = Math.imul(value ^ (value >>> 15), value | 1);
-      value ^= value + Math.imul(value ^ (value >>> 7), value | 61);
-      return ((value ^ (value >>> 14)) >>> 0) / 4294967296;
-    };
-  }
 </script>
 
 <svelte:head>
@@ -464,7 +583,7 @@
     </div>
   </section>
 
-  <section class="console" aria-label="Command console">
+  <section class="console crt-terminal" aria-label="Command console">
     <div class:online={connected} class="status">
       {connected ? 'Connected' : 'Disconnected'}
     </div>

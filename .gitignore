@@ -23,7 +23,7 @@ data/
 # Logs
 *.log
 logs/
-
+archive/
 # Private local learning notes
 private-docs/
 
