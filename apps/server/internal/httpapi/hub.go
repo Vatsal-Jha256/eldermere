@@ -12,6 +12,8 @@ import (
 
 const roomLogLimit = 30
 
+var writeRoomEvents = writeEvents
+
 type roomHub struct {
 	mu      sync.RWMutex
 	rooms   map[string]map[*clientConn]bool
@@ -118,13 +120,20 @@ func (h *roomHub) appendHistoryLocked(roomID string, event game.Event) {
 }
 
 func (h *roomHub) broadcastLocked(ctx context.Context, roomID string, event game.Event, except *clientConn) {
+	failed := make([]*clientConn, 0)
 	for client := range h.rooms[roomID] {
 		if client == except {
 			continue
 		}
-		if err := writeEvents(ctx, client.conn, []game.Event{event}); err != nil {
-			client.conn.Close(websocket.StatusInternalError, "broadcast failed")
+		if err := writeRoomEvents(ctx, client.conn, []game.Event{event}); err != nil {
+			if client.conn != nil {
+				client.conn.Close(websocket.StatusInternalError, "broadcast failed")
+			}
+			failed = append(failed, client)
 		}
+	}
+	for _, client := range failed {
+		h.removeLocked(client)
 	}
 }
 
