@@ -19,6 +19,8 @@ type commandMessage struct {
 	Command string `json:"command"`
 }
 
+const maxCommandLength = 512
+
 func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store, hub *roomHub) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		playerID := strings.TrimSpace(r.URL.Query().Get("player_id"))
@@ -97,6 +99,13 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			}
 
 			command := parseCommand(payload)
+			if commandTooLong(command) {
+				if err := writeEvents(r.Context(), conn, []game.Event{{Type: "error", Text: fmt.Sprintf("Command is too long. Keep commands under %d characters.", maxCommandLength)}}); err != nil {
+					logger.Warn("websocket command limit write failed", "error", err)
+					return
+				}
+				continue
+			}
 			if isPresenceCommand(command) {
 				if err := writeEvents(r.Context(), conn, []game.Event{hub.presence(session.RoomID())}); err != nil {
 					logger.Warn("websocket presence write failed", "error", err)
@@ -162,9 +171,13 @@ func quotedSpeech(text string) string {
 func parseCommand(payload []byte) string {
 	var message commandMessage
 	if err := json.Unmarshal(payload, &message); err == nil && message.Command != "" {
-		return message.Command
+		return strings.TrimSpace(message.Command)
 	}
-	return string(payload)
+	return strings.TrimSpace(string(payload))
+}
+
+func commandTooLong(command string) bool {
+	return len([]rune(command)) > maxCommandLength
 }
 
 func isPresenceCommand(command string) bool {

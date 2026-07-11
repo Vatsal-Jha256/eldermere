@@ -1,6 +1,7 @@
 package httpapi
 
 import (
+	"strings"
 	"testing"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/game"
@@ -35,5 +36,23 @@ func TestPersistentStateChangedDetectsNestedState(t *testing.T) {
 
 	if !persistentStateChanged(before, after) {
 		t.Fatal("expected faction change to be treated as changed")
+	}
+}
+
+func TestParseCommandTrimsRawAndJSONCommands(t *testing.T) {
+	if got := parseCommand([]byte("  look  ")); got != "look" {
+		t.Fatalf("raw command = %q, want look", got)
+	}
+	if got := parseCommand([]byte(`{"command":"  where  "}`)); got != "where" {
+		t.Fatalf("json command = %q, want where", got)
+	}
+}
+
+func TestCommandTooLong(t *testing.T) {
+	if commandTooLong(strings.Repeat("a", maxCommandLength)) {
+		t.Fatal("expected max-length command to be accepted")
+	}
+	if !commandTooLong(strings.Repeat("a", maxCommandLength+1)) {
+		t.Fatal("expected oversized command to be rejected")
 	}
 }
