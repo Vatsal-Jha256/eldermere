@@ -48,6 +48,8 @@
     startedAt: number;
   };
 
+  const sessionKey = 'eldermere.session';
+  const displayNameKey = 'eldermere.displayName';
   const commands = [
     'help',
     'exits',
@@ -70,12 +72,14 @@
   let command = $state('');
   let displayName = $state('Wanderer');
   let connected = $state(false);
+  let connecting = $state(false);
   let room = $state<RoomView | null>(null);
   let backgroundCanvas = $state<HTMLCanvasElement | null>(null);
   let logElement = $state<HTMLDivElement | null>(null);
   let visualEvents: VisualEvent[] = [];
   let commandHistory: string[] = [];
   let historyIndex = 0;
+  let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
   let log = $state([
     'Opening a path to the Eldermere server...'
   ]);
@@ -107,6 +111,9 @@
 
     return () => {
       active = false;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+      }
       socket?.close();
       window.removeEventListener('click', unlockAudio);
       window.removeEventListener('keydown', unlockAudio);
@@ -163,15 +170,31 @@
     };
   });
 
-  async function connect() {
-    const session = await getPlayerSession();
-    socket = new WebSocket(toWebSocketURL('/ws', session));
+  async function connect(options: { freshSession?: boolean; retryStaleSession?: boolean } = {}) {
+    if (connecting) return;
+    connecting = true;
+    connected = false;
 
-    socket.addEventListener('open', () => {
+    let session: PlayerSession;
+    try {
+      session = await getPlayerSession(options.freshSession);
+    } catch (error) {
+      connecting = false;
+      throw error;
+    }
+    const nextSocket = new WebSocket(toWebSocketURL('/ws', session));
+    let opened = false;
+    socket = nextSocket;
+
+    nextSocket.addEventListener('open', () => {
+      if (socket !== nextSocket) return;
+      opened = true;
+      connecting = false;
       connected = true;
     });
 
-    socket.addEventListener('message', (event) => {
+    nextSocket.addEventListener('message', (event) => {
+      if (socket !== nextSocket) return;
       const parsed = parseServerEvent(event.data);
       if (parsed.room) {
         room = parsed.room;
@@ -181,19 +204,41 @@
       log = [...log, parsed.text];
     });
 
-    socket.addEventListener('close', () => {
+    nextSocket.addEventListener('close', () => {
+      if (socket !== nextSocket) return;
       connected = false;
+      connecting = false;
+      socket = null;
+
+      if (!opened && options.retryStaleSession !== false && localStorage.getItem(sessionKey)) {
+        localStorage.removeItem(sessionKey);
+        log = [...log, 'Stored session was rejected. Creating a fresh player session...'];
+        reconnectTimer = setTimeout(() => {
+          reconnectTimer = null;
+          connect({ freshSession: true, retryStaleSession: false }).catch((error) => {
+            connecting = false;
+            log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
+          });
+        }, 200);
+        return;
+      }
+
       log = [...log, 'Disconnected from the server.'];
     });
 
-    socket.addEventListener('error', () => {
-      log = [...log, 'Connection error. Is the Go server running on port 8080?'];
+    nextSocket.addEventListener('error', () => {
+      if (socket !== nextSocket) return;
+      log = [...log, 'Connection error. Check the API URL and server availability.'];
     });
   }
 
   function submitCommand() {
     const trimmed = command.trim();
     if (!trimmed) return;
+    if (!socket || socket.readyState !== WebSocket.OPEN) {
+      log = [...log, 'Cannot send yet. Reconnect and wait for Connected.'];
+      return;
+    }
 
     log = [...log, `> ${trimmed}`];
     commandHistory = [...commandHistory, trimmed].slice(-40);
@@ -205,6 +250,27 @@
   function runCommand(value: string) {
     command = value;
     requestAnimationFrame(() => submitCommand());
+  }
+
+  function reconnect(freshSession = false) {
+    if (reconnectTimer) {
+      clearTimeout(reconnectTimer);
+      reconnectTimer = null;
+    }
+    if (freshSession) {
+      localStorage.removeItem(sessionKey);
+    }
+    if (socket && socket.readyState < WebSocket.CLOSING) {
+      socket.close();
+    }
+    socket = null;
+    connected = false;
+    connecting = false;
+    log = [...log, freshSession ? 'Starting a fresh player session...' : 'Reconnecting...'];
+    connect({ freshSession, retryStaleSession: true }).catch((error) => {
+      connecting = false;
+      log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
+    });
   }
 
   function handleCommandKeydown(event: KeyboardEvent) {
@@ -241,16 +307,25 @@
     visualEvents = [...visualEvents.filter((item) => performance.now() - item.startedAt < 2200), event].slice(-8);
   }
 
-  async function getPlayerSession() {
-    const key = 'eldermere.session';
-    const existing = localStorage.getItem(key);
+  async function getPlayerSession(freshSession = false) {
+    if (freshSession) {
+      localStorage.removeItem(sessionKey);
+    }
+    const existing = localStorage.getItem(sessionKey);
     if (existing) {
-      const session = JSON.parse(existing) as PlayerSession;
-      displayName = session.display_name || 'Wanderer';
-      return session;
+      try {
+        const session = JSON.parse(existing) as PlayerSession;
+        if (isPlayerSession(session)) {
+          displayName = session.display_name || 'Wanderer';
+          return session;
+        }
+      } catch {
+        // Fall through to create a clean session.
+      }
+      localStorage.removeItem(sessionKey);
     }
 
-    const savedName = localStorage.getItem('eldermere.displayName');
+    const savedName = localStorage.getItem(displayNameKey);
     const name = normalizeDisplayName(savedName ?? displayName);
     displayName = name;
     const response = await fetch(toApiURL('/api/v1/sessions'), {
@@ -264,20 +339,22 @@
     }
 
     const session = (await response.json()) as PlayerSession;
-    localStorage.setItem(key, JSON.stringify(session));
+    localStorage.setItem(sessionKey, JSON.stringify(session));
     return session;
+  }
+
+  function isPlayerSession(value: unknown): value is PlayerSession {
+    if (!value || typeof value !== 'object') return false;
+    const session = value as PlayerSession;
+    return Boolean(session.player_id && session.token && session.display_name);
   }
 
   function saveDisplayName() {
     const name = normalizeDisplayName(displayName);
     displayName = name;
-    localStorage.setItem('eldermere.displayName', name);
-    localStorage.removeItem('eldermere.session');
-    log = [...log, `Player name set to ${name}. Reconnecting with a fresh session...`];
-    socket?.close();
-    connect().catch((error) => {
-      log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
-    });
+    localStorage.setItem(displayNameKey, name);
+    log = [...log, `Player name set to ${name}.`];
+    reconnect(true);
   }
 
   function normalizeDisplayName(value: string) {
@@ -866,9 +943,10 @@
 
   <section class="console crt-terminal" aria-label="Command console">
     <div class="status" class:online={connected}>
-      <span>{connected ? 'Connected' : 'Disconnected'}</span>
+      <span>{connected ? 'Connected' : connecting ? 'Connecting' : 'Disconnected'}</span>
       <span>{displayName}</span>
       <span>{room?.name ?? 'No room yet'}</span>
+      <button type="button" onclick={() => reconnect()} disabled={connecting}>Reconnect</button>
     </div>
 
     <div class="console__guide" aria-label="Play guidance">

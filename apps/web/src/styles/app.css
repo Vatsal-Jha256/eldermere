@@ -131,6 +131,22 @@ h1 {
   color: #b7df9b;
 }
 
+.status button {
+  min-height: 1.9rem;
+  border: 1px solid currentColor;
+  border-radius: 6px;
+  padding: 0.25rem 0.55rem;
+  color: inherit;
+  background: rgba(255, 255, 255, 0.06);
+  cursor: pointer;
+  text-transform: uppercase;
+}
+
+.status button:disabled {
+  cursor: wait;
+  opacity: 0.62;
+}
+
 .console__guide {
   display: grid;
   gap: 1rem;
