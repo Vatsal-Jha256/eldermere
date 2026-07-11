@@ -18,6 +18,19 @@ export type AtmosphereProfile = {
   mythLayer: string;
   motifs: string[];
   modes: SoundMode[];
+  biome: BiomeKind;
+  visual: VisualGenerationConfig;
+};
+
+export type BiomeKind = 'cave' | 'court' | 'forest' | 'water' | 'fire' | 'fey' | 'void' | 'field';
+
+export type VisualGenerationConfig = {
+  tileSize: number;
+  terrainScale: number;
+  caveFill: number;
+  caveIterations: number;
+  structureDensity: number;
+  particleDensity: number;
 };
 
 export function buildAtmosphereProfile(room: RoomAtmosphere): AtmosphereProfile {
@@ -26,6 +39,8 @@ export function buildAtmosphereProfile(room: RoomAtmosphere): AtmosphereProfile 
   const mythLayer = room?.atmosphere?.myth_layer ?? '';
   const motifs = room?.atmosphere?.motifs ?? [];
   const key = [room?.id ?? 'eldermere', palette, weather, mythLayer, motifs.join('|')].join('|');
+  const modes = detectModes(palette, weather, mythLayer, motifs);
+  const biome = detectBiome(palette, weather, mythLayer, motifs, modes);
   return {
     key,
     seed: hashText(key),
@@ -33,7 +48,9 @@ export function buildAtmosphereProfile(room: RoomAtmosphere): AtmosphereProfile 
     weather,
     mythLayer,
     motifs,
-    modes: detectModes(palette, weather, mythLayer, motifs)
+    modes,
+    biome,
+    visual: visualConfigFor(biome, modes)
   };
 }
 
@@ -95,4 +112,48 @@ function detectModes(palette: string, weather: string, mythLayer: string, motifs
   if (text.includes('table') || text.includes('gallery') || text.includes('hall') || text.includes('bench') || text.includes('counsel') || text.includes('court')) add('court');
   if (modes.length === 0) add('field');
   return modes.slice(0, 3);
+}
+
+function detectBiome(palette: string, weather: string, mythLayer: string, motifs: string[], modes: SoundMode[]): BiomeKind {
+  const text = [palette, weather, mythLayer, ...motifs].join(' ').toLowerCase();
+
+  if (text.includes('fey') || text.includes('avalon')) return 'fey';
+  if (modes.includes('void')) return 'void';
+  if (modes.includes('fire')) return 'fire';
+  if (modes.includes('water')) return 'water';
+  if (modes.includes('court')) return 'court';
+  if (text.includes('forest') || text.includes('wood') || text.includes('grove')) return 'forest';
+  if (text.includes('cave') || text.includes('crypt') || text.includes('vault') || text.includes('under')) return 'cave';
+  return 'field';
+}
+
+function visualConfigFor(biome: BiomeKind, modes: SoundMode[]): VisualGenerationConfig {
+  const wet = modes.includes('rain') || modes.includes('water');
+  const windy = modes.includes('wind');
+
+  const base: VisualGenerationConfig = {
+    tileSize: 28,
+    terrainScale: 0.62,
+    caveFill: 0.47,
+    caveIterations: 4,
+    structureDensity: 0.22,
+    particleDensity: 0.45
+  };
+
+  if (biome === 'cave' || biome === 'void') {
+    return { ...base, tileSize: 24, terrainScale: 0.82, caveFill: biome === 'void' ? 0.54 : 0.5, caveIterations: 5, structureDensity: 0.18, particleDensity: windy ? 0.8 : 0.5 };
+  }
+  if (biome === 'court') {
+    return { ...base, tileSize: 30, terrainScale: 0.38, caveFill: 0.38, caveIterations: 2, structureDensity: 0.48, particleDensity: wet ? 0.55 : 0.28 };
+  }
+  if (biome === 'water') {
+    return { ...base, tileSize: 26, terrainScale: 0.55, caveFill: 0.42, caveIterations: 3, structureDensity: 0.26, particleDensity: 0.76 };
+  }
+  if (biome === 'fire') {
+    return { ...base, tileSize: 24, terrainScale: 0.74, caveFill: 0.44, caveIterations: 3, structureDensity: 0.3, particleDensity: 0.7 };
+  }
+  if (biome === 'fey' || biome === 'forest') {
+    return { ...base, tileSize: 22, terrainScale: 0.68, caveFill: 0.4, caveIterations: 3, structureDensity: 0.34, particleDensity: 0.62 };
+  }
+  return base;
 }

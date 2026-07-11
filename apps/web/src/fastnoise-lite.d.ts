@@ -4,6 +4,7 @@ declare module 'fastnoise-lite' {
     SetSeed(seed: number): void;
     SetNoiseType(type: number): void;
     SetFractalType(type: number): void;
+    SetFractalOctaves(octaves: number): void;
     GetNoise(x: number, y: number): number;
     GetNoise(x: number, y: number, z: number): number;
 

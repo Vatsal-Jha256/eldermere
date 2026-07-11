@@ -177,7 +177,17 @@ Fields:
 - `myth_layer`: the room's mythic context, such as `arthurian court`, `under-market`, or `greek underworld`.
 - `motifs`: inspectable visual motifs used by the browser renderer.
 
-The current implementation combines CSS atmosphere layers with a deterministic procedural canvas renderer. This creates lightweight room backdrops from the same metadata, including palette, weather, myth layer, and motifs.
+The browser derives a deterministic biome profile from the room id plus palette, weather, myth layer, and motifs. That profile drives:
+
+- CSS atmosphere color layers.
+- Seeded noise terrain for natural variation.
+- Cellular-automata masks for caves, vaults, underworld routes, water edges, and forest density.
+- Structured tile patterns for courts, ruins, fey spaces, and enclosed mythic rooms.
+- Weather and particle motion.
+- Matching ambient audio layers.
+- Short visual and audio cues for movement, combat, recruitment, quests, story steps, and errors.
+
+Because the seed comes from room metadata, different clients can render the same room consistently without storing or streaming image/audio files.
 
 ## Current Example
 

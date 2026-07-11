@@ -1,8 +1,8 @@
 <script lang="ts">
-  import { onMount, onDestroy } from 'svelte';
+  import { onMount } from 'svelte';
   import FastNoiseLite from 'fastnoise-lite';
   import { AtmosphereAudio } from '$lib/audio';
-  import { buildAtmosphereProfile, paletteFor, hashText, mulberry32 } from '$lib/atmosphere';
+  import { buildAtmosphereProfile, paletteFor, hashText, mulberry32, type AtmosphereProfile } from '$lib/atmosphere';
 
   const noise = new FastNoiseLite();
   noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
@@ -41,6 +41,12 @@
     token: string;
   };
 
+  type VisualEvent = {
+    kind: string;
+    seed: number;
+    startedAt: number;
+  };
+
   const commands = [
     'help',
     'help story',
@@ -58,6 +64,7 @@
   let connected = $state(false);
   let room = $state<RoomView | null>(null);
   let backgroundCanvas = $state<HTMLCanvasElement | null>(null);
+  let visualEvents: VisualEvent[] = [];
   let log = $state([
     'Opening a path to the Eldermere server...'
   ]);
@@ -151,6 +158,7 @@
         room = parsed.room;
       }
       audio?.playCue(parsed.type, parsed.text);
+      pushVisualEvent(parsed.type, parsed.text);
       log = [...log, parsed.text];
     });
 
@@ -179,6 +187,18 @@
     } catch {
       return { type: 'system', text: data };
     }
+  }
+
+  function pushVisualEvent(kind: string, text: string) {
+    const visualKinds = new Set(['fight', 'recruit', 'quest', 'story', 'move', 'party', 'error']);
+    if (!visualKinds.has(kind)) return;
+
+    const event = {
+      kind,
+      seed: hashText([room?.id ?? 'eldermere', kind, text.slice(0, 80)].join('|')),
+      startedAt: performance.now()
+    };
+    visualEvents = [...visualEvents.filter((item) => performance.now() - item.startedAt < 2200), event].slice(-8);
   }
 
   async function getPlayerSession() {
@@ -275,11 +295,14 @@
         const randomBg = mulberry32(profile.seed);
         drawGlow(bgCtx, w, h, colors[2], 0.18 + randomBg() * 0.14, 0.16 + randomBg() * 0.18, Math.min(w, h) * 0.5);
         drawGlow(bgCtx, w, h, colors[1], 0.72 + randomBg() * 0.16, 0.2 + randomBg() * 0.18, Math.min(w, h) * 0.38);
+        drawTerrainField(bgCtx, profile, w, h, colors);
+        drawCellularLayer(bgCtx, profile, w, h, colors);
       }
 
       const motifsCtx = setupOffscreen(canvasCache.motifs);
       if (motifsCtx) {
         const randomMotifs = mulberry32(profile.seed);
+        drawStructuredPattern(motifsCtx, profile, w, h, colors, randomMotifs);
         drawMotifs(motifsCtx, w, h, colors, motifsList, randomMotifs);
       }
 
@@ -310,10 +333,92 @@
     if (canvasCache.motifs) context.drawImage(canvasCache.motifs, 0, 0);
 
     context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
-    drawWeather(context, w, h, weatherStr, colors, dynRandom, time);
+    drawWeather(context, profile, w, h, weatherStr, colors, dynRandom, time);
+    drawVisualEvents(context, w, h, colors, time);
 
     context.setTransform(1, 0, 0, 1, 0, 0);
     if (canvasCache.overlay) context.drawImage(canvasCache.overlay, 0, 0);
+  }
+
+  function drawTerrainField(context: CanvasRenderingContext2D, profile: AtmosphereProfile, w: number, h: number, colors: RGB[]) {
+    const cell = Math.max(18, profile.visual.tileSize);
+    const cols = Math.ceil(w / cell);
+    const rows = Math.ceil(h / cell);
+    const terrainNoise = new FastNoiseLite(profile.seed ^ 0x9e3779b9);
+    terrainNoise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
+    terrainNoise.SetFractalType(FastNoiseLite.FractalType.FBm);
+    terrainNoise.SetFractalOctaves(4);
+
+    context.save();
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        const elevation = (terrainNoise.GetNoise(x * profile.visual.terrainScale, y * profile.visual.terrainScale) + 1) / 2;
+        const moisture = (terrainNoise.GetNoise((x + 80) * 0.35, (y - 30) * 0.35) + 1) / 2;
+        const color = classifyTerrainColor(profile, colors, elevation, moisture);
+        context.fillStyle = rgba(color, 0.1 + elevation * 0.16);
+        context.fillRect(x * cell, y * cell, cell + 1, cell + 1);
+      }
+    }
+    context.restore();
+  }
+
+  function drawCellularLayer(context: CanvasRenderingContext2D, profile: AtmosphereProfile, w: number, h: number, colors: RGB[]) {
+    if (!['cave', 'void', 'water', 'forest'].includes(profile.biome)) return;
+
+    const cell = Math.max(16, Math.floor(profile.visual.tileSize * 0.85));
+    const cols = Math.ceil(w / cell) + 2;
+    const rows = Math.ceil(h / cell) + 2;
+    let grid = seedCellularGrid(cols, rows, profile.seed, profile.visual.caveFill);
+
+    for (let i = 0; i < profile.visual.caveIterations; i += 1) {
+      grid = stepCellularGrid(grid, cols, rows);
+    }
+
+    context.save();
+    context.fillStyle = rgba(profile.biome === 'water' ? colors[1] : colors[0], profile.biome === 'void' ? 0.5 : 0.34);
+    for (let y = 1; y < rows - 1; y += 1) {
+      for (let x = 1; x < cols - 1; x += 1) {
+        if (!grid[y * cols + x]) continue;
+        const px = (x - 1) * cell;
+        const py = (y - 1) * cell;
+        context.beginPath();
+        context.roundRect(px, py, cell * 1.08, cell * 1.08, cell * 0.28);
+        context.fill();
+      }
+    }
+    context.restore();
+  }
+
+  function drawStructuredPattern(context: CanvasRenderingContext2D, profile: AtmosphereProfile, w: number, h: number, colors: RGB[], random: () => number) {
+    if (!['court', 'cave', 'void', 'fey'].includes(profile.biome)) return;
+
+    const cell = profile.visual.tileSize;
+    const cols = Math.ceil(w / cell);
+    const rows = Math.ceil(h / cell);
+    const tiles = collapseStructureTiles(cols, rows, profile, random);
+
+    context.save();
+    context.lineWidth = 1.5;
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        const tile = tiles[y * cols + x];
+        if (tile === 0) continue;
+        const px = x * cell;
+        const py = y * cell;
+        context.strokeStyle = rgba(colors[2], tile === 2 ? 0.24 : 0.14);
+        context.fillStyle = rgba(tile === 3 ? colors[2] : colors[0], tile === 3 ? 0.08 : 0.18);
+        if (tile === 1) {
+          context.fillRect(px, py + cell * 0.42, cell, cell * 0.16);
+        } else if (tile === 2) {
+          context.strokeRect(px + cell * 0.18, py + cell * 0.18, cell * 0.64, cell * 0.64);
+        } else {
+          context.beginPath();
+          context.arc(px + cell * 0.5, py + cell * 0.5, cell * 0.18, 0, Math.PI * 2);
+          context.fill();
+        }
+      }
+    }
+    context.restore();
   }
 
   function drawProceduralMood(context: CanvasRenderingContext2D, w: number, h: number, palette: string, colors: RGB[], time: number, random: () => number) {
@@ -343,6 +448,43 @@
         context.fill();
       }
     }
+  }
+
+  function drawVisualEvents(context: CanvasRenderingContext2D, w: number, h: number, colors: RGB[], time: number) {
+    const now = performance.now();
+    visualEvents = visualEvents.filter((event) => now - event.startedAt < 1800);
+    context.save();
+
+    for (const event of visualEvents) {
+      const age = Math.max(0, now - event.startedAt);
+      const progress = age / 1800;
+      const random = mulberry32(event.seed);
+      const cx = w * (0.22 + random() * 0.56);
+      const cy = h * (0.2 + random() * 0.5);
+      const pulse = Math.sin(progress * Math.PI);
+      const radius = Math.min(w, h) * (0.08 + progress * 0.34);
+      const accent = event.kind === 'error' ? mix(colors[2], [210, 60, 50], 0.55) : colors[2];
+
+      context.globalAlpha = pulse * 0.32;
+      context.strokeStyle = rgba(accent, 0.6);
+      context.lineWidth = event.kind === 'fight' ? 3 : 1.5;
+      context.beginPath();
+      context.arc(cx, cy, radius, 0, Math.PI * 2);
+      context.stroke();
+
+      if (event.kind === 'fight' || event.kind === 'recruit') {
+        context.fillStyle = rgba(accent, 0.22);
+        for (let i = 0; i < 10; i += 1) {
+          const angle = random() * Math.PI * 2 + time * 0.001;
+          const distance = radius * (0.35 + random() * 0.8);
+          context.beginPath();
+          context.arc(cx + Math.cos(angle) * distance, cy + Math.sin(angle) * distance, 1.5 + random() * 3, 0, Math.PI * 2);
+          context.fill();
+        }
+      }
+    }
+
+    context.restore();
   }
 
   function drawGlow(context: CanvasRenderingContext2D, w: number, h: number, color: RGB, x: number, y: number, radius: number) {
@@ -467,15 +609,17 @@
     context.stroke();
   }
 
-  function drawWeather(context: CanvasRenderingContext2D, w: number, h: number, weather: string, colors: RGB[], random: () => number, time: number) {
+  function drawWeather(context: CanvasRenderingContext2D, profile: AtmosphereProfile, w: number, h: number, weather: string, colors: RGB[], random: () => number, time: number) {
     const lower = weather.toLowerCase();
     context.save();
     const timeOffset = time * 0.05;
+    const density = profile.visual.particleDensity;
     if (lower.includes('rain') || lower.includes('drizzle')) {
       context.strokeStyle = rgba(colors[2], 0.25);
       context.lineWidth = 1;
       const speed = 0.8;
-      for (let i = 0; i < 150; i += 1) {
+      const drops = Math.round(80 + density * 160);
+      for (let i = 0; i < drops; i += 1) {
         let rx = random();
         let ry = random();
         let x = rx * w;
@@ -492,7 +636,8 @@
       // Draw organic mist/flow lines using FastNoiseLite and domain warping concept
       context.strokeStyle = rgba(colors[2], 0.08);
       context.lineWidth = 1.5;
-      for (let i = 0; i < 60; i += 1) {
+      const strands = Math.round(30 + density * 70);
+      for (let i = 0; i < strands; i += 1) {
         let baseRx = random();
         let baseRy = random();
         let driftRx = random();
@@ -513,6 +658,74 @@
       }
     }
     context.restore();
+  }
+
+  function classifyTerrainColor(profile: AtmosphereProfile, colors: RGB[], elevation: number, moisture: number): RGB {
+    if (profile.biome === 'water') return mix(colors[0], colors[1], Math.min(0.9, 0.35 + moisture * 0.55));
+    if (profile.biome === 'fire') return mix(colors[1], colors[2], Math.min(0.85, elevation * 0.75));
+    if (profile.biome === 'fey') return mix(colors[1], colors[2], 0.25 + moisture * 0.45);
+    if (profile.biome === 'void') return mix(colors[0], colors[1], elevation * 0.25);
+    if (profile.biome === 'court') return mix(colors[0], colors[2], elevation > 0.56 ? 0.28 : 0.12);
+    return mix(colors[0], colors[1], 0.25 + elevation * 0.45);
+  }
+
+  function seedCellularGrid(cols: number, rows: number, seed: number, fill: number) {
+    const random = mulberry32(seed ^ 0x85ebca6b);
+    const grid = new Array<boolean>(cols * rows);
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        const edge = x === 0 || y === 0 || x === cols - 1 || y === rows - 1;
+        grid[y * cols + x] = edge || random() < fill;
+      }
+    }
+    return grid;
+  }
+
+  function stepCellularGrid(grid: boolean[], cols: number, rows: number) {
+    const next = new Array<boolean>(grid.length);
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        const walls = countNeighbors(grid, cols, rows, x, y);
+        next[y * cols + x] = walls >= 5;
+      }
+    }
+    return next;
+  }
+
+  function countNeighbors(grid: boolean[], cols: number, rows: number, x: number, y: number) {
+    let count = 0;
+    for (let oy = -1; oy <= 1; oy += 1) {
+      for (let ox = -1; ox <= 1; ox += 1) {
+        if (ox === 0 && oy === 0) continue;
+        const nx = x + ox;
+        const ny = y + oy;
+        if (nx < 0 || ny < 0 || nx >= cols || ny >= rows || grid[ny * cols + nx]) count += 1;
+      }
+    }
+    return count;
+  }
+
+  function collapseStructureTiles(cols: number, rows: number, profile: AtmosphereProfile, random: () => number) {
+    const tiles = new Array<number>(cols * rows).fill(0);
+    const density = profile.visual.structureDensity;
+    for (let y = 0; y < rows; y += 1) {
+      for (let x = 0; x < cols; x += 1) {
+        const left = x > 0 ? tiles[y * cols + x - 1] : 0;
+        const up = y > 0 ? tiles[(y - 1) * cols + x] : 0;
+        const coherent = left || up;
+        const chance = coherent ? density * 1.35 : density;
+        if (random() > chance) continue;
+
+        if (profile.biome === 'court') {
+          tiles[y * cols + x] = left === 1 || up === 1 || random() > 0.45 ? 1 : 2;
+        } else if (profile.biome === 'fey') {
+          tiles[y * cols + x] = random() > 0.48 ? 3 : 2;
+        } else {
+          tiles[y * cols + x] = coherent && random() > 0.35 ? coherent : random() > 0.58 ? 2 : 3;
+        }
+      }
+    }
+    return tiles;
   }
 
   function drawGrain(context: CanvasRenderingContext2D, w: number, h: number, accent: RGB, random: () => number) {
