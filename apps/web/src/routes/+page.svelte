@@ -3,6 +3,7 @@
   import FastNoiseLite from 'fastnoise-lite';
   import { AtmosphereAudio } from '$lib/audio';
   import { buildAtmosphereProfile, paletteFor, hashText, mulberry32, type AtmosphereProfile } from '$lib/atmosphere';
+  import { env } from '$env/dynamic/public';
 
   const noise = new FastNoiseLite();
   noise.SetNoiseType(FastNoiseLite.NoiseType.OpenSimplex2);
@@ -78,7 +79,7 @@
     'Opening a path to the Eldermere server...'
   ]);
   let socket: WebSocket | null = null;
-  const apiBase = import.meta.env.PUBLIC_API_BASE?.trim() ?? '';
+  const apiBase = env.PUBLIC_API_BASE?.trim() ?? '';
   const atmosphereStyle = $derived(buildAtmosphereStyle(room));
 
   let audio: AtmosphereAudio | null = null;
