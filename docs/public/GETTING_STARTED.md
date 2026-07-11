@@ -2,11 +2,11 @@
 
 ## Prerequisites
 
-- Docker
+- Docker and Docker Compose
 - Node.js 20+ and npm, for local web development
-- Go 1.23+, optional locally because Docker can run backend checks
+- Go 1.23+, if you want to run the server directly instead of through Docker
 
-## Run The Project
+## Run The Game
 
 From the repository root:
 
@@ -18,19 +18,19 @@ Open:
 
 - Web client: <http://localhost:5173>
 - API health: <http://localhost:8080/healthz>
-- WebSocket command endpoint: `ws://localhost:8080/ws`
-- Session endpoint: `POST http://localhost:8080/api/v1/sessions`
+- Docs: run `make docs-public`, then open <http://localhost:3000>
 
 Postgres is exposed on `localhost:5433`. Inside Docker, services still use `db:5432`.
 
-The web client creates a session through `POST /api/v1/sessions`, stores it in browser `localStorage`, and sends the player id plus token to `/ws`. The server persists room location, inventory, party, and quest state in PostgreSQL.
+The web client creates a session through `POST /api/v1/sessions`, stores it in browser `localStorage`, and sends the player id plus token to `/ws`. The server persists room location, inventory, party, quest state, story state, and faction reputation in PostgreSQL.
 
 ## Run Checks
 
-Backend checks through Docker:
+Repository checks:
 
 ```sh
-docker run --rm -v "$PWD/apps/server:/src" -w /src golang:1.26-alpine go test ./...
+make test
+make validate-content
 ```
 
 Frontend checks:
@@ -41,54 +41,47 @@ npm install
 npm run check
 ```
 
-## Project Layout
+Docs locally:
 
-- `apps/server`: Go API server with `/healthz`, `/api/v1/status`, and `/ws`.
-- `apps/web`: SvelteKit browser client with a live WebSocket command console.
-- `apps/server/internal/game/content/starter/rooms.json`: starter room data loaded by the server.
-- `content-packs`: validated mod packs loaded by local and Docker server runs.
-- `apps/server/internal/storage`: PostgreSQL and in-memory persistence implementations.
-- `docker-compose.yml`: Postgres, server, and web services.
-- `docs/public`: public Docsify documentation.
+```sh
+make docs-public
+```
 
-Room backgrounds are generated from room `atmosphere` metadata: palette, weather, myth layer, and motifs. The browser combines CSS atmosphere layers with a procedural canvas backdrop, and the same metadata also shapes ambient audio.
+## Local Dev Loop
 
-## Starter Commands
+If you want split terminals instead of Docker:
 
-- `help`: list command families and discover focused help topics.
-- `help story`, `help movement`, `help combat`, `help inventory`, `help social`, `help world`: inspect focused MUD-style help topics.
-- `quest`: start or check the starter quest.
-- `story`: list loaded story arcs from content packs.
-- `story eligible`: list currently playable story arcs.
-- `story locked`: list blocked story arcs and the missing tags or faction reputation.
-- `story sword-test`: inspect a source-grounded Arthurian story arc.
-- `story start sword-test`: begin a loaded story arc.
-- `story status`: inspect active story progress, including the room and suggested commands for the current step.
-- `story next`: advance the active story arc when you are in the required room, collecting outcome tags and faction effects.
-- `story tags`: inspect earned branch and eligibility tags.
-- `factions`: inspect reputation changes from encounters and story steps.
-- `travel arthurian-core`: move to a loaded content pack's entry room.
-- `look`: inspect the current room.
-- `go north`, `go east`, `go south`, `go west`: move through room exits.
-- `fight`: resolve the current room's encounter with a d20-style roll, including tuned modifiers, advantage/disadvantage, and critical outcomes where the room defines them.
-- `recruit`: attempt to recruit the current room's companion with the same d20 check model.
-- `take`: pick up the current room's visible item.
-- `inventory`: list carried items.
-- `party`: list recruited companions.
-- `map`: inspect hidden or gated routes from the current room.
-- `say hello` or `talk hello`: send a local speech event.
+```sh
+make server
+make web
+```
 
-Players in the same room receive presence, `say`, fight, and recruit events. New arrivals receive the recent room event log.
+`make server` starts the Go API against the local content packs. `make web` starts the browser client on port 5173.
 
-## Starter Quest Path
+## First Test Path
 
-The current vertical slice has a small Arthurian quest arc:
+The smallest end-to-end loop is:
 
-1. Start in Lantern Yard and run `quest`.
-2. Go `west` into Tavern Backroom and use `take` to collect the Under-Market Map.
-3. Return east to Lantern Yard, then use `map` to see the unlocked under-route.
-4. Use `go under` to reach Smuggler Vault.
-5. Use `take` to collect the Excalibur Fragment.
-6. Return to Lantern Yard and run `quest` again to complete the arc.
+1. Start in Lantern Yard.
+2. Run `quest`.
+3. Go `west` into Tavern Backroom.
+4. Run `take` to collect the Under-Market Map.
+5. Return east to Lantern Yard.
+6. Run `map` to see the hidden under-route.
+7. Run `go under` to enter Smuggler Vault.
+8. Run `take` to collect the Excalibur Fragment.
+9. Return to Lantern Yard and run `quest` again.
 
-Reconnect after picking up the fragment to verify persistence: the same browser should resume in the last room with the item still in inventory. Clearing `localStorage` starts a new session.
+Reconnect after picking up the fragment to verify persistence. The same browser should resume in the last room with the item still in inventory. Clearing `localStorage` starts a new session.
+
+## Environment
+
+The server reads:
+
+- `APP_ENV`
+- `SERVER_ADDR`
+- `DATABASE_URL`
+- `CONTENT_PACKS_DIR`
+- `LOG_LEVEL`
+
+The web client reads `PUBLIC_API_BASE` at build time. If it is unset, the client falls back to the current origin, which is the cleanest path for a same-origin reverse proxy deployment.

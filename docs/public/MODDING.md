@@ -2,6 +2,8 @@
 
 Eldermere content packs are data-first. The current validator supports pack manifests plus room packs in JSON.
 
+If you are writing or reviewing content, read [Lore](LORE.md), [Schema](SCHEMA.md), and [Architecture](ARCHITECTURE.md) first. They explain what the world is trying to cover, what fields exist, and how runtime loading works.
+
 ## Validate A Pack
 
 From the repository root:

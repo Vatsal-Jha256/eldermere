@@ -3,6 +3,7 @@ package httpapi
 import (
 	"context"
 	"fmt"
+	"strings"
 	"sync"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/game"
@@ -74,6 +75,21 @@ func (h *roomHub) recent(roomID string) []game.Event {
 	return copied
 }
 
+func (h *roomHub) presence(roomID string) game.Event {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	names := make([]string, 0, len(h.rooms[roomID]))
+	for client := range h.rooms[roomID] {
+		names = append(names, client.displayName)
+	}
+	if len(names) == 0 {
+		return game.Event{Type: "presence", Text: "Players here: none."}
+	}
+	sortStrings(names)
+	return game.Event{Type: "presence", Text: fmt.Sprintf("Players here: %s.", strings.Join(names, ", "))}
+}
+
 func (h *roomHub) broadcast(ctx context.Context, roomID string, event game.Event, except *clientConn) {
 	h.mu.Lock()
 	defer h.mu.Unlock()
@@ -109,5 +125,17 @@ func (h *roomHub) broadcastLocked(ctx context.Context, roomID string, event game
 		if err := writeEvents(ctx, client.conn, []game.Event{event}); err != nil {
 			client.conn.Close(websocket.StatusInternalError, "broadcast failed")
 		}
+	}
+}
+
+func sortStrings(values []string) {
+	for i := 1; i < len(values); i++ {
+		value := values[i]
+		j := i - 1
+		for j >= 0 && values[j] > value {
+			values[j+1] = values[j]
+			j--
+		}
+		values[j+1] = value
 	}
 }

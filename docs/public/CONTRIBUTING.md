@@ -9,6 +9,19 @@ Eldermere is early. The best contributions are focused, tested, and easy to revi
 - Improve content validation.
 - Improve command help, accessibility, or mobile layout.
 - Tighten documentation when something is confusing.
+- Add or improve the procedural atmosphere or audio descriptions in docs.
+
+## Easy Contribution Paths
+
+If you want a small first change, pick one of these:
+
+1. Add a room and validate it with the content toolchain.
+2. Add a short story step with a clear `room_hint`.
+3. Improve a docs page with a missing command, schema field, or deployment note.
+4. Add another Arthurian lore note tied to a source id.
+5. Update a room's atmosphere metadata and verify the browser rendering still feels coherent.
+
+For implementation details, read [Gameplay](GAMEPLAY.md), [Schema](SCHEMA.md), [Procedural Systems](PROCEDURAL.md), and [Modding](MODDING.md).
 
 ## Content Rules
 

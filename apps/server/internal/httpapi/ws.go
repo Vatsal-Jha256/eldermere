@@ -96,6 +96,14 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			}
 
 			command := parseCommand(payload)
+			if isPresenceCommand(command) {
+				if err := writeEvents(r.Context(), conn, []game.Event{hub.presence(session.RoomID())}); err != nil {
+					logger.Warn("websocket presence write failed", "error", err)
+					return
+				}
+				continue
+			}
+
 			beforeRoomID := session.RoomID()
 			ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 			events := session.Handle(command)
@@ -148,6 +156,15 @@ func parseCommand(payload []byte) string {
 		return message.Command
 	}
 	return string(payload)
+}
+
+func isPresenceCommand(command string) bool {
+	switch strings.ToLower(strings.TrimSpace(command)) {
+	case "who", "players", "presence":
+		return true
+	default:
+		return false
+	}
 }
 
 func writeEvents(ctx context.Context, conn *websocket.Conn, events []game.Event) error {

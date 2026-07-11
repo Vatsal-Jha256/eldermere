@@ -461,7 +461,7 @@ func (s *Session) helpStatus(args []string) Event {
 	case "inventory", "items", "take":
 		return Event{Type: "help", Text: "Inventory: `take` collects the current room item, `inventory` lists carried relics/items, and some items unlock hidden map routes."}
 	case "social", "say", "talk", "multiplayer":
-		return Event{Type: "help", Text: "Social: `say hello` or `talk hello` sends local speech to players in the same room. Room presence and recent room events are shared over the WebSocket session."}
+		return Event{Type: "help", Text: "Social: `who` lists players in your current room. `say hello` or `talk hello` sends local speech to players in the same room. Presence and recent room events are shared over the WebSocket session."}
 	case "world", "factions", "map":
 		return Event{Type: "help", Text: "World state: `factions` shows reputation changes from encounters and story steps. `map` shows hidden or gated exits from the current room."}
 	default:

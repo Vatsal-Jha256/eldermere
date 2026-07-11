@@ -49,27 +49,36 @@
 
   const commands = [
     'help',
-    'help story',
+    'exits',
+    'who',
+    'help social',
     'quest',
     'story',
+    'story eligible',
     'story start sword-test',
     'story status',
+    'story next',
     'travel arthurian-core',
     'map',
     'fight',
+    'say hail from Camelot',
     'factions'
   ];
 
   let command = $state('');
+  let displayName = $state('Wanderer');
   let connected = $state(false);
   let room = $state<RoomView | null>(null);
   let backgroundCanvas = $state<HTMLCanvasElement | null>(null);
+  let logElement = $state<HTMLDivElement | null>(null);
   let visualEvents: VisualEvent[] = [];
+  let commandHistory: string[] = [];
+  let historyIndex = 0;
   let log = $state([
     'Opening a path to the Eldermere server...'
   ]);
   let socket: WebSocket | null = null;
-  const apiBase = import.meta.env.PUBLIC_API_BASE ?? 'http://localhost:8080';
+  const apiBase = import.meta.env.PUBLIC_API_BASE?.trim() ?? '';
   const atmosphereStyle = $derived(buildAtmosphereStyle(room));
 
   let audio: AtmosphereAudio | null = null;
@@ -112,15 +121,23 @@
   });
 
   $effect(() => {
+    if (logElement) {
+      logElement.scrollTop = logElement.scrollHeight;
+    }
+  });
+
+  $effect(() => {
     const canvas = backgroundCanvas;
     const currentRoom = room;
     if (!canvas) return;
 
     let frame = 0;
     let time = 0;
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
     const loop = (t: number) => {
       time = t;
       drawAtmosphereCanvas(canvas, currentRoom, time);
+      if (prefersReducedMotion.matches) return;
       frame = requestAnimationFrame(loop);
     };
 
@@ -146,7 +163,7 @@
 
   async function connect() {
     const session = await getPlayerSession();
-    socket = new WebSocket(toWebSocketURL(apiBase, '/ws', session));
+    socket = new WebSocket(toWebSocketURL('/ws', session));
 
     socket.addEventListener('open', () => {
       connected = true;
@@ -177,8 +194,29 @@
     if (!trimmed) return;
 
     log = [...log, `> ${trimmed}`];
+    commandHistory = [...commandHistory, trimmed].slice(-40);
+    historyIndex = commandHistory.length;
     socket?.send(JSON.stringify({ command: trimmed }));
     command = '';
+  }
+
+  function runCommand(value: string) {
+    command = value;
+    requestAnimationFrame(() => submitCommand());
+  }
+
+  function handleCommandKeydown(event: KeyboardEvent) {
+    if (event.key === 'ArrowUp') {
+      if (commandHistory.length === 0) return;
+      event.preventDefault();
+      historyIndex = Math.max(0, historyIndex - 1);
+      command = commandHistory[historyIndex] ?? command;
+    } else if (event.key === 'ArrowDown') {
+      if (commandHistory.length === 0) return;
+      event.preventDefault();
+      historyIndex = Math.min(commandHistory.length, historyIndex + 1);
+      command = commandHistory[historyIndex] ?? '';
+    }
   }
 
   function parseServerEvent(data: string): ServerEvent {
@@ -205,13 +243,18 @@
     const key = 'eldermere.session';
     const existing = localStorage.getItem(key);
     if (existing) {
-      return JSON.parse(existing) as PlayerSession;
+      const session = JSON.parse(existing) as PlayerSession;
+      displayName = session.display_name || 'Wanderer';
+      return session;
     }
 
-    const response = await fetch(new URL('/api/v1/sessions', apiBase), {
+    const savedName = localStorage.getItem('eldermere.displayName');
+    const name = normalizeDisplayName(savedName ?? displayName);
+    displayName = name;
+    const response = await fetch(toApiURL('/api/v1/sessions'), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ display_name: 'Wanderer' })
+      body: JSON.stringify({ display_name: name })
     });
 
     if (!response.ok) {
@@ -223,7 +266,30 @@
     return session;
   }
 
-  function toWebSocketURL(base: string, path: string, session: PlayerSession) {
+  function saveDisplayName() {
+    const name = normalizeDisplayName(displayName);
+    displayName = name;
+    localStorage.setItem('eldermere.displayName', name);
+    localStorage.removeItem('eldermere.session');
+    log = [...log, `Player name set to ${name}. Reconnecting with a fresh session...`];
+    socket?.close();
+    connect().catch((error) => {
+      log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
+    });
+  }
+
+  function normalizeDisplayName(value: string) {
+    const trimmed = value.trim().replace(/\s+/g, ' ');
+    return trimmed.length > 0 ? trimmed.slice(0, 28) : 'Wanderer';
+  }
+
+  function toApiURL(path: string) {
+    const base = apiBase || window.location.origin;
+    return new URL(path, base);
+  }
+
+  function toWebSocketURL(path: string, session: PlayerSession) {
+    const base = apiBase || window.location.origin;
     const url = new URL(path, base);
     url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
     url.searchParams.set('player_id', session.player_id);
@@ -797,11 +863,55 @@
   </section>
 
   <section class="console crt-terminal" aria-label="Command console">
-    <div class:online={connected} class="status">
-      {connected ? 'Connected' : 'Disconnected'}
+    <div class="status" class:online={connected}>
+      <span>{connected ? 'Connected' : 'Disconnected'}</span>
+      <span>{displayName}</span>
+      <span>{room?.name ?? 'No room yet'}</span>
     </div>
 
-    <div class="console__log" aria-live="polite">
+    <div class="console__guide" aria-label="Play guidance">
+      <form class="player" onsubmit={(event) => { event.preventDefault(); saveDisplayName(); }}>
+        <label for="display-name">Player</label>
+        <input
+          id="display-name"
+          bind:value={displayName}
+          autocomplete="nickname"
+          maxlength="28"
+        />
+        <button type="submit">Set</button>
+      </form>
+
+      <div class="guide-grid">
+        <section class="guide-panel" aria-labelledby="mud-heading">
+          <h2 id="mud-heading">Together</h2>
+          <p>Open this page in another browser or device on the same host, set a different player name, then use room speech.</p>
+          <div class="mini-actions">
+            <button type="button" onclick={() => runCommand('who')} disabled={!connected}>Who</button>
+            <button type="button" onclick={() => (command = 'say ')} disabled={!connected}>Say</button>
+          </div>
+        </section>
+
+        <section class="guide-panel" aria-labelledby="story-heading">
+          <h2 id="story-heading">Arthurian Story</h2>
+          <p>Start with the sword-test arc, then use story status and next to follow source-grounded Camelot branches.</p>
+          <div class="mini-actions">
+            <button type="button" onclick={() => runCommand('story eligible')} disabled={!connected}>Eligible</button>
+            <button type="button" onclick={() => runCommand('story status')} disabled={!connected}>Status</button>
+          </div>
+        </section>
+      </div>
+    </div>
+
+    {#if room}
+      <div class="exits" aria-label="Visible exits">
+        <span>Exits</span>
+        {#each Object.keys(room.exits) as exit}
+          <button type="button" onclick={() => runCommand(`go ${exit}`)} disabled={!connected}>{exit}</button>
+        {/each}
+      </div>
+    {/if}
+
+    <div class="console__log" aria-live="polite" aria-relevant="additions" bind:this={logElement}>
       {#each log as line}
         <p>{line}</p>
       {/each}
@@ -816,13 +926,14 @@
         spellcheck="false"
         placeholder="try: look"
         disabled={!connected}
+        onkeydown={handleCommandKeydown}
       />
       <button type="submit" disabled={!connected}>Send</button>
     </form>
 
     <div class="chips" aria-label="Example commands">
       {#each commands as item}
-        <button type="button" onclick={() => (command = item)}>{item}</button>
+        <button type="button" onclick={() => (command = item)} disabled={!connected}>{item}</button>
       {/each}
     </div>
   </section>
