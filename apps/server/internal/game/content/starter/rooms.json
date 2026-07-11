@@ -50,8 +50,11 @@
       "encounter": {
         "name": "Bridge Debt Collector",
         "dc": 12,
+        "roll_mode": "disadvantage",
         "win": "You break the collector's nerve and win a rumor about an Excalibur fragment.",
         "lose": "The collector marks your name in a wet ledger. The debt will come back later.",
+        "crit_win": "You turn the collector's wet ledger against him and every debt on the bridge briefly forgets your name.",
+        "crit_lose": "The collector stamps your name twice, once for the debt and once for the insult.",
         "faction_effects": {
           "Camelot Underbelly": 1,
           "Mordred's Brokers": -1
@@ -75,8 +78,11 @@
       "recruitable": {
         "name": "Oath Spirit",
         "dc": 11,
+        "roll_mode": "advantage",
         "success": "The Oath Spirit joins your party, bound by a promise neither of you fully understands.",
-        "failure": "The Oath Spirit circles once and refuses. It wants proof, not enthusiasm."
+        "failure": "The Oath Spirit circles once and refuses. It wants proof, not enthusiasm.",
+        "crit_win": "The Oath Spirit joins eagerly, and the oath burns bright enough to make nearby lies flinch.",
+        "crit_lose": "The Oath Spirit recoils; some old promise in your wake smells broken."
       }
     },
     {
@@ -117,8 +123,11 @@
       "encounter": {
         "name": "Mordred's Runner",
         "dc": 14,
+        "modifier": 1,
         "win": "You cut off the runner's escape and learn the vault passphrase.",
         "lose": "The runner vanishes downriver, leaving only a false coin and a worse rumor.",
+        "crit_win": "You catch the runner, the passphrase, and the name of the clerk who paid for both.",
+        "crit_lose": "The runner escapes with your description and sells it before the river mist closes.",
         "faction_effects": {
           "Merlin's Couriers": 1,
           "Mordred's Brokers": -1

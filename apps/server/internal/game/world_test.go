@@ -243,6 +243,63 @@ func TestFightCanChangeFactionReputation(t *testing.T) {
 	}
 }
 
+func TestFightUsesCriticalOutcomeText(t *testing.T) {
+	world, err := NewWorld([]Room{
+		{
+			ID:          "arena",
+			Name:        "Arena",
+			Description: "A valid test room.",
+			Exits:       map[string]string{},
+			Encounter: &Encounter{
+				Name:     "Duelist",
+				DC:       30,
+				Win:      "You win.",
+				Lose:     "You lose.",
+				CritWin:  "You turn the duel into legend.",
+				CritLose: "You drop the blade before the bell.",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("build world: %v", err)
+	}
+	session := NewSessionWithRoller(world, sequenceRoller(20))
+	session.roomID = "arena"
+
+	events := session.Handle("fight")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "You turn the duel into legend.") {
+		t.Fatalf("expected critical win text, got %#v", events)
+	}
+}
+
+func TestRecruitUsesAdvantageRollMode(t *testing.T) {
+	world, err := NewWorld([]Room{
+		{
+			ID:          "market",
+			Name:        "Market",
+			Description: "A valid test room.",
+			Exits:       map[string]string{},
+			Recruitable: &Recruitable{
+				Name:     "Clever Page",
+				DC:       15,
+				RollMode: rollAdvantage,
+				Success:  "The page joins.",
+				Failure:  "The page waits.",
+			},
+		},
+	})
+	if err != nil {
+		t.Fatalf("build world: %v", err)
+	}
+	session := NewSessionWithRoller(world, sequenceRoller(2, 14))
+	session.roomID = "market"
+
+	events := session.Handle("recruit")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "2/14 advantage") || !strings.Contains(events[0].Text, "The page joins.") {
+		t.Fatalf("expected advantage recruit success, got %#v", events)
+	}
+}
+
 func TestQuestStoresVariant(t *testing.T) {
 	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
 		return 1

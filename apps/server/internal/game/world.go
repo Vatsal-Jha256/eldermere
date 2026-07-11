@@ -30,16 +30,24 @@ type Room struct {
 type Encounter struct {
 	Name           string         `json:"name"`
 	DC             int            `json:"dc"`
+	Modifier       int            `json:"modifier,omitempty"`
+	RollMode       string         `json:"roll_mode,omitempty"`
 	Win            string         `json:"win"`
 	Lose           string         `json:"lose"`
+	CritWin        string         `json:"crit_win,omitempty"`
+	CritLose       string         `json:"crit_lose,omitempty"`
 	FactionEffects map[string]int `json:"faction_effects,omitempty"`
 }
 
 type Recruitable struct {
-	Name    string `json:"name"`
-	DC      int    `json:"dc"`
-	Success string `json:"success"`
-	Failure string `json:"failure"`
+	Name     string `json:"name"`
+	DC       int    `json:"dc"`
+	Modifier int    `json:"modifier,omitempty"`
+	RollMode string `json:"roll_mode,omitempty"`
+	Success  string `json:"success"`
+	Failure  string `json:"failure"`
+	CritWin  string `json:"crit_win,omitempty"`
+	CritLose string `json:"crit_lose,omitempty"`
 }
 
 type Item struct {
@@ -180,6 +188,16 @@ func NewWorld(rooms []Room) (World, error) {
 		if room.GatedExits == nil {
 			room.GatedExits = map[string]GatedExit{}
 		}
+		if room.Encounter != nil {
+			if err := validateChallenge("encounter", room.ID, room.Encounter.DC, room.Encounter.RollMode); err != nil {
+				return World{}, err
+			}
+		}
+		if room.Recruitable != nil {
+			if err := validateChallenge("recruitable", room.ID, room.Recruitable.DC, room.Recruitable.RollMode); err != nil {
+				return World{}, err
+			}
+		}
 		byID[room.ID] = room
 	}
 
@@ -209,6 +227,16 @@ func NewWorld(rooms []Room) (World, error) {
 	}
 
 	return World{rooms: byID, stories: map[string]StoryArc{}, packEntries: map[string]string{}}, nil
+}
+
+func validateChallenge(kind string, roomID string, dc int, mode string) error {
+	if dc < 2 || dc > 30 {
+		return fmt.Errorf("room %q %s dc must be between 2 and 30", roomID, kind)
+	}
+	if !validRollMode(mode) {
+		return fmt.Errorf("room %q %s roll_mode must be empty, normal, advantage, or disadvantage", roomID, kind)
+	}
+	return nil
 }
 
 func (w World) WithRooms(rooms []Room) (World, error) {
@@ -514,22 +542,30 @@ func (s *Session) fight() Event {
 		return Event{Type: "system", Text: "There is nothing here that wants a fight yet."}
 	}
 
-	roll := s.roll(20)
 	partyBonus := s.partyBonus()
-	total := roll + 2 + partyBonus
-	if total >= room.Encounter.DC {
+	modifier := room.Encounter.Modifier + 2 + partyBonus
+	result := resolveCheck(s.roll, room.Encounter.DC, modifier, room.Encounter.RollMode)
+	if result.Success {
 		for faction, delta := range room.Encounter.FactionEffects {
 			s.factions[faction] += delta
 		}
+		text := room.Encounter.Win
+		if result.Critical == "critical success" && room.Encounter.CritWin != "" {
+			text = room.Encounter.CritWin
+		}
 		return Event{
 			Type: "fight",
-			Text: fmt.Sprintf("Rolled %d + 2 + party %d = %d against DC %d. %s", roll, partyBonus, total, room.Encounter.DC, room.Encounter.Win),
+			Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
 		}
 	}
 
+	text := room.Encounter.Lose
+	if result.Critical == "critical failure" && room.Encounter.CritLose != "" {
+		text = room.Encounter.CritLose
+	}
 	return Event{
 		Type: "fight",
-		Text: fmt.Sprintf("Rolled %d + 2 + party %d = %d against DC %d. %s", roll, partyBonus, total, room.Encounter.DC, room.Encounter.Lose),
+		Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
 	}
 }
 
@@ -544,19 +580,26 @@ func (s *Session) recruit() Event {
 		return Event{Type: "party", Text: fmt.Sprintf("%s is already with you.", name)}
 	}
 
-	roll := s.roll(20)
-	total := roll + 1
-	if total >= room.Recruitable.DC {
+	result := resolveCheck(s.roll, room.Recruitable.DC, room.Recruitable.Modifier+1, room.Recruitable.RollMode)
+	if result.Success {
 		s.party[name] = true
+		text := room.Recruitable.Success
+		if result.Critical == "critical success" && room.Recruitable.CritWin != "" {
+			text = room.Recruitable.CritWin
+		}
 		return Event{
 			Type: "party",
-			Text: fmt.Sprintf("Rolled %d + 1 = %d against DC %d. %s", roll, total, room.Recruitable.DC, room.Recruitable.Success),
+			Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
 		}
 	}
 
+	text := room.Recruitable.Failure
+	if result.Critical == "critical failure" && room.Recruitable.CritLose != "" {
+		text = room.Recruitable.CritLose
+	}
 	return Event{
 		Type: "party",
-		Text: fmt.Sprintf("Rolled %d + 1 = %d against DC %d. %s", roll, total, room.Recruitable.DC, room.Recruitable.Failure),
+		Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
 	}
 }
 

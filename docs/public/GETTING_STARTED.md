@@ -71,8 +71,8 @@ Room backgrounds are generated from room `atmosphere` metadata: palette, weather
 - `travel arthurian-core`: move to a loaded content pack's entry room.
 - `look`: inspect the current room.
 - `go north`, `go east`, `go south`, `go west`: move through room exits.
-- `fight`: resolve the current room's encounter with a d20-style roll.
-- `recruit`: attempt to recruit the current room's companion.
+- `fight`: resolve the current room's encounter with a d20-style roll, including tuned modifiers, advantage/disadvantage, and critical outcomes where the room defines them.
+- `recruit`: attempt to recruit the current room's companion with the same d20 check model.
 - `take`: pick up the current room's visible item.
 - `inventory`: list carried items.
 - `party`: list recruited companions.

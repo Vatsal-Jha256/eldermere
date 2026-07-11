@@ -42,8 +42,11 @@
       "recruitable": {
         "name": "Ledger Squire",
         "dc": 11,
+        "modifier": 1,
         "success": "The Ledger Squire joins you and can spot a false prophecy by the ink cost.",
-        "failure": "The Ledger Squire decides your account is still too untidy."
+        "failure": "The Ledger Squire decides your account is still too untidy.",
+        "crit_win": "The Ledger Squire joins and quietly balances one prophecy debt in your favor.",
+        "crit_lose": "The Ledger Squire closes the book on you for now, citing emotional arithmetic."
       }
     },
     {
@@ -89,8 +92,11 @@
       "encounter": {
         "name": "Seat Claimant",
         "dc": 14,
+        "roll_mode": "advantage",
         "win": "The claimant backs down and admits the table makes brothers out of rivals only on its best days.",
         "lose": "The claimant wins the room and leaves you carrying a rumor with teeth.",
+        "crit_win": "You settle the claim so cleanly that two rival witnesses repeat the same version for once.",
+        "crit_lose": "The claimant turns your answer into a public boast, and the room enjoys it too much.",
         "faction_effects": {
           "Round Table": 1,
           "Camelot Underbelly": -1

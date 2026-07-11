@@ -18,7 +18,7 @@ Stage 0 scaffold is in place. The current repo has:
 - Runtime-loaded Arthurian story arcs from content packs, with start/status/advance and eligibility commands
 - Runtime-loaded content-pack rooms with `travel <pack-id>` entry points
 - Recruitable companions, relics, and allies
-- Dice/probability-driven encounters
+- Dice/probability-driven encounters with modifiers, advantage/disadvantage, and critical outcomes
 - Public modding docs
 - Private learning docs for architecture and CSE concepts
 

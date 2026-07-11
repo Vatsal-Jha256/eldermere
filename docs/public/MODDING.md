@@ -75,14 +75,22 @@ And a `rooms.json`:
       "encounter": {
         "name": "Ledger Knight",
         "dc": 13,
+        "modifier": 1,
+        "roll_mode": "advantage",
         "win": "Win text.",
-        "lose": "Lose text."
+        "lose": "Lose text.",
+        "crit_win": "Natural 20 text.",
+        "crit_lose": "Natural 1 text."
       },
       "recruitable": {
         "name": "Candle Page",
         "dc": 10,
+        "modifier": 0,
+        "roll_mode": "normal",
         "success": "Recruit success text.",
-        "failure": "Recruit failure text."
+        "failure": "Recruit failure text.",
+        "crit_win": "Natural 20 recruitment text.",
+        "crit_lose": "Natural 1 refusal text."
       },
       "item": {
         "id": "excalibur-fragment",
@@ -182,3 +190,15 @@ See:
 The Arthurian Core pack demonstrates source-grounded story arcs. The Greek Crossing pack demonstrates the connected-legend rule: it declares interactions that respond to Arthurian tags such as `excalibur-rumor` and `grail-curse` instead of behaving like an isolated Greek zone.
 
 At runtime, content-pack rooms are merged into the world and can be entered with `travel <pack-id>` using the pack's `entry_room`.
+
+## Dice Tuning
+
+Encounters and recruitables use a d20 check:
+
+- `dc`: target number from 2 to 30.
+- `modifier`: optional flat modifier from the room challenge. Combat also adds a small player base bonus and party bonus; recruitment adds a small player base bonus.
+- `roll_mode`: optional roll style. Leave it empty or use `normal` for a normal roll, or use `advantage` or `disadvantage`.
+- `crit_win`: optional natural 20 text.
+- `crit_lose`: optional natural 1 text.
+
+Natural 20 succeeds even when the total would miss the DC. Natural 1 fails even when modifiers would pass. This keeps the math simple enough for a browser MUD while giving modders DnD-like texture.
