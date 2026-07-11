@@ -87,6 +87,7 @@
   let socket: WebSocket | null = null;
   const apiBase = env.PUBLIC_API_BASE?.trim() ?? '';
   const atmosphereStyle = $derived(buildAtmosphereStyle(room));
+  const latestAnnouncement = $derived(log[log.length - 1] ?? '');
 
   let audio: AtmosphereAudio | null = null;
 
@@ -949,6 +950,7 @@
       <span>{room?.name ?? 'No room yet'}</span>
       <button type="button" onclick={() => reconnect()} disabled={connecting}>Reconnect</button>
     </div>
+    <p class="sr-only" role="status" aria-live="polite" aria-atomic="true">{latestAnnouncement}</p>
 
     <div class="console__guide" aria-label="Play guidance">
       <form class="player" onsubmit={(event) => { event.preventDefault(); saveDisplayName(); }}>
@@ -992,7 +994,7 @@
       </div>
     {/if}
 
-    <div class="console__log" aria-live="polite" aria-relevant="additions" bind:this={logElement}>
+    <div class="console__log" aria-label="Event log" bind:this={logElement}>
       {#each log as line}
         <p>{line}</p>
       {/each}
@@ -1007,10 +1009,14 @@
         spellcheck="false"
         placeholder="try: look"
         disabled={!connected}
+        autocapitalize="none"
+        enterkeyhint="send"
+        aria-describedby="command-hint"
         onkeydown={handleCommandKeydown}
       />
       <button type="submit" disabled={!connected}>Send</button>
     </form>
+    <p id="command-hint" class="sr-only">Enter a MUD command, then press Send. Use the example command buttons to fill common commands.</p>
 
     <div class="chips" aria-label="Example commands">
       {#each commands as item}
