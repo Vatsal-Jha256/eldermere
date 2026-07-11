@@ -106,4 +106,4 @@ Players who share a room share room events.
 
 For online play, the important rule is simple: room IDs are the stable backend keys, while room names are the player-facing labels. Use the room name in the UI, keep the room id as the canonical internal identifier, and expose the id only when it helps debugging or coordination.
 
-Each browser session has its own player id and token. Room, inventory, party, quest, story, and faction state persist across reconnects for the same browser session.
+Each browser session has its own player id and token. Room, inventory, party, quest, story, and faction state persist across reconnects for the same browser session. Starting a new character creates a fresh saved session.

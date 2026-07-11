@@ -22,7 +22,7 @@ Open:
 
 Postgres is exposed on `localhost:5433`. Inside Docker, services still use `db:5432`.
 
-The web client creates a session through `POST /api/v1/sessions`, stores it in browser `localStorage`, and sends the player id plus token to `/ws`. The server persists room location, inventory, party, quest state, story state, and faction reputation in PostgreSQL.
+The web client creates a session through `POST /api/v1/sessions`, stores it in browser `localStorage`, and sends the player id plus token to `/ws`. Reconnect resumes that same browser session. Starting a new character creates a fresh session. The server persists room location, inventory, party, quest state, story state, and faction reputation in PostgreSQL.
 
 ## Run Checks
 
@@ -72,7 +72,7 @@ The smallest end-to-end loop is:
 8. Run `take` to collect the Excalibur Fragment.
 9. Return to Lantern Yard and run `quest` again.
 
-Reconnect after picking up the fragment to verify persistence. The same browser should resume in the last room with the item still in inventory. Clearing `localStorage` starts a new session.
+Reconnect after picking up the fragment to verify persistence. The same browser should resume in the last room with the item still in inventory. Starting a new character or clearing `localStorage` starts a new session.
 
 ## Environment
 

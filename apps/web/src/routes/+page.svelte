@@ -357,7 +357,7 @@
     const name = normalizeDisplayName(displayName);
     displayName = name;
     localStorage.setItem(displayNameKey, name);
-    log = [...log, `Player name set to ${name}.`];
+    log = [...log, `Starting a new saved session as ${name}.`];
     reconnect(true);
   }
 
@@ -962,9 +962,11 @@
           bind:value={displayName}
           autocomplete="nickname"
           maxlength="28"
+          aria-describedby="player-hint"
         />
-        <button type="submit">Set</button>
+        <button type="submit">New character</button>
       </form>
+      <p id="player-hint" class="sr-only">Submitting the player name starts a fresh saved browser session. Use Reconnect to resume the current session.</p>
 
       <div class="guide-grid">
         <section class="guide-panel" aria-labelledby="mud-heading">
