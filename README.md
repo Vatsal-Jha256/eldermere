@@ -1,5 +1,7 @@
 # Eldermere
 
+**[▶️ Play Eldermere Live!](https://eldermere.pages.dev)** | **[📚 Read the Documentation](https://vatsal-jha256.github.io/eldermere/)**
+
 Eldermere is an early browser MUD and creature-RPG for exploring Arthurian legend through play.
 
 It mixes room-based exploration, source-grounded story arcs, recruitable companions, relics, faction reputation, and d20-style checks. The project is intentionally mod-friendly: most world content lives in JSON content packs.
