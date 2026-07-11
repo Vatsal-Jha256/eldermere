@@ -62,6 +62,7 @@
     'travel arthurian-core',
     'map',
     'fight',
+    'odds',
     'say hail from Camelot',
     'factions'
   ];

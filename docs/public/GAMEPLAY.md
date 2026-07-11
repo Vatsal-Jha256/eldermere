@@ -43,6 +43,8 @@ The browser client shows room atmosphere, recent events, example commands, and c
 
 - `fight`: resolve the current room encounter.
 - `recruit`: attempt to recruit the current room companion.
+- `odds`: show exact success chances for available fight and recruit checks.
+- `odds story <id>`: show uniform story variation odds for an arc.
 - `party`: list recruited companions.
 
 ### Inventory And State
@@ -75,6 +77,19 @@ The current starter slice begins in Lantern Yard.
 8. Return to Lantern Yard and run `quest` again.
 
 That loop tests the core quest path, hidden-route gating, and persistence.
+
+## Probability
+
+The probability model is intentionally simple and visible.
+
+- Combat and recruitment use d20 checks.
+- `advantage` rolls two d20s and keeps the higher result.
+- `disadvantage` rolls two d20s and keeps the lower result.
+- Natural 20 always succeeds.
+- Natural 1 always fails.
+- `odds` computes the exact success chance for the current room's available checks.
+
+The odds command is useful for tuning content because contributors can see whether a room challenge is forgiving, risky, or punishing before changing the JSON.
 
 ## Multiplayer
 

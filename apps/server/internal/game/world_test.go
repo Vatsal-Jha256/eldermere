@@ -117,6 +117,26 @@ func TestFightUsesRoomEncounter(t *testing.T) {
 	}
 }
 
+func TestOddsCommandShowsCurrentRoomChecks(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+	session.Handle("go north")
+
+	events := session.Handle("odds")
+	if len(events) != 1 || events[0].Type != "odds" {
+		t.Fatalf("expected odds event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "Fight odds:") || !strings.Contains(events[0].Text, "Bridge Debt Collector") {
+		t.Fatalf("expected fight odds for current room, got %q", events[0].Text)
+	}
+
+	session.Handle("go south")
+	session.Handle("go east")
+	events = session.Handle("odds recruit")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "Recruit odds:") || !strings.Contains(events[0].Text, "Oath Spirit") {
+		t.Fatalf("expected recruit odds for current room, got %#v", events)
+	}
+}
+
 func TestRecruitAddsCompanionToParty(t *testing.T) {
 	session := NewSessionWithRoller(NewStarterWorld(), func(sides int) int {
 		return 20

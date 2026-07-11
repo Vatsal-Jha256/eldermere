@@ -19,6 +19,7 @@ Generated:
 - ambient audio beds
 - short cue sounds for events
 - motion inside the browser atmosphere canvas
+- exact d20 odds shown through the `odds` command
 
 The generated pieces are seeded from room metadata, so two players can see and hear the same room in a consistent way without shipping art or audio assets for every location.
 
@@ -84,6 +85,18 @@ This system gives contributors a good payoff for a small amount of content work.
 - Add a new pack interaction and another myth pack can react to it without extra code.
 
 That means content authors can contribute useful work without touching the engine for every new idea.
+
+## Probability Generation
+
+The gameplay probability layer is deterministic math around random rolls, not hidden balancing magic.
+
+- `fight` and `recruit` roll d20 checks.
+- The server computes exact success chances by enumerating the possible d20 outcomes.
+- Advantage and disadvantage are handled by enumerating the 400 two-die outcomes.
+- Natural 1 and natural 20 rules are included in both the roll result and the displayed odds.
+- Story variation tags are chosen uniformly when an arc starts.
+
+Use `odds` while tuning rooms. If a DC feels wrong in play, the command gives a concrete success percentage before you change the content pack.
 
 ## Practical Guidelines
 

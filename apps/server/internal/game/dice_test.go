@@ -48,6 +48,23 @@ func TestFormatCheckShowsRollModeAndMath(t *testing.T) {
 	}
 }
 
+func TestSuccessChanceAccountsForCriticalsAndRollMode(t *testing.T) {
+	normal := successChance(14, 2, rollNormal)
+	if normal != 0.45 {
+		t.Fatalf("expected normal chance 45%%, got %v", normal)
+	}
+
+	advantage := successChance(14, 2, rollAdvantage)
+	if formatChance(advantage) != "69.8%" {
+		t.Fatalf("expected advantage chance 69.8%%, got %s", formatChance(advantage))
+	}
+
+	disadvantage := successChance(14, 2, rollDisadvantage)
+	if formatChance(disadvantage) != "20.2%" {
+		t.Fatalf("expected disadvantage chance 20.2%%, got %s", formatChance(disadvantage))
+	}
+}
+
 func sequenceRoller(values ...int) func(sides int) int {
 	index := 0
 	return func(sides int) int {

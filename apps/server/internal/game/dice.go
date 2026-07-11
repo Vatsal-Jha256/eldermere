@@ -62,6 +62,53 @@ func formatCheck(result CheckResult) string {
 	return fmt.Sprintf("Rolled %s %s, kept %d %+d = %d against DC %d", formatRolls(result.Rolls), mode, result.Kept, result.Modifier, result.Total, result.DC)
 }
 
+func successChance(dc int, modifier int, mode string) float64 {
+	normalized := normalizeRollMode(mode)
+	successes := 0
+	total := 0
+
+	if normalized == rollAdvantage || normalized == rollDisadvantage {
+		for first := 1; first <= 20; first++ {
+			for second := 1; second <= 20; second++ {
+				kept := first
+				if normalized == rollAdvantage {
+					kept = maxInt(first, second)
+				} else {
+					kept = minInt(first, second)
+				}
+				if keptSucceeds(kept, dc, modifier) {
+					successes++
+				}
+				total++
+			}
+		}
+		return float64(successes) / float64(total)
+	}
+
+	for kept := 1; kept <= 20; kept++ {
+		if keptSucceeds(kept, dc, modifier) {
+			successes++
+		}
+		total++
+	}
+	return float64(successes) / float64(total)
+}
+
+func formatChance(chance float64) string {
+	return fmt.Sprintf("%.1f%%", chance*100)
+}
+
+func keptSucceeds(kept int, dc int, modifier int) bool {
+	switch kept {
+	case 20:
+		return true
+	case 1:
+		return false
+	default:
+		return kept+modifier >= dc
+	}
+}
+
 func normalizeRollMode(mode string) string {
 	switch mode {
 	case rollNormal, rollNormalName:

@@ -202,6 +202,24 @@ The server persists this state per player:
 
 The `quest` object currently serializes with capitalized keys (`Started`, `Completed`, `Variant`) because that struct uses Go's default JSON field naming. The `story` object uses explicit snake_case tags.
 
+## Probability Fields
+
+Room encounters and recruitables share the same d20 probability model.
+
+- `dc`: target number from 2 to 30.
+- `modifier`: flat bonus or penalty from room content.
+- `roll_mode`: empty, `normal`, `advantage`, or `disadvantage`.
+- `crit_win`: optional natural 20 text.
+- `crit_lose`: optional natural 1 text.
+
+The runtime also adds:
+
+- combat base bonus: `+2`
+- recruitment base bonus: `+1`
+- party bonus for combat: up to `+3`
+
+Players can inspect current probabilities with `odds`, `odds fight`, `odds recruit`, and `odds story <id>`.
+
 ## HTTP And WebSocket Shapes
 
 - `POST /api/v1/sessions` accepts `{ "display_name": "Wanderer" }` and returns `player_id`, `display_name`, and `token`.

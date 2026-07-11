@@ -425,6 +425,8 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.partyStatus()}
 	case "factions", "reputation", "rep":
 		return []Event{s.factionStatus()}
+	case "odds", "chance", "probability":
+		return []Event{s.oddsStatus(args)}
 	case "map":
 		return []Event{s.mapStatus()}
 	case "inventory", "inv", "i":
@@ -447,7 +449,7 @@ func (s *Session) helpStatus(args []string) Event {
 	if len(args) == 0 {
 		return Event{
 			Type: "help",
-			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, map, say <text>. Try `help story`.",
+			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
 		}
 	}
 
@@ -457,13 +459,13 @@ func (s *Session) helpStatus(args []string) Event {
 	case "story", "quest", "plot":
 		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story eligible` shows playable arcs, `story locked` explains blocked arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
 	case "combat", "fight", "recruit":
-		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, and `party` lists recruited allies."}
+		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, `odds` shows current fight/recruit success chances, and `party` lists recruited allies."}
 	case "inventory", "items", "take":
 		return Event{Type: "help", Text: "Inventory: `take` collects the current room item, `inventory` lists carried relics/items, and some items unlock hidden map routes."}
 	case "social", "say", "talk", "multiplayer":
 		return Event{Type: "help", Text: "Social: `who` lists players in your current room. `say hello` or `talk hello` sends local speech to players in the same room. Presence and recent room events are shared over the WebSocket session."}
 	case "world", "factions", "map":
-		return Event{Type: "help", Text: "World state: `factions` shows reputation changes from encounters and story steps. `map` shows hidden or gated exits from the current room."}
+		return Event{Type: "help", Text: "World state: `factions` shows reputation changes from encounters and story steps. `map` shows hidden or gated exits from the current room. `odds story <id>` shows story variant chances."}
 	default:
 		return Event{Type: "help", Text: fmt.Sprintf("Unknown help topic `%s`. Try `help`, `help story`, `help movement`, `help combat`, `help inventory`, `help social`, or `help world`.", args[0])}
 	}
@@ -657,6 +659,76 @@ func (s *Session) factionStatus() Event {
 		parts = append(parts, fmt.Sprintf("%s %+d", name, s.factions[name]))
 	}
 	return Event{Type: "factions", Text: fmt.Sprintf("Factions: %s.", strings.Join(parts, ", "))}
+}
+
+func (s *Session) oddsStatus(args []string) Event {
+	if len(args) > 0 {
+		switch strings.ToLower(strings.TrimSpace(args[0])) {
+		case "fight", "combat":
+			return s.fightOddsStatus()
+		case "recruit", "party":
+			return s.recruitOddsStatus()
+		case "story", "stories":
+			if len(args) < 2 {
+				return Event{Type: "odds", Text: "Story odds for which arc? Try `odds story sword-test`."}
+			}
+			return s.storyOddsStatus(strings.ToLower(strings.TrimSpace(args[1])))
+		}
+	}
+
+	parts := []string{}
+	fight := s.fightOddsStatus()
+	if fight.Type == "odds" {
+		parts = append(parts, fight.Text)
+	}
+	recruit := s.recruitOddsStatus()
+	if recruit.Type == "odds" {
+		parts = append(parts, recruit.Text)
+	}
+	if len(parts) == 0 {
+		return Event{Type: "odds", Text: "Odds: no fight or recruit check is available in this room. Try `odds story sword-test` for story variation odds."}
+	}
+	return Event{Type: "odds", Text: strings.Join(parts, " ")}
+}
+
+func (s *Session) fightOddsStatus() Event {
+	room := s.currentRoom()
+	if room.Encounter == nil {
+		return Event{Type: "system", Text: "No fight odds here; this room has no encounter."}
+	}
+	modifier := room.Encounter.Modifier + 2 + s.partyBonus()
+	chance := successChance(room.Encounter.DC, modifier, room.Encounter.RollMode)
+	mode := normalizeRollMode(room.Encounter.RollMode)
+	if mode == rollNormal {
+		mode = rollNormalName
+	}
+	return Event{Type: "odds", Text: fmt.Sprintf("Fight odds: %s against %s, DC %d, modifier %+d, %s roll.", formatChance(chance), room.Encounter.Name, room.Encounter.DC, modifier, mode)}
+}
+
+func (s *Session) recruitOddsStatus() Event {
+	room := s.currentRoom()
+	if room.Recruitable == nil {
+		return Event{Type: "system", Text: "No recruit odds here; this room has no recruitable companion."}
+	}
+	modifier := room.Recruitable.Modifier + 1
+	chance := successChance(room.Recruitable.DC, modifier, room.Recruitable.RollMode)
+	mode := normalizeRollMode(room.Recruitable.RollMode)
+	if mode == rollNormal {
+		mode = rollNormalName
+	}
+	return Event{Type: "odds", Text: fmt.Sprintf("Recruit odds: %s for %s, DC %d, modifier %+d, %s roll.", formatChance(chance), room.Recruitable.Name, room.Recruitable.DC, modifier, mode)}
+}
+
+func (s *Session) storyOddsStatus(id string) Event {
+	arc, ok := s.world.stories[id]
+	if !ok {
+		return Event{Type: "odds", Text: fmt.Sprintf("Story arc `%s` is not loaded. Try `story` to list known arcs.", id)}
+	}
+	if len(arc.VariationTags) == 0 {
+		return Event{Type: "odds", Text: fmt.Sprintf("Story odds: `%s` has no random variation tags.", id)}
+	}
+	chance := 1 / float64(len(arc.VariationTags))
+	return Event{Type: "odds", Text: fmt.Sprintf("Story odds: `%s` chooses uniformly among %d variants; each is %s.", id, len(arc.VariationTags), formatChance(chance))}
 }
 
 func (s *Session) mapStatus() Event {

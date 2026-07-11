@@ -214,3 +214,5 @@ Encounters and recruitables use a d20 check:
 - `crit_lose`: optional natural 1 text.
 
 Natural 20 succeeds even when the total would miss the DC. Natural 1 fails even when modifiers would pass. This keeps the math simple enough for a browser MUD while giving modders DnD-like texture.
+
+Use `odds`, `odds fight`, or `odds recruit` in-game after changing room content. The command reports exact success chances for the current room and is the quickest way to check whether a challenge is tuned correctly.
