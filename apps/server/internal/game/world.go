@@ -404,6 +404,8 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.look()}
 	case "where", "room":
 		return []Event{s.whereStatus()}
+	case "lore", "atmosphere":
+		return []Event{s.loreStatus()}
 	case "go", "move", "walk":
 		if len(args) == 0 {
 			return []Event{{Type: "error", Text: "Go where? Try `go north`."}}
@@ -451,7 +453,7 @@ func (s *Session) helpStatus(args []string) Event {
 	if len(args) == 0 {
 		return Event{
 			Type: "help",
-			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, where, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
+			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, where, lore, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
 		}
 	}
 
@@ -459,7 +461,7 @@ func (s *Session) helpStatus(args []string) Event {
 	case "movement", "move", "go", "travel":
 		return Event{Type: "help", Text: "Movement: `look` shows the current room, `where` shows its stable room id for coordination, `exits` lists visible exits, `go north` moves through exits, and `travel arthurian-core` enters a loaded content pack entry room."}
 	case "story", "quest", "plot":
-		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story eligible` shows playable arcs, `story locked` explains blocked arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
+		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `lore` shows the current room's myth layer and motifs. `story` lists loaded arcs, `story eligible` shows playable arcs, `story locked` explains blocked arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
 	case "combat", "fight", "recruit":
 		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, `odds` shows current fight/recruit success chances, and `party` lists recruited allies."}
 	case "inventory", "items", "take":
@@ -553,6 +555,24 @@ func (s *Session) whereStatus() Event {
 			Atmosphere:  room.Atmosphere,
 		},
 	}
+}
+
+func (s *Session) loreStatus() Event {
+	room := s.currentRoom()
+	parts := make([]string, 0, 3)
+	if room.Atmosphere.MythLayer != "" {
+		parts = append(parts, fmt.Sprintf("myth layer: %s", room.Atmosphere.MythLayer))
+	}
+	if room.Atmosphere.Weather != "" {
+		parts = append(parts, fmt.Sprintf("weather: %s", room.Atmosphere.Weather))
+	}
+	if len(room.Atmosphere.Motifs) > 0 {
+		parts = append(parts, fmt.Sprintf("motifs: %s", strings.Join(room.Atmosphere.Motifs, ", ")))
+	}
+	if len(parts) == 0 {
+		return Event{Type: "lore", Text: fmt.Sprintf("%s has no explicit atmosphere metadata yet.", room.Name)}
+	}
+	return Event{Type: "lore", Text: fmt.Sprintf("%s lore: %s.", room.Name, strings.Join(parts, "; "))}
 }
 
 func (s *Session) fight() Event {

@@ -54,6 +54,7 @@
     'help',
     'exits',
     'where',
+    'lore',
     'who',
     'help social',
     'quest',

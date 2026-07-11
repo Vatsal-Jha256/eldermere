@@ -41,6 +41,18 @@ func TestSessionWhereReportsRoomID(t *testing.T) {
 	}
 }
 
+func TestSessionLoreReportsRoomAtmosphere(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("lore")
+	if len(events) != 1 || events[0].Type != "lore" {
+		t.Fatalf("expected lore event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "arthurian court") || !strings.Contains(events[0].Text, "iron rain") || !strings.Contains(events[0].Text, "lanterns") {
+		t.Fatalf("expected room atmosphere details, got %q", events[0].Text)
+	}
+}
+
 func TestSessionUnknownCommand(t *testing.T) {
 	session := NewSession(NewStarterWorld())
 

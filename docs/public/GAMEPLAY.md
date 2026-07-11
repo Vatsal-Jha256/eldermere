@@ -18,6 +18,7 @@ The browser client shows room atmosphere, recent events, example commands, and c
 
 - `look` or `l`: inspect the current room.
 - `where` or `room`: show the current room name and stable room id.
+- `lore` or `atmosphere`: show the room's myth layer, weather, and motifs.
 - `exits`: list visible exits.
 - `go north`, `go east`, `go south`, `go west`: move through the world.
 - `travel arthurian-core`: enter the entry room for a loaded content pack.
