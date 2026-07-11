@@ -16,12 +16,19 @@ type Config struct {
 
 func FromEnv() Config {
 	return Config{
-		AppEnv:          getEnv("APP_ENV", "development"),
+		AppEnv:          getEnv("APP_ENV", defaultAppEnv()),
 		ServerAddr:      getEnv("SERVER_ADDR", ":8080"),
 		DatabaseURL:     getEnv("DATABASE_URL", "postgres://eldermere:eldermere@localhost:5432/eldermere?sslmode=disable"),
 		ContentPacksDir: getEnv("CONTENT_PACKS_DIR", ""),
 		LogLevel:        parseLogLevel(getEnv("LOG_LEVEL", "info")),
 	}
+}
+
+func defaultAppEnv() string {
+	if strings.TrimSpace(os.Getenv("RENDER")) != "" {
+		return "production"
+	}
+	return "development"
 }
 
 func getEnv(key, fallback string) string {
