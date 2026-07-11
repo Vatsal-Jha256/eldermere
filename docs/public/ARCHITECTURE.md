@@ -88,7 +88,7 @@ The server reads:
 - `CONTENT_PACKS_DIR`
 - `LOG_LEVEL`
 
-The browser build reads `PUBLIC_API_BASE` at build time.
+The browser reads `PUBLIC_API_BASE` from the web runtime environment.
 
 If you host the web client and API on the same origin behind a reverse proxy, `PUBLIC_API_BASE` can be omitted and the browser will fall back to the current origin.
 

@@ -84,4 +84,4 @@ The server reads:
 - `CONTENT_PACKS_DIR`
 - `LOG_LEVEL`
 
-The web client reads `PUBLIC_API_BASE` at build time. If it is unset, the client falls back to the current origin, which is the cleanest path for a same-origin reverse proxy deployment.
+The web client reads `PUBLIC_API_BASE` from the web runtime environment. If it is unset, the client falls back to the current origin, which is the cleanest path for a same-origin reverse proxy deployment.

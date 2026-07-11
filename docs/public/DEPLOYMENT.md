@@ -90,7 +90,7 @@ If you want one stable public deployment, use this split:
 1. Provision the host.
 2. Install Docker and Docker Compose if you are running containers yourself.
 3. Set `DATABASE_URL`, `SERVER_ADDR`, `CONTENT_PACKS_DIR`, and `APP_ENV=production`.
-4. Build the web client with `PUBLIC_API_BASE` set to the public API URL if the web and API are on different origins.
+4. Set `PUBLIC_API_BASE` in the web host environment to the public API URL if the web and API are on different origins.
 5. If the web and API share one origin behind a reverse proxy, leave `PUBLIC_API_BASE` unset and route `/api` and `/ws` to the server.
 6. Deploy `docs/public` to a static host.
 
