@@ -40,7 +40,7 @@ That profile produces:
 - a small set of sound modes
 - visual generation settings
 
-The implementation lives in [apps/web/src/lib/atmosphere.ts](/home/vatsal/Projects/ArthurDnD/apps/web/src/lib/atmosphere.ts).
+The implementation lives in [`apps/web/src/lib/atmosphere.ts`](https://github.com/Vatsal-Jha256/eldermere/blob/main/apps/web/src/lib/atmosphere.ts).
 
 ## Visual Generation
 
@@ -74,7 +74,7 @@ Ambient audio is generated from the same profile.
 
 Event cues also use the current room profile and command type to trigger short musical or noise-based responses.
 
-The implementation lives in [apps/web/src/lib/audio.ts](/home/vatsal/Projects/ArthurDnD/apps/web/src/lib/audio.ts).
+The implementation lives in [`apps/web/src/lib/audio.ts`](https://github.com/Vatsal-Jha256/eldermere/blob/main/apps/web/src/lib/audio.ts).
 
 ## Why This Matters For Contributors
 
