@@ -17,6 +17,7 @@ The browser client shows room atmosphere, recent events, example commands, and c
 ### Movement
 
 - `look` or `l`: inspect the current room.
+- `where` or `room`: show the current room name and stable room id.
 - `exits`: list visible exits.
 - `go north`, `go east`, `go south`, `go west`: move through the world.
 - `travel arthurian-core`: enter the entry room for a loaded content pack.
@@ -99,5 +100,6 @@ Players who share a room share room events.
 - `say` is heard by other players in the same room.
 - `fight`, `recruit`, and party-related events are broadcast to the room.
 - `who` asks the server for the current room occupancy.
+- `where` shows the stable room id when players need to coordinate or report a bug.
 
 For online play, the important rule is simple: room IDs are the stable backend keys, while room names are the player-facing labels. Use the room name in the UI, keep the room id as the canonical internal identifier, and expose the id only when it helps debugging or coordination.

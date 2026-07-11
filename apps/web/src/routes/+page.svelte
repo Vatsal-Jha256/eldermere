@@ -53,6 +53,7 @@
   const commands = [
     'help',
     'exits',
+    'where',
     'who',
     'help social',
     'quest',

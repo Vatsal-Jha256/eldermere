@@ -26,6 +26,21 @@ func TestSessionLookAndMove(t *testing.T) {
 	}
 }
 
+func TestSessionWhereReportsRoomID(t *testing.T) {
+	session := NewSession(NewStarterWorld())
+
+	events := session.Handle("where")
+	if len(events) != 1 || events[0].Room == nil {
+		t.Fatalf("expected one room-aware event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "Lantern Yard") || !strings.Contains(events[0].Text, "`lantern-yard`") {
+		t.Fatalf("expected room name and id, got %q", events[0].Text)
+	}
+	if events[0].Room.ID != "lantern-yard" {
+		t.Fatalf("expected lantern-yard room view, got %#v", events[0].Room)
+	}
+}
+
 func TestSessionUnknownCommand(t *testing.T) {
 	session := NewSession(NewStarterWorld())
 

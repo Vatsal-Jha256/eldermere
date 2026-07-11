@@ -402,6 +402,8 @@ func (s *Session) Handle(input string) []Event {
 		return []Event{s.helpStatus(args)}
 	case "look", "l":
 		return []Event{s.look()}
+	case "where", "room":
+		return []Event{s.whereStatus()}
 	case "go", "move", "walk":
 		if len(args) == 0 {
 			return []Event{{Type: "error", Text: "Go where? Try `go north`."}}
@@ -449,13 +451,13 @@ func (s *Session) helpStatus(args []string) Event {
 	if len(args) == 0 {
 		return Event{
 			Type: "help",
-			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
+			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, where, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
 		}
 	}
 
 	switch strings.ToLower(strings.TrimSpace(args[0])) {
 	case "movement", "move", "go", "travel":
-		return Event{Type: "help", Text: "Movement: `look` shows the current room, `exits` lists visible exits, `go north` moves through exits, and `travel arthurian-core` enters a loaded content pack entry room."}
+		return Event{Type: "help", Text: "Movement: `look` shows the current room, `where` shows its stable room id for coordination, `exits` lists visible exits, `go north` moves through exits, and `travel arthurian-core` enters a loaded content pack entry room."}
 	case "story", "quest", "plot":
 		return Event{Type: "help", Text: "Story: `quest` runs the starter quest. `story` lists loaded arcs, `story eligible` shows playable arcs, `story locked` explains blocked arcs, `story <id>` inspects one, `story start <id>` begins it, `story status` shows the current room/objective, `story next` advances when requirements are met, and `story tags` lists earned branch tags."}
 	case "combat", "fight", "recruit":
@@ -528,6 +530,21 @@ func (s *Session) look() Event {
 	return Event{
 		Type: "room",
 		Text: text,
+		Room: &View{
+			ID:          room.ID,
+			Name:        room.Name,
+			Description: room.Description,
+			Exits:       s.visibleExits(room),
+			Atmosphere:  room.Atmosphere,
+		},
+	}
+}
+
+func (s *Session) whereStatus() Event {
+	room := s.currentRoom()
+	return Event{
+		Type: "system",
+		Text: fmt.Sprintf("You are in %s (`%s`). Use `who` to see players sharing this room.", room.Name, room.ID),
 		Room: &View{
 			ID:          room.ID,
 			Name:        room.Name,
