@@ -24,12 +24,17 @@ Then open:
 In the game:
 
 - `help`
+- `help multiplayer`
 - `look`
+- `where`
+- `lore`
+- `who`
 - `go north`
 - `quest`
 - `story`
 - `story eligible`
 - `story start sword-test`
+- `odds`
 - `fight`
 - `recruit`
 - `inventory`
