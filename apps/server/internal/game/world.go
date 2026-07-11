@@ -453,7 +453,7 @@ func (s *Session) helpStatus(args []string) Event {
 	if len(args) == 0 {
 		return Event{
 			Type: "help",
-			Text: "Help topics: movement, story, combat, inventory, social, world. Commands: look, where, lore, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
+			Text: "Help topics: movement, story, combat, inventory, social, multiplayer, world. Commands: look, where, lore, exits, go <direction>, travel <pack-id>, quest, story, fight, recruit, take, inventory, party, factions, odds, map, say <text>. Try `help story`.",
 		}
 	}
 
@@ -466,12 +466,14 @@ func (s *Session) helpStatus(args []string) Event {
 		return Event{Type: "help", Text: "Combat and companions: `fight` rolls against the current room encounter, party members add a small bonus, `recruit` rolls to add a room companion, `odds` shows current fight/recruit success chances, and `party` lists recruited allies."}
 	case "inventory", "items", "take":
 		return Event{Type: "help", Text: "Inventory: `take` collects the current room item, `inventory` lists carried relics/items, and some items unlock hidden map routes."}
-	case "social", "say", "talk", "multiplayer":
+	case "social", "say", "talk":
 		return Event{Type: "help", Text: "Social: `who` lists players in your current room. `say hello` or `talk hello` sends local speech to players in the same room. Presence and recent room events are shared over the WebSocket session."}
+	case "multiplayer", "online", "mud":
+		return Event{Type: "help", Text: "Multiplayer: each browser has its own saved player session. Players share events only when they are in the same room. Use `where` to confirm the stable room id, `who` to list current room players, and `say <text>` for room-local chat. Room, inventory, party, quest, story, and factions persist across reconnects."}
 	case "world", "factions", "map":
 		return Event{Type: "help", Text: "World state: `factions` shows reputation changes from encounters and story steps. `map` shows hidden or gated exits from the current room. `odds story <id>` shows story variant chances."}
 	default:
-		return Event{Type: "help", Text: fmt.Sprintf("Unknown help topic `%s`. Try `help`, `help story`, `help movement`, `help combat`, `help inventory`, `help social`, or `help world`.", args[0])}
+		return Event{Type: "help", Text: fmt.Sprintf("Unknown help topic `%s`. Try `help`, `help story`, `help movement`, `help combat`, `help inventory`, `help social`, `help multiplayer`, or `help world`.", args[0])}
 	}
 }
 

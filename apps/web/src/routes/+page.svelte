@@ -56,6 +56,7 @@
     'where',
     'lore',
     'who',
+    'help multiplayer',
     'help social',
     'quest',
     'story',

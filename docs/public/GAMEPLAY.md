@@ -102,5 +102,8 @@ Players who share a room share room events.
 - `fight`, `recruit`, and party-related events are broadcast to the room.
 - `who` asks the server for the current room occupancy.
 - `where` shows the stable room id when players need to coordinate or report a bug.
+- `help multiplayer` explains room-local play, sessions, and what persists.
 
 For online play, the important rule is simple: room IDs are the stable backend keys, while room names are the player-facing labels. Use the room name in the UI, keep the room id as the canonical internal identifier, and expose the id only when it helps debugging or coordination.
+
+Each browser session has its own player id and token. Room, inventory, party, quest, story, and faction state persist across reconnects for the same browser session.

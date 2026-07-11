@@ -83,6 +83,11 @@ func TestHelpCommandTopics(t *testing.T) {
 	if len(events) != 1 || !strings.Contains(events[0].Text, "story start <id>") {
 		t.Fatalf("expected story help, got %#v", events)
 	}
+
+	events = session.Handle("help multiplayer")
+	if len(events) != 1 || !strings.Contains(events[0].Text, "same room") || !strings.Contains(events[0].Text, "persist across reconnects") {
+		t.Fatalf("expected multiplayer help, got %#v", events)
+	}
 }
 
 func TestTalkAliasUsesSayEvent(t *testing.T) {
