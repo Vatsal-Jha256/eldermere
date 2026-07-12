@@ -81,6 +81,7 @@
   let room = $state<RoomView | null>(null);
   let backgroundCanvas = $state<HTMLCanvasElement | null>(null);
   let logElement = $state<HTMLDivElement | null>(null);
+  let commandInput = $state<HTMLInputElement | null>(null);
   let visualEvents: VisualEvent[] = [];
   let commandHistory: string[] = [];
   let historyIndex = 0;
@@ -256,6 +257,11 @@
   function runCommand(value: string) {
     command = value;
     requestAnimationFrame(() => submitCommand());
+  }
+
+  function draftCommand(value: string) {
+    command = value;
+    requestAnimationFrame(() => commandInput?.focus());
   }
 
   function reconnect(freshSession = false) {
@@ -976,7 +982,7 @@
           <p>Open this page in another browser or device on the same host, set a different player name, then use room speech.</p>
           <div class="mini-actions">
             <button type="button" onclick={() => runCommand('who')} disabled={!connected}>Who</button>
-            <button type="button" onclick={() => (command = 'say ')} disabled={!connected}>Say</button>
+            <button type="button" onclick={() => draftCommand('say ')} disabled={!connected}>Say</button>
           </div>
         </section>
 
@@ -1010,6 +1016,7 @@
       <label for="command">Command</label>
       <input
         id="command"
+        bind:this={commandInput}
         bind:value={command}
         autocomplete="off"
         spellcheck="false"
@@ -1023,11 +1030,11 @@
       />
       <button type="submit" disabled={!connected}>Send</button>
     </form>
-    <p id="command-hint" class="sr-only">Enter a MUD command of 512 characters or fewer, then press Send. Use the example command buttons to fill common commands.</p>
+    <p id="command-hint" class="sr-only">Enter a MUD command of 512 characters or fewer, then press Send. Quick command buttons run immediately unless they draft a command that needs text.</p>
 
-    <div class="chips" aria-label="Example commands">
+    <div class="chips" aria-label="Quick commands">
       {#each commands as item}
-        <button type="button" onclick={() => (command = item)} disabled={!connected}>{item}</button>
+        <button type="button" onclick={() => runCommand(item)} disabled={!connected}>{item}</button>
       {/each}
     </div>
   </section>
