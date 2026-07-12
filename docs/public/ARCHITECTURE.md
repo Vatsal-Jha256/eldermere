@@ -87,10 +87,13 @@ The server reads:
 - `DATABASE_URL`
 - `CONTENT_PACKS_DIR`
 - `LOG_LEVEL`
+- `ALLOWED_ORIGINS`
 
 The browser reads `PUBLIC_API_BASE` from the web runtime environment.
 
 If you host the web client and API on the same origin behind a reverse proxy, `PUBLIC_API_BASE` can be omitted and the browser will fall back to the current origin.
+
+`ALLOWED_ORIGINS` is a comma-separated list of browser origins allowed to call the API and open WebSockets. It defaults to `*` for easy local play. Public deployments should set it to the deployed web origin, for example `https://eldermere.pages.dev`.
 
 ## Deployment Shape
 

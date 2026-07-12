@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
+	"net/url"
 	"reflect"
 	"strings"
 	"time"
@@ -21,7 +22,7 @@ type commandMessage struct {
 
 const maxCommandLength = 512
 
-func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store, hub *roomHub) http.HandlerFunc {
+func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store, hub *roomHub, allowedOrigins []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		playerID := strings.TrimSpace(r.URL.Query().Get("player_id"))
 		token := strings.TrimSpace(r.URL.Query().Get("token"))
@@ -55,9 +56,7 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			return
 		}
 
-		conn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
-			InsecureSkipVerify: true,
-		})
+		conn, err := websocket.Accept(w, r, websocketAcceptOptions(allowedOrigins))
 		if err != nil {
 			logger.Warn("websocket accept failed", "error", err)
 			return
@@ -140,6 +139,42 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			}
 		}
 	}
+}
+
+func websocketAcceptOptions(allowedOrigins []string) *websocket.AcceptOptions {
+	if originPolicyAllowsAny(allowedOrigins) {
+		return &websocket.AcceptOptions{InsecureSkipVerify: true}
+	}
+	return &websocket.AcceptOptions{OriginPatterns: originPatterns(allowedOrigins)}
+}
+
+func originPolicyAllowsAny(allowedOrigins []string) bool {
+	if len(allowedOrigins) == 0 {
+		return true
+	}
+	for _, allowed := range allowedOrigins {
+		if strings.TrimSpace(allowed) == "*" {
+			return true
+		}
+	}
+	return false
+}
+
+func originPatterns(allowedOrigins []string) []string {
+	patterns := make([]string, 0, len(allowedOrigins))
+	for _, allowed := range allowedOrigins {
+		allowed = strings.TrimSpace(allowed)
+		if allowed == "" || allowed == "*" {
+			continue
+		}
+		parsed, err := url.Parse(allowed)
+		if err == nil && parsed.Host != "" {
+			patterns = append(patterns, parsed.Host)
+			continue
+		}
+		patterns = append(patterns, allowed)
+	}
+	return patterns
 }
 
 func persistentStateChanged(before game.PersistentState, after game.PersistentState) bool {

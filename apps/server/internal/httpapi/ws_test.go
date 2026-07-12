@@ -56,3 +56,28 @@ func TestCommandTooLong(t *testing.T) {
 		t.Fatal("expected oversized command to be rejected")
 	}
 }
+
+func TestWebSocketAcceptOptionsWildcard(t *testing.T) {
+	options := websocketAcceptOptions([]string{"*"})
+
+	if options == nil || !options.InsecureSkipVerify {
+		t.Fatalf("expected wildcard policy to allow insecure origin verification, got %#v", options)
+	}
+	if len(options.OriginPatterns) != 0 {
+		t.Fatalf("OriginPatterns = %#v, want empty", options.OriginPatterns)
+	}
+}
+
+func TestOriginPatternsFromAllowedOrigins(t *testing.T) {
+	patterns := originPatterns([]string{"https://eldermere.pages.dev", "http://localhost:5173", "custom.example"})
+
+	want := []string{"eldermere.pages.dev", "localhost:5173", "custom.example"}
+	if len(patterns) != len(want) {
+		t.Fatalf("patterns = %#v", patterns)
+	}
+	for i := range want {
+		if patterns[i] != want[i] {
+			t.Fatalf("patterns = %#v, want %#v", patterns, want)
+		}
+	}
+}

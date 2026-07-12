@@ -34,3 +34,26 @@ func TestFromEnvUsesExplicitAppEnv(t *testing.T) {
 		t.Fatalf("AppEnv = %q, want staging", cfg.AppEnv)
 	}
 }
+
+func TestFromEnvParsesAllowedOrigins(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", " https://eldermere.pages.dev, http://localhost:5173 ")
+
+	cfg := FromEnv()
+
+	if len(cfg.AllowedOrigins) != 2 {
+		t.Fatalf("AllowedOrigins = %#v", cfg.AllowedOrigins)
+	}
+	if cfg.AllowedOrigins[0] != "https://eldermere.pages.dev" || cfg.AllowedOrigins[1] != "http://localhost:5173" {
+		t.Fatalf("AllowedOrigins = %#v", cfg.AllowedOrigins)
+	}
+}
+
+func TestFromEnvDefaultsAllowedOriginsToWildcard(t *testing.T) {
+	t.Setenv("ALLOWED_ORIGINS", "")
+
+	cfg := FromEnv()
+
+	if len(cfg.AllowedOrigins) != 1 || cfg.AllowedOrigins[0] != "*" {
+		t.Fatalf("AllowedOrigins = %#v, want wildcard", cfg.AllowedOrigins)
+	}
+}

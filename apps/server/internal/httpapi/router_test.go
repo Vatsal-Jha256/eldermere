@@ -104,3 +104,37 @@ func TestCORSHeadersOnAPIResponse(t *testing.T) {
 		t.Fatalf("allow origin = %q, want *", got)
 	}
 }
+
+func TestCORSAllowsConfiguredOrigin(t *testing.T) {
+	router := NewRouter(config.Config{
+		AppEnv:         "test",
+		AllowedOrigins: []string{"https://eldermere.pages.dev"},
+	}, slog.Default(), storage.NewMemoryStore())
+
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.Header.Set("Origin", "https://eldermere.pages.dev")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if got := res.Header().Get("Access-Control-Allow-Origin"); got != "https://eldermere.pages.dev" {
+		t.Fatalf("allow origin = %q", got)
+	}
+}
+
+func TestCORSRejectsUnconfiguredOrigin(t *testing.T) {
+	router := NewRouter(config.Config{
+		AppEnv:         "test",
+		AllowedOrigins: []string{"https://eldermere.pages.dev"},
+	}, slog.Default(), storage.NewMemoryStore())
+
+	req := httptest.NewRequest(http.MethodGet, "/healthz", nil)
+	req.Header.Set("Origin", "https://example.invalid")
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if got := res.Header().Get("Access-Control-Allow-Origin"); got != "" {
+		t.Fatalf("allow origin = %q, want empty", got)
+	}
+}

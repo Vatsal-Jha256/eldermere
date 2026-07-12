@@ -89,10 +89,12 @@ If you want one stable public deployment, use this split:
 
 1. Provision the host.
 2. Install Docker and Docker Compose if you are running containers yourself.
-3. Set `DATABASE_URL`, `SERVER_ADDR`, `CONTENT_PACKS_DIR`, and `APP_ENV=production`.
+3. Set `DATABASE_URL`, `SERVER_ADDR`, `CONTENT_PACKS_DIR`, `APP_ENV=production`, and `ALLOWED_ORIGINS`.
 4. Set `PUBLIC_API_BASE` in the web host environment to the public API URL if the web and API are on different origins.
 5. If the web and API share one origin behind a reverse proxy, leave `PUBLIC_API_BASE` unset and route `/api` and `/ws` to the server.
 6. Deploy `docs/public` to a static host.
+
+For a separate Cloudflare Pages frontend and Render API, set `ALLOWED_ORIGINS` on the API to the Cloudflare Pages origin, for example `https://eldermere.pages.dev`.
 
 ## What To Use For Multiplayer
 

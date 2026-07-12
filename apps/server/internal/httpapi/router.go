@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/Vatsal-Jha256/eldermere/apps/server/internal/config"
@@ -42,9 +43,9 @@ func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http
 	})
 
 	mux.HandleFunc("POST /api/v1/sessions", handleCreateSession(logger, store))
-	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store, hub))
+	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store, hub, cfg.AllowedOrigins))
 
-	return withRequestLogging(logger, withCORS(mux))
+	return withRequestLogging(logger, withCORS(mux, cfg.AllowedOrigins))
 }
 
 func loadWorld(logger *slog.Logger, cfg config.Config) game.World {
@@ -82,9 +83,11 @@ func writeJSON(w http.ResponseWriter, status int, payload any) {
 	}
 }
 
-func withCORS(next http.Handler) http.Handler {
+func withCORS(next http.Handler, allowedOrigins []string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Access-Control-Allow-Origin", "*")
+		if origin := allowedCORSOrigin(r.Header.Get("Origin"), allowedOrigins); origin != "" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+		}
 		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Authorization")
 		w.Header().Set("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
 		if r.Method == http.MethodOptions {
@@ -93,6 +96,22 @@ func withCORS(next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+func allowedCORSOrigin(requestOrigin string, allowedOrigins []string) string {
+	if len(allowedOrigins) == 0 {
+		return "*"
+	}
+	for _, allowed := range allowedOrigins {
+		allowed = strings.TrimSpace(allowed)
+		if allowed == "*" {
+			return "*"
+		}
+		if requestOrigin != "" && strings.EqualFold(allowed, requestOrigin) {
+			return requestOrigin
+		}
+	}
+	return ""
 }
 
 func withRequestLogging(logger *slog.Logger, next http.Handler) http.Handler {
