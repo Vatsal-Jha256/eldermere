@@ -92,6 +92,33 @@ func (h *roomHub) presence(roomID string) game.Event {
 	return game.Event{Type: "presence", Text: fmt.Sprintf("Players here: %s.", strings.Join(names, ", "))}
 }
 
+func (h *roomHub) presenceAll() game.Event {
+	h.mu.RLock()
+	defer h.mu.RUnlock()
+
+	roomIDs := make([]string, 0, len(h.rooms))
+	for roomID, clients := range h.rooms {
+		if len(clients) > 0 {
+			roomIDs = append(roomIDs, roomID)
+		}
+	}
+	if len(roomIDs) == 0 {
+		return game.Event{Type: "presence", Text: "Players online: none."}
+	}
+	sortStrings(roomIDs)
+
+	parts := make([]string, 0, len(roomIDs))
+	for _, roomID := range roomIDs {
+		names := make([]string, 0, len(h.rooms[roomID]))
+		for client := range h.rooms[roomID] {
+			names = append(names, client.displayName)
+		}
+		sortStrings(names)
+		parts = append(parts, fmt.Sprintf("%s: %s", roomID, strings.Join(names, ", ")))
+	}
+	return game.Event{Type: "presence", Text: fmt.Sprintf("Players online by room: %s.", strings.Join(parts, "; "))}
+}
+
 func (h *roomHub) broadcast(ctx context.Context, roomID string, event game.Event, except *clientConn) {
 	h.mu.Lock()
 	defer h.mu.Unlock()

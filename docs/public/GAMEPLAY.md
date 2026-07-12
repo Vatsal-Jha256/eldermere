@@ -101,6 +101,7 @@ Players who share a room share room events.
 - `say` is heard by other players in the same room.
 - `fight`, `recruit`, and party-related events are broadcast to the room.
 - `who` asks the server for the current room occupancy.
+- `who all` lists occupied room ids and player names.
 - `where` shows the stable room id when players need to coordinate or report a bug.
 - `help multiplayer` explains room-local play, sessions, and what persists.
 

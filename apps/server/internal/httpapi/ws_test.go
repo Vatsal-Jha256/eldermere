@@ -57,6 +57,18 @@ func TestCommandTooLong(t *testing.T) {
 	}
 }
 
+func TestPresenceCommandParsing(t *testing.T) {
+	if !isGlobalPresenceCommand(" who all ") {
+		t.Fatal("expected who all to be a global presence command")
+	}
+	if !isPresenceCommand("who") {
+		t.Fatal("expected who to be a room presence command")
+	}
+	if isPresenceCommand("who all") {
+		t.Fatal("expected who all not to be treated as room-local presence")
+	}
+}
+
 func TestWebSocketAcceptOptionsWildcard(t *testing.T) {
 	options := websocketAcceptOptions([]string{"*"})
 

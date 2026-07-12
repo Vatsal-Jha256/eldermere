@@ -105,6 +105,13 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 				}
 				continue
 			}
+			if isGlobalPresenceCommand(command) {
+				if err := writeEvents(r.Context(), conn, []game.Event{hub.presenceAll()}); err != nil {
+					logger.Warn("websocket global presence write failed", "error", err)
+					return
+				}
+				continue
+			}
 			if isPresenceCommand(command) {
 				if err := writeEvents(r.Context(), conn, []game.Event{hub.presence(session.RoomID())}); err != nil {
 					logger.Warn("websocket presence write failed", "error", err)
@@ -213,6 +220,15 @@ func parseCommand(payload []byte) string {
 
 func commandTooLong(command string) bool {
 	return len([]rune(command)) > maxCommandLength
+}
+
+func isGlobalPresenceCommand(command string) bool {
+	switch strings.ToLower(strings.TrimSpace(command)) {
+	case "who all", "players all", "presence all":
+		return true
+	default:
+		return false
+	}
 }
 
 func isPresenceCommand(command string) bool {

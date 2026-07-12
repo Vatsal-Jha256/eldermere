@@ -57,6 +57,23 @@ func TestRoomHubBroadcastPrunesFailedClients(t *testing.T) {
 	}
 }
 
+func TestRoomHubPresenceAllGroupsPlayersByRoom(t *testing.T) {
+	restoreRoomWriter(t, func(context.Context, *websocket.Conn, []game.Event) error {
+		return nil
+	})
+
+	hub := newRoomHub()
+	hub.join(context.Background(), &clientConn{displayName: "Guinevere"}, "camelot")
+	hub.join(context.Background(), &clientConn{displayName: "Arthur"}, "camelot")
+	hub.join(context.Background(), &clientConn{displayName: "Merlin"}, "counting-room")
+
+	presence := hub.presenceAll()
+	want := "Players online by room: camelot: Arthur, Guinevere; counting-room: Merlin."
+	if presence.Text != want {
+		t.Fatalf("presence all = %q, want %q", presence.Text, want)
+	}
+}
+
 func restoreRoomWriter(t *testing.T, writer func(context.Context, *websocket.Conn, []game.Event) error) {
 	t.Helper()
 
