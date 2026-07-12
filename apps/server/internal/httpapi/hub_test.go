@@ -74,6 +74,26 @@ func TestRoomHubPresenceAllGroupsPlayersByRoom(t *testing.T) {
 	}
 }
 
+func TestRoomHubRecentSkipsPresenceEvents(t *testing.T) {
+	restoreRoomWriter(t, func(context.Context, *websocket.Conn, []game.Event) error {
+		return nil
+	})
+
+	hub := newRoomHub()
+	arthur := &clientConn{displayName: "Arthur"}
+	hub.join(context.Background(), arthur, "camelot")
+	hub.leave(context.Background(), arthur)
+	hub.broadcast(context.Background(), "camelot", game.Event{Type: "say", Text: "Arthur says: hail"}, nil)
+
+	recent := hub.recent("camelot")
+	if len(recent) != 1 {
+		t.Fatalf("expected only durable room events in recent history, got %#v", recent)
+	}
+	if recent[0].Type != "say" || recent[0].Text != "Arthur says: hail" {
+		t.Fatalf("unexpected recent event: %#v", recent[0])
+	}
+}
+
 func restoreRoomWriter(t *testing.T, writer func(context.Context, *websocket.Conn, []game.Event) error) {
 	t.Helper()
 

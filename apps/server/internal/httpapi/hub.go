@@ -48,7 +48,6 @@ func (h *roomHub) join(ctx context.Context, client *clientConn, roomID string) {
 	h.rooms[roomID][client] = true
 
 	joined := game.Event{Type: "presence", Text: fmt.Sprintf("%s enters the room.", client.displayName)}
-	h.appendHistoryLocked(roomID, joined)
 	h.broadcastLocked(ctx, roomID, joined, client)
 }
 
@@ -63,7 +62,6 @@ func (h *roomHub) leave(ctx context.Context, client *clientConn) {
 	roomID := client.roomID
 	h.removeLocked(client)
 	left := game.Event{Type: "presence", Text: fmt.Sprintf("%s leaves the room.", client.displayName)}
-	h.appendHistoryLocked(roomID, left)
 	h.broadcastLocked(ctx, roomID, left, client)
 }
 
@@ -139,11 +137,18 @@ func (h *roomHub) removeLocked(client *clientConn) {
 }
 
 func (h *roomHub) appendHistoryLocked(roomID string, event game.Event) {
+	if !shouldRetainHistory(event) {
+		return
+	}
 	events := append(h.history[roomID], event)
 	if len(events) > roomLogLimit {
 		events = events[len(events)-roomLogLimit:]
 	}
 	h.history[roomID] = events
+}
+
+func shouldRetainHistory(event game.Event) bool {
+	return event.Type != "presence"
 }
 
 func (h *roomHub) broadcastLocked(ctx context.Context, roomID string, event game.Event, except *clientConn) {
