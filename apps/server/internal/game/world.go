@@ -586,6 +586,7 @@ func (s *Session) fight() Event {
 	partyBonus := s.partyBonus()
 	modifier := room.Encounter.Modifier + 2 + partyBonus
 	result := resolveCheck(s.roll, room.Encounter.DC, modifier, room.Encounter.RollMode)
+	chance := formatChance(successChance(room.Encounter.DC, modifier, room.Encounter.RollMode))
 	if result.Success {
 		for faction, delta := range room.Encounter.FactionEffects {
 			s.factions[faction] += delta
@@ -596,7 +597,7 @@ func (s *Session) fight() Event {
 		}
 		return Event{
 			Type: "fight",
-			Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
+			Text: fmt.Sprintf("%s. Chance: %s. %s", formatCheck(result), chance, text),
 		}
 	}
 
@@ -606,7 +607,7 @@ func (s *Session) fight() Event {
 	}
 	return Event{
 		Type: "fight",
-		Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
+		Text: fmt.Sprintf("%s. Chance: %s. %s", formatCheck(result), chance, text),
 	}
 }
 
@@ -622,6 +623,7 @@ func (s *Session) recruit() Event {
 	}
 
 	result := resolveCheck(s.roll, room.Recruitable.DC, room.Recruitable.Modifier+1, room.Recruitable.RollMode)
+	chance := formatChance(successChance(room.Recruitable.DC, room.Recruitable.Modifier+1, room.Recruitable.RollMode))
 	if result.Success {
 		s.party[name] = true
 		text := room.Recruitable.Success
@@ -630,7 +632,7 @@ func (s *Session) recruit() Event {
 		}
 		return Event{
 			Type: "party",
-			Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
+			Text: fmt.Sprintf("%s. Chance: %s. %s", formatCheck(result), chance, text),
 		}
 	}
 
@@ -640,7 +642,7 @@ func (s *Session) recruit() Event {
 	}
 	return Event{
 		Type: "party",
-		Text: fmt.Sprintf("%s. %s", formatCheck(result), text),
+		Text: fmt.Sprintf("%s. Chance: %s. %s", formatCheck(result), chance, text),
 	}
 }
 

@@ -90,6 +90,7 @@ The probability model is intentionally simple and visible.
 - Natural 20 always succeeds.
 - Natural 1 always fails.
 - `odds` computes the exact success chance for the current room's available checks.
+- `fight` and `recruit` results show the roll math, critical result when present, and the applied success chance.
 
 The odds command is useful for tuning content because contributors can see whether a room challenge is forgiving, risky, or punishing before changing the JSON.
 

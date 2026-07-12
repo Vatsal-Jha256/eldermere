@@ -59,7 +59,11 @@ func formatCheck(result CheckResult) string {
 	if mode == rollNormal {
 		mode = "normal"
 	}
-	return fmt.Sprintf("Rolled %s %s, kept %d %+d = %d against DC %d", formatRolls(result.Rolls), mode, result.Kept, result.Modifier, result.Total, result.DC)
+	text := fmt.Sprintf("Rolled %s %s, kept %d %+d = %d against DC %d", formatRolls(result.Rolls), mode, result.Kept, result.Modifier, result.Total, result.DC)
+	if result.Critical != "" {
+		text = fmt.Sprintf("%s (%s)", text, result.Critical)
+	}
+	return text
 }
 
 func successChance(dc int, modifier int, mode string) float64 {

@@ -46,6 +46,12 @@ func TestFormatCheckShowsRollModeAndMath(t *testing.T) {
 	if !strings.Contains(text, "7/15 advantage") || !strings.Contains(text, "15 +3 = 18") {
 		t.Fatalf("expected readable check math, got %q", text)
 	}
+
+	result.Critical = "critical success"
+	text = formatCheck(result)
+	if !strings.Contains(text, "critical success") {
+		t.Fatalf("expected critical result in check text, got %q", text)
+	}
 }
 
 func TestSuccessChanceAccountsForCriticalsAndRollMode(t *testing.T) {

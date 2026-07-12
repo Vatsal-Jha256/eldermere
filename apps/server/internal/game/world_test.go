@@ -147,6 +147,9 @@ func TestFightUsesRoomEncounter(t *testing.T) {
 	if events[0].Type != "fight" {
 		t.Fatalf("expected fight event, got %q", events[0].Type)
 	}
+	if !strings.Contains(events[0].Text, "Chance: 30.2%") {
+		t.Fatalf("expected fight result to include applied chance, got %q", events[0].Text)
+	}
 }
 
 func TestOddsCommandShowsCurrentRoomChecks(t *testing.T) {
@@ -178,6 +181,9 @@ func TestRecruitAddsCompanionToParty(t *testing.T) {
 	events := session.Handle("recruit")
 	if len(events) != 1 || events[0].Type != "party" {
 		t.Fatalf("expected party event, got %#v", events)
+	}
+	if !strings.Contains(events[0].Text, "Chance: 79.8%") || !strings.Contains(events[0].Text, "critical success") {
+		t.Fatalf("expected recruit result to include chance and critical, got %q", events[0].Text)
 	}
 
 	events = session.Handle("party")
@@ -319,7 +325,7 @@ func TestFightUsesCriticalOutcomeText(t *testing.T) {
 	session.roomID = "arena"
 
 	events := session.Handle("fight")
-	if len(events) != 1 || !strings.Contains(events[0].Text, "You turn the duel into legend.") {
+	if len(events) != 1 || !strings.Contains(events[0].Text, "critical success") || !strings.Contains(events[0].Text, "You turn the duel into legend.") {
 		t.Fatalf("expected critical win text, got %#v", events)
 	}
 }
