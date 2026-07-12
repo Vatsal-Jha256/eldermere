@@ -3,21 +3,6 @@ import { buildAtmosphereProfile, type RoomAtmosphere, type AtmosphereProfile, ha
 
 type Disposables = Array<{ stop?: () => void; disconnect?: () => void; dispose?: () => void }>;
 
-type MusicPlan = {
-  scale: string[];
-  bass: string[];
-  chords: string[][];
-  density: number;
-  motifInterval: Tone.Unit.Time;
-  chordInterval: Tone.Unit.Time;
-  motifDuration: Tone.Unit.Time;
-  chordDuration: Tone.Unit.Time;
-  motifVolume: number;
-  chordVolume: number;
-  grid: 'loose' | 'steady';
-  timbre: 'bell' | 'reed' | 'hollow' | 'string';
-};
-
 export class AtmosphereAudio {
   private activeNodes: Disposables = [];
   private loops: Tone.Loop[] = [];
@@ -184,7 +169,6 @@ export class AtmosphereAudio {
     if (layers.length === 1 && layers[0] === 'field') {
       this.addFieldLayer(profile, rng);
     }
-    this.addProceduralMusicLayer(profile, rng);
   }
 
   private addRainLayer(profile: AtmosphereProfile, rng: () => number) {
@@ -425,73 +409,6 @@ export class AtmosphereAudio {
     this.loops.push(loop);
   }
 
-  private addProceduralMusicLayer(profile: AtmosphereProfile, rng: () => number) {
-    const plan = buildMusicPlan(profile);
-    const motif = new Tone.PolySynth(Tone.Synth, {
-      oscillator: { type: plan.timbre === 'bell' ? 'sine' : plan.timbre === 'reed' ? 'triangle' : 'fatsine' },
-      envelope: {
-        attack: plan.timbre === 'hollow' ? 0.18 : 0.04,
-        decay: 0.45,
-        sustain: plan.timbre === 'string' ? 0.16 : 0.08,
-        release: plan.timbre === 'hollow' ? 2.4 : 1.5
-      }
-    });
-    const motifFilter = new Tone.Filter({
-      type: 'lowpass',
-      frequency: plan.timbre === 'bell' ? 2600 : 1800,
-      rolloff: -12
-    });
-    const motifDelay = new Tone.FeedbackDelay(plan.grid === 'steady' ? '8n.' : '4n.', 0.26);
-    const motifReverb = new Tone.Freeverb({ roomSize: 0.84, dampening: 2600 });
-    const motifVolume = new Tone.Volume(plan.motifVolume);
-    motif.chain(motifFilter, motifDelay, motifReverb, motifVolume, this.masterVolume);
-    this.activeNodes.push(motif, motifFilter, motifDelay, motifReverb, motifVolume);
-
-    const harmony = new Tone.PolySynth(Tone.FMSynth, {
-      harmonicity: plan.timbre === 'hollow' ? 0.75 : 1.5,
-      modulationIndex: plan.timbre === 'bell' ? 1.1 : 0.45,
-      envelope: { attack: 0.4, decay: 1.2, sustain: 0.28, release: 4.8 }
-    });
-    const harmonyFilter = new Tone.Filter({
-      type: 'lowpass',
-      frequency: profile.modes.includes('void') ? 760 : 1200,
-      rolloff: -24
-    });
-    const harmonyReverb = new Tone.Freeverb({ roomSize: 0.92, dampening: 1800 });
-    const harmonyVolume = new Tone.Volume(plan.chordVolume);
-    harmony.chain(harmonyFilter, harmonyReverb, harmonyVolume, this.masterVolume);
-    this.activeNodes.push(harmony, harmonyFilter, harmonyReverb, harmonyVolume);
-
-    let step = Math.floor(rng() * plan.scale.length);
-    let direction = rng() > 0.5 ? 1 : -1;
-    const motifLoop = new Tone.Loop((time) => {
-      if (rng() > plan.density) return;
-      if (rng() > 0.72) direction *= -1;
-      const leap = rng() > 0.82 ? 2 : 1;
-      step = clamp(step + direction * leap, 0, plan.scale.length - 1);
-      if ((step === 0 || step === plan.scale.length - 1) && rng() > 0.45) direction *= -1;
-
-      const start = plan.grid === 'loose' ? time + rng() * 0.18 : time;
-      const note = plan.scale[step];
-      const octaveNote = rng() > 0.84 ? plan.scale[Math.max(0, step - 2)] : note;
-      motif.triggerAttackRelease(octaveNote, plan.motifDuration, start, 0.09 + rng() * 0.09);
-    }, plan.motifInterval).start(0);
-    this.loops.push(motifLoop);
-
-    let chordIndex = Math.floor(rng() * plan.chords.length);
-    const chordLoop = new Tone.Loop((time) => {
-      if (rng() > 0.86) {
-        chordIndex = (chordIndex + 2) % plan.chords.length;
-      } else {
-        chordIndex = (chordIndex + 1) % plan.chords.length;
-      }
-      const chord = plan.chords[chordIndex];
-      const bass = pick(plan.bass, rng);
-      harmony.triggerAttackRelease([bass, ...chord], plan.chordDuration, time, 0.08 + rng() * 0.08);
-    }, plan.chordInterval).start(0);
-    this.loops.push(chordLoop);
-  }
-
   private disposeLater(node: { dispose?: () => void }, delayMs: number) {
     setTimeout(() => {
       try {
@@ -503,115 +420,6 @@ export class AtmosphereAudio {
   }
 }
 
-function buildMusicPlan(profile: AtmosphereProfile): MusicPlan {
-  const text = [profile.palette, profile.weather, profile.mythLayer, ...profile.motifs].join(' ').toLowerCase();
-  const stormy = text.includes('storm') || text.includes('battle') || text.includes('danger');
-
-  if (profile.modes.includes('void')) {
-    return {
-      scale: ['D2', 'F2', 'G2', 'A2', 'C3', 'D3', 'F3'],
-      bass: ['D1', 'A1', 'C2'],
-      chords: [['D2', 'F2'], ['C2', 'F2'], ['A1', 'D2'], ['G1', 'C2']],
-      density: stormy ? 0.42 : 0.3,
-      motifInterval: '2n',
-      chordInterval: '2m',
-      motifDuration: '2n.',
-      chordDuration: '2m',
-      motifVolume: -32,
-      chordVolume: -31,
-      grid: 'loose',
-      timbre: 'hollow'
-    };
-  }
-
-  if (profile.modes.includes('sacred')) {
-    return {
-      scale: ['C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4', 'E4'],
-      bass: ['C2', 'G2', 'A2'],
-      chords: [['C3', 'E3', 'G3'], ['D3', 'G3', 'A3'], ['E3', 'G3', 'C4'], ['A2', 'D3', 'E3']],
-      density: 0.44,
-      motifInterval: '2n',
-      chordInterval: '1m',
-      motifDuration: '4n.',
-      chordDuration: '1m',
-      motifVolume: -33,
-      chordVolume: -34,
-      grid: 'steady',
-      timbre: 'bell'
-    };
-  }
-
-  if (profile.modes.includes('court')) {
-    return {
-      scale: ['D3', 'E3', 'F3', 'A3', 'C4', 'D4', 'E4', 'F4'],
-      bass: ['D2', 'A2', 'C3'],
-      chords: [['D3', 'F3', 'A3'], ['F3', 'A3', 'C4'], ['C3', 'E3', 'A3'], ['E3', 'F3', 'A3']],
-      density: 0.48,
-      motifInterval: '4n',
-      chordInterval: '1m',
-      motifDuration: '8n',
-      chordDuration: '1m',
-      motifVolume: -34,
-      chordVolume: -36,
-      grid: 'steady',
-      timbre: 'string'
-    };
-  }
-
-  if (profile.modes.includes('fire')) {
-    return {
-      scale: ['E2', 'G2', 'A2', 'B2', 'D3', 'E3', 'G3'],
-      bass: ['E1', 'B1', 'D2'],
-      chords: [['E2', 'G2'], ['A2', 'D3'], ['B1', 'E2'], ['D2', 'G2']],
-      density: 0.5,
-      motifInterval: '4n',
-      chordInterval: '1m',
-      motifDuration: '8n',
-      chordDuration: '2n.',
-      motifVolume: -35,
-      chordVolume: -38,
-      grid: 'steady',
-      timbre: 'reed'
-    };
-  }
-
-  if (profile.modes.includes('water') || profile.modes.includes('rain')) {
-    return {
-      scale: ['A2', 'C3', 'D3', 'E3', 'G3', 'A3', 'C4', 'D4'],
-      bass: ['A1', 'E2', 'G2'],
-      chords: [['A2', 'C3', 'E3'], ['G2', 'C3', 'D3'], ['D3', 'E3', 'A3'], ['C3', 'E3', 'G3']],
-      density: profile.modes.includes('rain') ? 0.36 : 0.4,
-      motifInterval: '2n',
-      chordInterval: '2m',
-      motifDuration: '4n',
-      chordDuration: '1m',
-      motifVolume: -35,
-      chordVolume: -38,
-      grid: 'loose',
-      timbre: 'bell'
-    };
-  }
-
-  return {
-    scale: ['D3', 'F3', 'G3', 'A3', 'C4', 'D4', 'F4'],
-    bass: ['D2', 'A2', 'C3'],
-    chords: [['D3', 'F3', 'A3'], ['C3', 'F3', 'G3'], ['A2', 'D3', 'F3'], ['G2', 'C3', 'D3']],
-    density: profile.modes.includes('wind') ? 0.32 : 0.42,
-    motifInterval: '2n',
-    chordInterval: '2m',
-    motifDuration: '4n.',
-    chordDuration: '1m',
-    motifVolume: -36,
-    chordVolume: -39,
-    grid: 'loose',
-    timbre: 'string'
-  };
-}
-
 function pick<T>(items: T[], rng: () => number): T {
   return items[Math.floor(rng() * items.length) % items.length];
-}
-
-function clamp(value: number, min: number, max: number) {
-  return Math.min(max, Math.max(min, value));
 }
