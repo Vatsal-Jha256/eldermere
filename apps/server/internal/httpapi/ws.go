@@ -20,7 +20,10 @@ type commandMessage struct {
 	Command string `json:"command"`
 }
 
-const maxCommandLength = 512
+const (
+	maxCommandLength         = 512
+	maxWebSocketMessageBytes = 2048
+)
 
 func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store, hub *roomHub, allowedOrigins []string) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -61,6 +64,7 @@ func handleWebSocket(logger *slog.Logger, world game.World, store storage.Store,
 			logger.Warn("websocket accept failed", "error", err)
 			return
 		}
+		conn.SetReadLimit(maxWebSocketMessageBytes)
 		defer conn.Close(websocket.StatusNormalClosure, "session ended")
 
 		session := game.NewSession(world)
