@@ -43,6 +43,7 @@ func NewRouter(cfg config.Config, logger *slog.Logger, store storage.Store) http
 	})
 
 	mux.HandleFunc("POST /api/v1/sessions", handleCreateSession(logger, store))
+	mux.HandleFunc("POST /api/v1/sessions/verify", handleVerifySession(logger, store))
 	mux.HandleFunc("GET /ws", handleWebSocket(logger, world, store, hub, cfg.AllowedOrigins))
 
 	return withRequestLogging(logger, withCORS(mux, cfg.AllowedOrigins))

@@ -42,6 +42,8 @@
     token: string;
   };
 
+  type StoredSessionStatus = 'valid' | 'invalid' | 'unknown';
+
   type VisualEvent = {
     kind: string;
     seed: number;
@@ -218,15 +220,26 @@
       socket = null;
 
       if (!opened && options.retryStaleSession !== false && localStorage.getItem(sessionKey)) {
-        localStorage.removeItem(sessionKey);
-        log = [...log, 'Stored session was rejected. Creating a fresh player session...'];
-        reconnectTimer = setTimeout(() => {
-          reconnectTimer = null;
-          connect({ freshSession: true, retryStaleSession: false }).catch((error) => {
-            connecting = false;
-            log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
-          });
-        }, 200);
+        verifyStoredSession(session).then((status) => {
+          if (socket !== null || opened) return;
+          if (status === 'invalid') {
+            localStorage.removeItem(sessionKey);
+            log = [...log, 'Stored session was rejected. Creating a fresh player session...'];
+            reconnectTimer = setTimeout(() => {
+              reconnectTimer = null;
+              connect({ freshSession: true, retryStaleSession: false }).catch((error) => {
+                connecting = false;
+                log = [...log, `Reconnect failed: ${error instanceof Error ? error.message : 'unknown error'}`];
+              });
+            }, 200);
+            return;
+          }
+          if (status === 'unknown') {
+            log = [...log, 'Could not verify the stored session. Keeping it for continuation; check the API URL and server availability.'];
+            return;
+          }
+          log = [...log, 'Stored session is valid, but the socket could not open. Check the API URL and server availability.'];
+        });
         return;
       }
 
@@ -353,6 +366,34 @@
     const session = (await response.json()) as PlayerSession;
     localStorage.setItem(sessionKey, JSON.stringify(session));
     return session;
+  }
+
+  async function verifyStoredSession(session: PlayerSession): Promise<StoredSessionStatus> {
+    try {
+      const response = await fetch(toApiURL('/api/v1/sessions/verify'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          player_id: session.player_id,
+          token: session.token
+        })
+      });
+
+      if (response.status === 401) {
+        return 'invalid';
+      }
+      if (!response.ok) {
+        return 'unknown';
+      }
+      const verified = (await response.json()) as Partial<PlayerSession>;
+      if (verified.player_id !== session.player_id) {
+        return 'invalid';
+      }
+      displayName = verified.display_name || session.display_name || 'Wanderer';
+      return 'valid';
+    } catch {
+      return 'unknown';
+    }
   }
 
   function isPlayerSession(value: unknown): value is PlayerSession {

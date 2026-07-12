@@ -17,6 +17,7 @@ Generated:
 - room backdrops
 - room mood layers
 - ambient audio beds
+- sparse procedural music layers
 - short cue sounds for events
 - motion inside the browser atmosphere canvas
 - exact d20 odds shown through the `odds` command
@@ -72,9 +73,27 @@ Ambient audio is generated from the same profile.
 - void rooms lean darker and more sparse
 - court rooms lean measured and ceremonial
 
+The browser also adds a restrained procedural music layer. It is not a streaming AI model and it does not require authored audio assets. Instead, the client builds a small symbolic plan from the atmosphere profile:
+
+- scale and bass pools
+- sparse chord progressions
+- motif density
+- grid feel, from steady court pulses to looser water and void timing
+- synthesis timbre
+
+The melody line uses seeded step motion with occasional reversals, so it changes over time without becoming a dominant soundtrack. Harmony enters slowly as low-volume drones or chords. This keeps the environmental audio first while giving rooms a little more musical identity.
+
 Event cues also use the current room profile and command type to trigger short musical or noise-based responses.
 
 The implementation lives in [`apps/web/src/lib/audio.ts`](https://github.com/Vatsal-Jha256/eldermere/blob/main/apps/web/src/lib/audio.ts).
+
+### Research Notes
+
+The current approach follows the practical side of PMG research: small, context-aware, rule-based systems are easier to ship and control than heavyweight generation models in browser games.
+
+- Luo and Reiss, ["Procedural Music Generation Systems in Games"](https://arxiv.org/abs/2512.12834) (AES International Conference on Machine Learning and Artificial Intelligence for Audio, 2025) survey game PMG and argue for task-oriented, context-aware systems that fit real deployment constraints.
+- Marra and Ferreira, ["Long-Form Text-to-Music Generation with Adaptive Prompts: A Case Study in Tabletop Role-Playing Games Soundtracks"](https://arxiv.org/abs/2411.03948) (arXiv:2411.03948, 2024) is useful for its emphasis on story alignment and transition smoothness, even though Eldermere uses local symbolic generation rather than text-to-audio models.
+- Jung, Jansson, and Jeong, ["MusicGen-Chord: Advancing Music Generation through Chord Progressions and Interactive Web-UI"](https://arxiv.org/abs/2412.00325) (ISMIR extended abstract, 2024) supports the value of controllable chord/harmony inputs. Eldermere applies that idea as explicit room-derived chord pools instead of neural audio generation.
 
 ## Why This Matters For Contributors
 

@@ -2,6 +2,7 @@ package httpapi
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"log/slog"
 	"net/http"
@@ -64,6 +65,66 @@ func TestCreateSession(t *testing.T) {
 	}
 	if !ok {
 		t.Fatal("expected session token to verify")
+	}
+}
+
+func TestVerifySession(t *testing.T) {
+	store := storage.NewMemoryStore()
+	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default(), store)
+	session, err := store.CreatePlayerSession(context.Background(), "Tester")
+	if err != nil {
+		t.Fatalf("create session: %v", err)
+	}
+
+	payload, err := json.Marshal(map[string]string{
+		"player_id": session.PlayerID,
+		"token":     session.Token,
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sessions/verify", bytes.NewReader(payload))
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusOK {
+		t.Fatalf("expected status 200, got %d", res.Code)
+	}
+	var body storage.PlayerSession
+	if err := json.NewDecoder(res.Body).Decode(&body); err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+	if body.PlayerID != session.PlayerID || body.DisplayName != "Tester" {
+		t.Fatalf("verified session = %#v", body)
+	}
+	if body.Token != "" {
+		t.Fatal("expected verify response not to echo the token")
+	}
+}
+
+func TestVerifySessionRejectsBadToken(t *testing.T) {
+	store := storage.NewMemoryStore()
+	router := NewRouter(config.Config{AppEnv: "test"}, slog.Default(), store)
+	session, err := store.CreatePlayerSession(context.Background(), "Tester")
+	if err != nil {
+		t.Fatalf("create session: %v", err)
+	}
+
+	payload, err := json.Marshal(map[string]string{
+		"player_id": session.PlayerID,
+		"token":     "bad-token",
+	})
+	if err != nil {
+		t.Fatalf("marshal request: %v", err)
+	}
+	req := httptest.NewRequest(http.MethodPost, "/api/v1/sessions/verify", bytes.NewReader(payload))
+	res := httptest.NewRecorder()
+
+	router.ServeHTTP(res, req)
+
+	if res.Code != http.StatusUnauthorized {
+		t.Fatalf("expected status 401, got %d", res.Code)
 	}
 }
 

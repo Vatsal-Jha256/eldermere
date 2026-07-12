@@ -223,6 +223,7 @@ Players can inspect current probabilities with `odds`, `odds fight`, `odds recru
 ## HTTP And WebSocket Shapes
 
 - `POST /api/v1/sessions` accepts `{ "display_name": "Wanderer" }` and returns `player_id`, `display_name`, and `token`.
+- `POST /api/v1/sessions/verify` accepts `{ "player_id": "...", "token": "..." }` and returns the verified `player_id` and `display_name`.
 - `GET /ws?player_id=...&token=...` opens the command socket.
 - WebSocket command messages can be raw strings or JSON `{ "command": "look" }`.
 - WebSocket events use `{ "type": "...", "text": "...", "room": {...} }`.
