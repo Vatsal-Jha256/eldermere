@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/hex"
+	"strings"
 	"sync"
 	"time"
 
@@ -109,15 +110,23 @@ func newPlayerSession(displayName string) (PlayerSession, error) {
 	if err != nil {
 		return PlayerSession{}, err
 	}
-	if displayName == "" {
-		displayName = "Wanderer"
-	}
-
 	return PlayerSession{
 		PlayerID:    playerID,
-		DisplayName: displayName,
+		DisplayName: normalizeDisplayName(displayName),
 		Token:       token,
 	}, nil
+}
+
+func normalizeDisplayName(value string) string {
+	name := strings.Join(strings.Fields(value), " ")
+	if name == "" {
+		return "Wanderer"
+	}
+	runes := []rune(name)
+	if len(runes) > 28 {
+		return string(runes[:28])
+	}
+	return name
 }
 
 func randomHex(bytes int) (string, error) {
